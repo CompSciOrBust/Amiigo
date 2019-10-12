@@ -1,0 +1,2 @@
+# Amiigo
+GUI for Emuiibo
