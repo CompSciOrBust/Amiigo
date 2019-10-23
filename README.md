@@ -18,6 +18,7 @@ Up / Down on Dpad to move up and down the list.
 A to select a Amiibo from the list.
 X toggles emulation state.
 Y moves on to the next Amiibo.
+B enters the Amiigo Maker. Press B again to go back to the Amiibo selection UI.
 
 You can also use the touch screen to select an Amiibo by tapping on a item in the list, tapping the emulation status rectangle will toggle the emulation state, and tapping the currently selected Amiibo on the top rectangle will move on to the next Amiibo.
 
