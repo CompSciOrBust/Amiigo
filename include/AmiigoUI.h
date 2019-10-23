@@ -27,6 +27,8 @@ class AmiigoUI
 	public:
 	AmiigoUI();
 	void DrawUI();
+	void ScanForAmiibos();
+	void PleaseWait();
 	SDL_Event *Event;
 	int *WindowState;
 	SDL_Renderer *renderer;

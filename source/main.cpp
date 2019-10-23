@@ -8,6 +8,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <switch.h>
 #include <AmiigoUI.h>
+#include <CreatorUI.h>
 #include <nfpemu.h>
 int main(int argc, char *argv[])
 {
@@ -62,7 +63,7 @@ int main(int argc, char *argv[])
 	TTF_Init(); //Init the font
 	nfpemuInitialize(); //Init nfp ipc
 
-	//Give UI access to vars
+	//Give MainUI access to vars
 	AmiigoUI *MainUI = new AmiigoUI();
 	MainUI->Event = &event;
 	MainUI->WindowState = &WindowState;
@@ -70,6 +71,9 @@ int main(int argc, char *argv[])
 	MainUI->Width = &Width;
 	MainUI->Height = &Height;
 	MainUI->IsDone = &done;
+	
+	CreatorUI *AmiigoGenUI = NULL;
+	
     while (!done)
 	{
 		//Clear the frame
@@ -81,6 +85,36 @@ int main(int argc, char *argv[])
 			case 0:
 			{
 				MainUI->DrawUI();
+				//If the user has switched to the maker UI and the data isn't read show the please wait message
+				if(AmiigoGenUI == NULL && WindowState != 0)
+				{
+					//Display the please wait message
+					MainUI->PleaseWait();
+				}
+			}
+			break;
+			//Draw the Amiibo creator
+			case 1:
+			{
+				//Check if the UI has been initialized
+				if(AmiigoGenUI == NULL)
+				{
+					//Give AmiigoGenUI access to vars
+					AmiigoGenUI = new CreatorUI();
+					AmiigoGenUI->Event = &event;
+					AmiigoGenUI->WindowState = &WindowState;
+					AmiigoGenUI->renderer = renderer;
+					AmiigoGenUI->Width = &Width;
+					AmiigoGenUI->Height = &Height;
+					AmiigoGenUI->IsDone = &done;
+				}
+				//Render the UI
+				AmiigoGenUI->DrawUI();
+				//If the window state has changed then we need to rescan the amiibo folder to load the new amiibos in to the list
+				if(WindowState != 1)
+				{
+					MainUI->ScanForAmiibos();
+				}
 			}
 			break;
 		}

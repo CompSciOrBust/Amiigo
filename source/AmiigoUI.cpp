@@ -28,6 +28,8 @@ class AmiigoUI
 	public:
 	AmiigoUI();
 	void DrawUI();
+	void ScanForAmiibos();
+	void PleaseWait();
 	SDL_Event *Event;
 	int *WindowState;
 	SDL_Renderer *renderer;
@@ -41,14 +43,7 @@ AmiigoUI::AmiigoUI()
 	HeaderFont = TTF_OpenFont("romfs:/font.ttf", 48); //Load the header font
 	ListFont = TTF_OpenFont("romfs:/font.ttf", 32); //Load the list font
 	//Scan the Amiibo folder for Amiibos
-	DIR* dir;
-	struct dirent* ent;
-	dir = opendir("sdmc:/emuiibo/amiibo/");
-	while ((ent = readdir(dir)))
-	{
-		Files.push_back(*ent);
-	}
-	closedir(dir);
+	ScanForAmiibos();
 }
 
 void AmiigoUI::DrawUI()
@@ -136,6 +131,11 @@ void AmiigoUI::DrawUI()
 							char PathToAmiibo[FS_MAX_PATH] = "sdmc:/emuiibo/amiibo/";
 							strcat(PathToAmiibo, Files.at(SelectedIndex).d_name);
 							nfpemuSetCustomAmiibo(PathToAmiibo);
+						}
+						//B pressed so switch to Amiibo generator
+						else if(Event->jbutton.button == 1)
+						{
+							*WindowState = 1;
 						}
                     }
                     break;
@@ -225,13 +225,13 @@ void AmiigoUI::DrawFooter()
 	
 	SDL_RenderFillRect(renderer, &FooterRect);
 	
-	//Draw the Amiibo path text
+	//Draw the status text
 	SDL_Surface* FooterTextSurface = TTF_RenderUTF8_Blended_Wrapped(HeaderFont, StatusText.c_str(), TextColour, *Width);
-	SDL_Texture* HeaderTextTexture = SDL_CreateTextureFromSurface(renderer, FooterTextSurface);
+	SDL_Texture* FooterTextTexture = SDL_CreateTextureFromSurface(renderer, FooterTextSurface);
 	SDL_Rect FooterTextRect = {(*Width - FooterTextSurface->w) / 2, FooterYOffset + ((FooterHeight - FooterTextSurface->h) / 2), FooterTextSurface->w, FooterTextSurface->h};
-	SDL_RenderCopy(renderer, HeaderTextTexture, NULL, &FooterTextRect);
+	SDL_RenderCopy(renderer, FooterTextTexture, NULL, &FooterTextRect);
 	//Clean up
-	SDL_DestroyTexture(HeaderTextTexture);
+	SDL_DestroyTexture(FooterTextTexture);
 	SDL_FreeSurface(FooterTextSurface);
 }
 
@@ -311,6 +311,41 @@ void AmiigoUI::DrawList()
 		SDL_DestroyTexture(FileNameTexture);
 		SDL_FreeSurface(FileNameSurface);
 	}
+}
+
+void AmiigoUI::ScanForAmiibos()
+{
+	//clear the Amiibo list
+	Files.clear();
+	//Reset some vars so we don't crash when a new Amiibo is added
+	SelectedIndex = 0;
+	CursorIndex = 0;
+	ListRenderOffset = 0;
+	//Do the asctual scanning
+	DIR* dir;
+	struct dirent* ent;
+	dir = opendir("sdmc:/emuiibo/amiibo/");
+	while ((ent = readdir(dir)))
+	{
+		Files.push_back(*ent);
+	}
+	closedir(dir);
+}
+
+void AmiigoUI::PleaseWait()
+{
+	//Draw the rect
+	SDL_SetRenderDrawColor(renderer, 0, 188, 212, 255);
+	SDL_Rect MessageRect = {0,0, *Width, *Height};
+	SDL_RenderFillRect(renderer, &MessageRect);
+	//Draw the please wait text
+	SDL_Surface* MessageTextSurface = TTF_RenderUTF8_Blended_Wrapped(HeaderFont, "Please wait while we get data from the Amiibo API...", TextColour, *Width);
+	SDL_Texture* MessagerTextTexture = SDL_CreateTextureFromSurface(renderer, MessageTextSurface);
+	SDL_Rect HeaderTextRect = {(*Width - MessageTextSurface->w) / 2, (*Height - MessageTextSurface->h) / 2, MessageTextSurface->w, MessageTextSurface->h};
+	SDL_RenderCopy(renderer, MessagerTextTexture, NULL, &HeaderTextRect);
+	//Clean up
+	SDL_DestroyTexture(MessagerTextTexture);
+	SDL_FreeSurface(MessageTextSurface);
 }
 
 bool AmiigoUI::CheckButtonPressed(SDL_Rect* ButtonRect)
