@@ -1,3 +1,4 @@
+![Logo](icon.jpg)
 # Amiigo
 A GUI for Emuiibo.
 
