@@ -71,6 +71,7 @@ int main(int argc, char *argv[])
 	MainUI->Width = &Width;
 	MainUI->Height = &Height;
 	MainUI->IsDone = &done;
+	MainUI->InitList();
 	
 	CreatorUI *AmiigoGenUI = NULL;
 	

@@ -4,6 +4,7 @@
 #include <nfpemu.h>
 #include <vector>
 #include <dirent.h>
+#include <UI.h>
 using namespace std;
 
 class AmiigoUI
@@ -14,22 +15,19 @@ class AmiigoUI
 	SDL_Color TextColour = {0, 0, 0};
 	void DrawHeader();
 	void DrawFooter();
-	void DrawList();
 	int HeaderHeight;
 	int FooterHeight;
-	int ListHeight;
-	int SelectedIndex = 0;
-	int CursorIndex = 0;
-	int ListRenderOffset = 0;
 	vector <dirent> Files{vector <dirent>(0)};
-	bool CheckButtonPressed(SDL_Rect*);
 	int TouchX = -1;
 	int TouchY = -1;
+	ScrollList *AmiiboList;
 	public:
 	AmiigoUI();
 	void DrawUI();
 	void ScanForAmiibos();
 	void PleaseWait();
+	void InitList();
+	void SetAmiibo(int);
 	SDL_Event *Event;
 	int *WindowState;
 	SDL_Renderer *renderer;
@@ -41,18 +39,14 @@ class AmiigoUI
 AmiigoUI::AmiigoUI()
 {
 	HeaderFont = TTF_OpenFont("romfs:/font.ttf", 48); //Load the header font
-	ListFont = TTF_OpenFont("romfs:/font.ttf", 32); //Load the list font
 	//Scan the Amiibo folder for Amiibos
 	ScanForAmiibos();
+	//Create the list
+	AmiiboList = new ScrollList();
 }
 
 void AmiigoUI::DrawUI()
 {		
-
-	//This crashes when in the constructor for some reason
-	HeaderHeight = (*Height / 100) * 10;
-	FooterHeight = (*Height / 100) * 10;
-	ListHeight = *Height - HeaderHeight - FooterHeight;
 	//Scan input
 	while (SDL_PollEvent(Event))
 		{
@@ -116,21 +110,19 @@ void AmiigoUI::DrawUI()
 						//Up pressed
 						else if(Event->jbutton.button == 13)
 						{
-							CursorIndex--;
-							SelectedIndex--;
+							AmiiboList->CursorIndex--;
+							AmiiboList->SelectedIndex--;
 						}
 						//Down pressed
 						else if(Event->jbutton.button == 15)
 						{
-							CursorIndex++;
-							SelectedIndex++;
+							AmiiboList->CursorIndex++;
+							AmiiboList->SelectedIndex++;
 						}
 						//A pressed
 						else if(Event->jbutton.button == 0)
 						{
-							char PathToAmiibo[FS_MAX_PATH] = "sdmc:/emuiibo/amiibo/";
-							strcat(PathToAmiibo, Files.at(SelectedIndex).d_name);
-							nfpemuSetCustomAmiibo(PathToAmiibo);
+							SetAmiibo(AmiiboList->SelectedIndex);
 						}
 						//B pressed so switch to Amiibo generator
 						else if(Event->jbutton.button == 1)
@@ -150,7 +142,12 @@ void AmiigoUI::DrawUI()
 	//Draw the UI
 	DrawHeader();
 	DrawFooter();
-	DrawList();
+	AmiiboList->DrawList();
+	//Check if list item selected via touch screen
+	if(AmiiboList->ItemSelected)
+	{
+		SetAmiibo(AmiiboList->SelectedIndex);
+	}
 	
 	//Reset touch coords
 	TouchX = -1;
@@ -175,7 +172,7 @@ void AmiigoUI::DrawHeader()
 	SDL_DestroyTexture(HeaderTextTexture);
 	SDL_FreeSurface(HeaderTextSurface);
 	//Switch to next Amiibo
-	if(CheckButtonPressed(&HeaderRect))
+	if(CheckButtonPressed(&HeaderRect, TouchX, TouchY))
 	{
 		nfpemuMoveToNextAmiibo(NULL);
 	}
@@ -207,7 +204,7 @@ void AmiigoUI::DrawFooter()
 	}
 	
 	//Footer was pressed so we should change the status
-	if(CheckButtonPressed(&FooterRect))
+	if(CheckButtonPressed(&FooterRect, TouchX, TouchY))
 	{
 		switch(CurrentStatus)
 		{
@@ -235,93 +232,15 @@ void AmiigoUI::DrawFooter()
 	SDL_FreeSurface(FooterTextSurface);
 }
 
-void AmiigoUI::DrawList()
-{
-	int ListingsOnScreen = 10;
-	int ListingHeight = ListHeight / ListingsOnScreen;
-	int ListLength = ListingsOnScreen;
-	if(ListLength > Files.size()) ListLength = Files.size();
-	
-	//Check cursor is with in bounds
-	if(CursorIndex > ListLength-1)
-	{
-		CursorIndex = ListLength-1;
-		ListRenderOffset++;
-	}
-	if(CursorIndex < 0)
-	{
-		CursorIndex = 0;
-		ListRenderOffset--;
-	}
-	
-	//Check selected index is with in the bounds
-	if(SelectedIndex < 0)
-	{
-		SelectedIndex = Files.size()-1;
-		CursorIndex = ListLength;
-		ListRenderOffset = Files.size() - ListLength-1;
-	}
-	else if(SelectedIndex > Files.size()-1)
-	{
-		SelectedIndex = 0;
-		CursorIndex = 0;
-		ListRenderOffset = 0;
-	}
-	
-	//Draw the Amiibo list
-	for(int i = 0; i < ListLength; i++)
-	{
-		//Set the background color with alternating colours
-		if(i % 2 == 1)
-		{
-			SDL_SetRenderDrawColor(renderer, 0, 184, 212, 255);
-		}
-		else
-		{
-			SDL_SetRenderDrawColor(renderer, 0, 229, 255, 255);
-		}
-		//Check if this is the highlighted file
-		if(i == CursorIndex)
-		{
-			SDL_SetRenderDrawColor(renderer, 224, 247, 250, 255);
-		}
-		
-		SDL_Rect MenuItem = {0, HeaderHeight + (i * ListingHeight), *Width, ListingHeight};
-		SDL_RenderFillRect(renderer, &MenuItem);
-		
-		//Draw file names
-		SDL_Color TextColour = {0, 0, 0};
-		SDL_Surface* FileNameSurface = TTF_RenderUTF8_Blended_Wrapped(ListFont, Files.at(i + ListRenderOffset).d_name, TextColour, *Width);
-		SDL_Texture* FileNameTexture = SDL_CreateTextureFromSurface(renderer, FileNameSurface);
-		SDL_Rect AmiiboNameRect = {0, MenuItem.y + ((MenuItem.h - FileNameSurface->h) / 2), FileNameSurface->w, FileNameSurface->h};
-		SDL_RenderCopy(renderer, FileNameTexture, NULL, &AmiiboNameRect);
-		
-		//Check if option is pressed
-		if(CheckButtonPressed(&MenuItem))
-		{
-			char PathToAmiibo[FS_MAX_PATH] = "sdmc:/emuiibo/amiibo/";
-			strcat(PathToAmiibo, Files.at(i + ListRenderOffset).d_name);
-			nfpemuSetCustomAmiibo(PathToAmiibo);
-			int SelectedDifference = i - CursorIndex;
-			SelectedIndex += SelectedDifference;
-			CursorIndex = i;
-		}
-		
-		//Clean up
-		SDL_DestroyTexture(FileNameTexture);
-		SDL_FreeSurface(FileNameSurface);
-	}
-}
-
 void AmiigoUI::ScanForAmiibos()
 {
 	//clear the Amiibo list
 	Files.clear();
 	//Reset some vars so we don't crash when a new Amiibo is added
-	SelectedIndex = 0;
-	CursorIndex = 0;
-	ListRenderOffset = 0;
-	//Do the asctual scanning
+	//AmiiboList->SelectedIndex = 0;
+	//AmiiboList->CursorIndex = 0;
+	//AmiiboList->ListRenderOffset = 0;
+	//Do the actual scanning
 	DIR* dir;
 	struct dirent* ent;
 	dir = opendir("sdmc:/emuiibo/amiibo/");
@@ -348,8 +267,29 @@ void AmiigoUI::PleaseWait()
 	SDL_FreeSurface(MessageTextSurface);
 }
 
-bool AmiigoUI::CheckButtonPressed(SDL_Rect* ButtonRect)
+void AmiigoUI::SetAmiibo(int Index)
 {
-	if(TouchX > ButtonRect->x && TouchX < ButtonRect->x + ButtonRect->w && TouchY > ButtonRect->y && TouchY < ButtonRect->y + ButtonRect->h) return true;
-	else return false;
+	char PathToAmiibo[FS_MAX_PATH] = "sdmc:/emuiibo/amiibo/";
+	strcat(PathToAmiibo, Files.at(Index).d_name);
+	nfpemuSetCustomAmiibo(PathToAmiibo);
+}
+
+void AmiigoUI::InitList()
+{
+	//This crashes when in the constructor because these values aren't set yet
+	HeaderHeight = (*Height / 100) * 10;
+	FooterHeight = (*Height / 100) * 10;
+	//Assign vars
+	AmiiboList->TouchListX = &TouchX;
+	AmiiboList->TouchListY = &TouchY;
+	AmiiboList->ListFont = TTF_OpenFont("romfs:/font.ttf", 32); //Load the list font
+	AmiiboList->ListingsOnScreen = 10;
+	AmiiboList->ListHeight = *Height - HeaderHeight - FooterHeight;
+	AmiiboList->ListWidth = *Width;
+	AmiiboList->ListYOffset = HeaderHeight;
+	AmiiboList->renderer = renderer;
+	for(int i = 0; i < Files.size(); i++)
+	{
+		AmiiboList->ListingTextVec.push_back(Files.at(i).d_name);
+	}
 }

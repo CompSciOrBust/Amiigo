@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <dirent.h>
+#include <UI.h>
 using namespace std;
 
 class AmiigoUI
@@ -13,22 +14,19 @@ class AmiigoUI
 	SDL_Color TextColour = {0, 0, 0};
 	void DrawHeader();
 	void DrawFooter();
-	void DrawList();
 	int HeaderHeight;
 	int FooterHeight;
-	int ListHeight;
-	int SelectedIndex = 0;
-	int CursorIndex = 0;
-	int ListRenderOffset = 0;
 	vector <dirent> Files{vector <dirent>(0)};
-	bool CheckButtonPressed(SDL_Rect*);
 	int TouchX = -1;
 	int TouchY = -1;
+	ScrollList *AmiiboList;
 	public:
 	AmiigoUI();
 	void DrawUI();
 	void ScanForAmiibos();
 	void PleaseWait();
+	void InitList();
+	void SetAmiibo(int);
 	SDL_Event *Event;
 	int *WindowState;
 	SDL_Renderer *renderer;
