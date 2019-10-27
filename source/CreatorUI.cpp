@@ -9,8 +9,17 @@
 #include <fstream>
 #include <dirent.h>
 #include <vector>
+#include <UI.h>
 using namespace std;
 using json = nlohmann::json;
+
+class AmiiboVars
+{
+	public:
+	string AmiiboSeries = "";
+	string AmiiboName = "";
+	int ListIndex = 0;
+};
 
 class CreatorUI
 {
@@ -24,9 +33,6 @@ class CreatorUI
 	int HeaderHeight;
 	int FooterHeight;
 	int ListHeight;
-	int SelectedIndex = 0;
-	int CursorIndex = 0;
-	int ListRenderOffset = 0;
 	bool CheckButtonPressed(SDL_Rect*);
 	int TouchX = -1;
 	int TouchY = -1;
@@ -34,18 +40,22 @@ class CreatorUI
 	int JDataSize = 0;
 	bool HasSelectedSeries = false;
 	vector<string> SeriesVec;
+	vector<AmiiboVars> AmiiboVarsVec;
+	vector<AmiiboVars> SortedAmiiboVarsVec;
 	string AmiiboAPIString = "";
 	public:
 	CreatorUI();
 	void DrawUI();
 	void GetDataFromAPI(string);
-	string GetKBInput();
+	void InitList();
+	void ListSelect();
 	SDL_Event *Event;
 	int *WindowState;
 	SDL_Renderer *renderer;
 	int *Width;
 	int *Height;
 	int *IsDone;
+	ScrollList *SeriesList;
 };
 
 CreatorUI::CreatorUI()
@@ -55,11 +65,21 @@ CreatorUI::CreatorUI()
 	ListFont = TTF_OpenFont("romfs:/font.ttf", 32); //Load the list font
 	GetDataFromAPI(""); //Get data from the API
 	
-	//Get all of the Series' names
+	//Create the lists
+	SeriesList = new ScrollList();
+	//Get all of the Series' names and add Amiibos to the AmiiboVarsVec
 	for(int i = 0; i < JDataSize; i++)
 	{
 		bool IsInVec = false;
 		string SeriesName = JData["amiibo"][i]["amiiboSeries"].get<std::string>();
+		
+		//Add data to the AmiiboVarsVec
+		AmiiboVars TempAmiiboVars;
+		TempAmiiboVars.AmiiboSeries = SeriesName;
+		TempAmiiboVars.AmiiboName = JData["amiibo"][i]["name"].get<std::string>();
+		TempAmiiboVars.ListIndex = i;
+		AmiiboVarsVec.push_back(TempAmiiboVars);
+		
 		//Loop through every element in the vector
 		for(int j = 0; j < SeriesVec.size(); j++)
 		{
@@ -77,13 +97,16 @@ CreatorUI::CreatorUI()
 	}
 }
 
-void CreatorUI::GetDataFromAPI(string FilterTerm)
+void CreatorUI::InitList()
 {
-	//Note we need to poke around NIFM to check that the user actually has an internet connection otherwise we'll crashes
-	string APIURI = "https://www.amiiboapi.com/api/amiibo" + FilterTerm;
-	AmiiboAPIString = RetrieveContent(APIURI, "application/json").c_str();
-	JData = json::parse(AmiiboAPIString);
-	JDataSize = JData["amiibo"].size();
+	//Create the lists
+	SeriesList->TouchListX = &TouchX;
+	SeriesList->TouchListY = &TouchY;
+	SeriesList->ListFont = TTF_OpenFont("romfs:/font.ttf", 32); //Load the list font
+	SeriesList->ListingsOnScreen = 11;
+	SeriesList->ListWidth = *Width;
+	SeriesList->renderer = renderer;
+	SeriesList->ListingTextVec = SeriesVec;
 }
 
 void CreatorUI::DrawUI()
@@ -91,6 +114,8 @@ void CreatorUI::DrawUI()
 	//This crashes when in the constructor for some reason
 	HeaderHeight = (*Height / 100) * 10;
 	ListHeight = *Height - HeaderHeight;
+	SeriesList->ListHeight = *Height - HeaderHeight;
+	SeriesList->ListYOffset = HeaderHeight;
 	//Scan input
 	while (SDL_PollEvent(Event))
 		{
@@ -113,52 +138,19 @@ void CreatorUI::DrawUI()
 						//Up pressed
 						else if(Event->jbutton.button == 13)
 						{
-							CursorIndex--;
-							SelectedIndex--;
+							SeriesList->CursorIndex--;
+							SeriesList->SelectedIndex--;
 						}
 						//Down pressed
 						else if(Event->jbutton.button == 15)
 						{
-							CursorIndex++;
-							SelectedIndex++;
+							SeriesList->CursorIndex++;
+							SeriesList->SelectedIndex++;
 						}
 						//A pressed
 						else if(Event->jbutton.button == 0)
 						{
-							if(HasSelectedSeries)
-							{
-						    	string AmiiboPath = "sdmc:/emuiibo/amiibo/" + JData["amiibo"][SelectedIndex]["name"].get<std::string>();
-						    	mkdir(AmiiboPath.c_str(), 0);
-						    	//Write common.json
-						    	string FilePath = AmiiboPath + "/common.json";
-						    	ofstream CommonFileWriter(FilePath.c_str());
-						    	CommonFileWriter << "{\"lastWriteDate\": \"2019-01-01\",\"writeCounter\": 0,\"version\": 0}";
-						    	CommonFileWriter.close();
-						    	//Write model.json
-						    	FilePath = AmiiboPath + "/model.json";
-						    	ofstream ModelFileWriter(FilePath.c_str());
-						    	ModelFileWriter << "{\"amiiboId\": \"" + JData["amiibo"][SelectedIndex]["head"].get<std::string>() + JData["amiibo"][SelectedIndex]["tail"].get<std::string>() + "\"}";
-						    	ModelFileWriter.close();
-						    	//write tag.json
-						    	FilePath = AmiiboPath + "/tag.json";
-						    	ofstream TagFileWriter(FilePath.c_str());
-						    	TagFileWriter << "{\"randomUuid\": true}";
-						    	TagFileWriter.close();
-						    	//write register.json
-						    	FilePath = AmiiboPath + "/register.json";
-						    	ofstream RegFileWriter(FilePath.c_str());
-						    	RegFileWriter << "{\"name\": \"" + JData["amiibo"][SelectedIndex]["name"].get<std::string>() + "\",\"firstWriteDate\": \"2019-01-01\",\"miiCharInfo\": \"mii-charinfo.bin\"}";
-						    	RegFileWriter.close();
-							}
-							else
-							{
-								GetDataFromAPI("/?amiiboSeries=" + FormatURL(SeriesVec.at(SelectedIndex)));
-								//Reset some vars so we don't crash
-								SelectedIndex = 0;
-								CursorIndex = 0;
-								ListRenderOffset = 0;
-								HasSelectedSeries = true;
-							}
+							ListSelect();
 						}
 						//B pressed
 						else if(Event->jbutton.button == 1)
@@ -166,9 +158,10 @@ void CreatorUI::DrawUI()
 							if(HasSelectedSeries)
 							{
 								//Reset some vars so we don't crash
-								SelectedIndex = 0;
-								CursorIndex = 0;
-								ListRenderOffset = 0;
+								SeriesList->ListingTextVec = SeriesVec;
+								SeriesList->SelectedIndex = 0;
+								SeriesList->CursorIndex = 0;
+								SeriesList->ListRenderOffset = 0;
 								HasSelectedSeries = false;
 							}
 							else *WindowState = 0;
@@ -185,164 +178,66 @@ void CreatorUI::DrawUI()
 	
 	//Draw the UI
 	DrawHeader();
-	if(HasSelectedSeries)
-	{
-		DrawAmiiboList();
-	}
-	else
-	{
-		DrawSeriesList();
-	}
+	SeriesList->DrawList();
 	
 	//Reset touch coords
 	TouchX = -1;
 	TouchY = -1;
 }
 
-void CreatorUI::DrawAmiiboList()
+void CreatorUI::ListSelect()
 {
-	int ListingsOnScreen = 11;
-	int ListingHeight = ListHeight / ListingsOnScreen;
-	int ListLength = ListingsOnScreen;
-	if(ListLength > JDataSize) ListLength = JDataSize;
-	
-	//Check cursor is with in bounds
-	if(CursorIndex > ListLength-1)
+	//Create the virtual amiibo on the SD card
+	if(HasSelectedSeries)
 	{
-		CursorIndex = ListLength-1;
-		ListRenderOffset++;
+		int IndexInJdata = SortedAmiiboVarsVec.at(SeriesList->SelectedIndex).ListIndex;
+        string AmiiboPath = "sdmc:/emuiibo/amiibo/" + JData["amiibo"][IndexInJdata]["name"].get<std::string>();
+        mkdir(AmiiboPath.c_str(), 0);
+        //Write common.json
+        string FilePath = AmiiboPath + "/common.json";
+        ofstream CommonFileWriter(FilePath.c_str());
+        CommonFileWriter << "{\"lastWriteDate\": \"2019-01-01\",\"writeCounter\": 0,\"version\": 0}";
+        CommonFileWriter.close();
+        //Write model.json
+        FilePath = AmiiboPath + "/model.json";
+        ofstream ModelFileWriter(FilePath.c_str());
+        ModelFileWriter << "{\"amiiboId\": \"" + JData["amiibo"][IndexInJdata]["head"].get<std::string>() + JData["amiibo"][IndexInJdata]["tail"].get<std::string>() + "\"}";
+        ModelFileWriter.close();
+        //write tag.json
+        FilePath = AmiiboPath + "/tag.json";
+        ofstream TagFileWriter(FilePath.c_str());
+        TagFileWriter << "{\"randomUuid\": true}";
+        TagFileWriter.close();
+        //write register.json
+        FilePath = AmiiboPath + "/register.json";
+        ofstream RegFileWriter(FilePath.c_str());
+        RegFileWriter << "{\"name\": \"" + JData["amiibo"][IndexInJdata]["name"].get<std::string>() + "\",\"firstWriteDate\": \"2019-01-01\",\"miiCharInfo\": \"mii-charinfo.bin\"}";
+        RegFileWriter.close();
 	}
-	if(CursorIndex < 0)
+	//Add the Amiibos from the selected series to the list
+	else
 	{
-		CursorIndex = 0;
-		ListRenderOffset--;
-	}
-	
-	//Check selected index is with in the bounds
-	if(SelectedIndex < 0)
-	{
-		SelectedIndex = JDataSize-1;
-		CursorIndex = ListLength;
-		ListRenderOffset = JDataSize - ListLength-1;
-	}
-	else if(SelectedIndex > JDataSize-1)
-	{
-		SelectedIndex = 0;
-		CursorIndex = 0;
-		ListRenderOffset = 0;
-	}
-	
-	//Draw the Amiibo list
-	for(int i = 0; i < ListLength; i++)
-	{
-		//Set the background color with alternating colours
-		if(i % 2 == 1)
+		HasSelectedSeries = true;
+		string SelectedSeries = SeriesVec.at(SeriesList->SelectedIndex);
+		SeriesList->ListingTextVec.clear();
+		SortedAmiiboVarsVec.clear();
+		for(int i = 0; i < AmiiboVarsVec.size(); i++)
 		{
-			SDL_SetRenderDrawColor(renderer, 0, 184, 212, 255);
+			//There's something happening here
+			//What it is ain't exactly clear
+			//There's a class with a bug over there
+			//When using it we should beware
+			if(AmiiboVarsVec.at(i).AmiiboSeries == SelectedSeries)
+			{
+				SortedAmiiboVarsVec.push_back(AmiiboVarsVec.at(i));
+				SeriesList->ListingTextVec.push_back(AmiiboVarsVec.at(i).AmiiboName);
+				//SeriesList->ListingTextVec.push_back(SortedAmiiboVarsVec.at(SortedAmiiboVarsVec.size()-1).AmiiboName);
+			}
 		}
-		else
-		{
-			SDL_SetRenderDrawColor(renderer, 0, 229, 255, 255);
-		}
-		//Check if this is the highlighted file
-		if(i == CursorIndex)
-		{
-			SDL_SetRenderDrawColor(renderer, 224, 247, 250, 255);
-		}
-		
-		SDL_Rect MenuItem = {0, HeaderHeight + (i * ListingHeight), *Width, ListingHeight};
-		SDL_RenderFillRect(renderer, &MenuItem);
-		
-		//Draw file names
-		SDL_Color TextColour = {0, 0, 0};
-		string AmiiboText = JData["amiibo"][i + ListRenderOffset]["name"].get<std::string>() + " - " + JData["amiibo"][i + ListRenderOffset]["amiiboSeries"].get<std::string>();
-		SDL_Surface* FileNameSurface = TTF_RenderUTF8_Blended_Wrapped(ListFont, AmiiboText.c_str(), TextColour, *Width);
-		SDL_Texture* FileNameTexture = SDL_CreateTextureFromSurface(renderer, FileNameSurface);
-		SDL_Rect AmiiboNameRect = {0, MenuItem.y + ((MenuItem.h - FileNameSurface->h) / 2), FileNameSurface->w, FileNameSurface->h};
-		SDL_RenderCopy(renderer, FileNameTexture, NULL, &AmiiboNameRect);
-		
-		//Check if option is pressed
-		if(CheckButtonPressed(&MenuItem))
-		{
-			
-		}
-		
-		//Clean up
-		SDL_DestroyTexture(FileNameTexture);
-		SDL_FreeSurface(FileNameSurface);
-	}
-}
-
-void CreatorUI::DrawSeriesList()
-{
-	int ListingsOnScreen = 11;
-	int ListingHeight = ListHeight / ListingsOnScreen;
-	int ListLength = ListingsOnScreen;
-	
-	//Check cursor is with in bounds
-	if(CursorIndex > ListLength-1)
-	{
-		CursorIndex = ListLength-1;
-		ListRenderOffset++;
-	}
-	if(CursorIndex < 0)
-	{
-		CursorIndex = 0;
-		ListRenderOffset--;
-	}
-	
-	//Check selected index is with in the bounds
-	if(SelectedIndex < 0)
-	{
-		SelectedIndex = SeriesVec.size()-1;
-		CursorIndex = ListLength;
-		ListRenderOffset = SeriesVec.size() - ListLength-1;
-	}
-	else if(SelectedIndex > SeriesVec.size()-1)
-	{
-		SelectedIndex = 0;
-		CursorIndex = 0;
-		ListRenderOffset = 0;
-	}
-	
-	//Draw the Series list
-	for(int i = 0; i < ListLength; i++)
-	{
-		//Set the background color with alternating colours
-		if(i % 2 == 1)
-		{
-			SDL_SetRenderDrawColor(renderer, 0, 184, 212, 255);
-		}
-		else
-		{
-			SDL_SetRenderDrawColor(renderer, 0, 229, 255, 255);
-		}
-		//Check if this is the highlighted file
-		if(i == CursorIndex)
-		{
-			SDL_SetRenderDrawColor(renderer, 224, 247, 250, 255);
-		}
-		
-		SDL_Rect MenuItem = {0, HeaderHeight + (i * ListingHeight), *Width, ListingHeight};
-		SDL_RenderFillRect(renderer, &MenuItem);
-		
-		//Draw file names
-		SDL_Color TextColour = {0, 0, 0};
-		string AmiiboText = SeriesVec.at(i + ListRenderOffset);
-		SDL_Surface* FileNameSurface = TTF_RenderUTF8_Blended_Wrapped(ListFont, AmiiboText.c_str(), TextColour, *Width);
-		SDL_Texture* FileNameTexture = SDL_CreateTextureFromSurface(renderer, FileNameSurface);
-		SDL_Rect AmiiboNameRect = {0, MenuItem.y + ((MenuItem.h - FileNameSurface->h) / 2), FileNameSurface->w, FileNameSurface->h};
-		SDL_RenderCopy(renderer, FileNameTexture, NULL, &AmiiboNameRect);
-		
-		//Check if option is pressed
-		if(CheckButtonPressed(&MenuItem))
-		{
-			
-		}
-		
-		//Clean up
-		SDL_DestroyTexture(FileNameTexture);
-		SDL_FreeSurface(FileNameSurface);
+		//Reset some vars so we don't crash
+		SeriesList->SelectedIndex = 0;
+		SeriesList->CursorIndex = 0;
+		SeriesList->ListRenderOffset = 0;
 	}
 }
 
@@ -362,28 +257,13 @@ void CreatorUI::DrawHeader()
 	SDL_FreeSurface(HeaderTextSurface);
 }
 
-string CreatorUI::GetKBInput()
+void CreatorUI::GetDataFromAPI(string FilterTerm)
 {
-	//Init swkbd
-	Result rc=0;
-	SwkbdConfig kbd;
-	char tmpoutstr[16] = {0};
-	rc = swkbdCreate(&kbd, 0);
-	if (R_SUCCEEDED(rc)) 
-	{
-		// Select a Preset to use, if any.
-		swkbdConfigMakePresetDefault(&kbd);
-		printf("Running swkbdShow...\n");
-		rc = swkbdShow(&kbd, tmpoutstr, sizeof(tmpoutstr));
-		printf("swkbdShow(): 0x%x\n", rc);
-
-		if (R_SUCCEEDED(rc))
-		{
-			printf("out str: %s\n", tmpoutstr);
-		}
-		swkbdClose(&kbd);
-	}
-	return tmpoutstr;
+	//Note we need to poke around NIFM to check that the user actually has an internet connection otherwise we'll crashes
+	string APIURI = "https://www.amiiboapi.com/api/amiibo" + FilterTerm;
+	AmiiboAPIString = RetrieveContent(APIURI, "application/json").c_str();
+	JData = json::parse(AmiiboAPIString);
+	JDataSize = JData["amiibo"].size();
 }
 
 bool CreatorUI::CheckButtonPressed(SDL_Rect* ButtonRect)

@@ -108,6 +108,7 @@ int main(int argc, char *argv[])
 					AmiigoGenUI->Width = &Width;
 					AmiigoGenUI->Height = &Height;
 					AmiigoGenUI->IsDone = &done;
+					AmiigoGenUI->InitList();
 				}
 				//Render the UI
 				AmiigoGenUI->DrawUI();

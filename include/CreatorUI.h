@@ -8,8 +8,17 @@
 #include <fstream>
 #include <dirent.h>
 #include <vector>
+//#include <UI.h>
 using namespace std;
 using json = nlohmann::json;
+
+class AmiiboVars
+{
+	public:
+	string AmiiboSeries = "";
+	string AmiiboName = "";
+	int ListIndex = 0;
+};
 
 class CreatorUI
 {
@@ -23,9 +32,6 @@ class CreatorUI
 	int HeaderHeight;
 	int FooterHeight;
 	int ListHeight;
-	int SelectedIndex = 0;
-	int CursorIndex = 0;
-	int ListRenderOffset = 0;
 	bool CheckButtonPressed(SDL_Rect*);
 	int TouchX = -1;
 	int TouchY = -1;
@@ -33,16 +39,20 @@ class CreatorUI
 	int JDataSize = 0;
 	bool HasSelectedSeries = false;
 	vector<string> SeriesVec;
+	vector<AmiiboVars> AmiiboVarsVec;
+	vector<AmiiboVars> SortedAmiiboVarsVec;
 	string AmiiboAPIString = "";
 	public:
 	CreatorUI();
 	void DrawUI();
 	void GetDataFromAPI(string);
-	string GetKBInput();
+	void InitList();
+	void ListSelect();
 	SDL_Event *Event;
 	int *WindowState;
 	SDL_Renderer *renderer;
 	int *Width;
 	int *Height;
 	int *IsDone;
+	ScrollList *SeriesList;
 };

@@ -38,11 +38,12 @@ class AmiigoUI
 
 AmiigoUI::AmiigoUI()
 {
-	HeaderFont = TTF_OpenFont("romfs:/font.ttf", 48); //Load the header font
-	//Scan the Amiibo folder for Amiibos
-	ScanForAmiibos();
+	//Load the header font
+	HeaderFont = TTF_OpenFont("romfs:/font.ttf", 48);
 	//Create the list
 	AmiiboList = new ScrollList();
+	//Scan the Amiibo folder for Amiibos
+	ScanForAmiibos();
 }
 
 void AmiigoUI::DrawUI()
@@ -237,9 +238,9 @@ void AmiigoUI::ScanForAmiibos()
 	//clear the Amiibo list
 	Files.clear();
 	//Reset some vars so we don't crash when a new Amiibo is added
-	//AmiiboList->SelectedIndex = 0;
-	//AmiiboList->CursorIndex = 0;
-	//AmiiboList->ListRenderOffset = 0;
+	AmiiboList->SelectedIndex = 0;
+	AmiiboList->CursorIndex = 0;
+	AmiiboList->ListRenderOffset = 0;
 	//Do the actual scanning
 	DIR* dir;
 	struct dirent* ent;
@@ -249,6 +250,12 @@ void AmiigoUI::ScanForAmiibos()
 		Files.push_back(*ent);
 	}
 	closedir(dir);
+	
+	AmiiboList->ListingTextVec.clear();
+	for(int i = 0; i < Files.size(); i++)
+	{
+		AmiiboList->ListingTextVec.push_back(Files.at(i).d_name);
+	}
 }
 
 void AmiigoUI::PleaseWait()
@@ -288,8 +295,9 @@ void AmiigoUI::InitList()
 	AmiiboList->ListWidth = *Width;
 	AmiiboList->ListYOffset = HeaderHeight;
 	AmiiboList->renderer = renderer;
+	/*
 	for(int i = 0; i < Files.size(); i++)
 	{
 		AmiiboList->ListingTextVec.push_back(Files.at(i).d_name);
-	}
+	}*/
 }
