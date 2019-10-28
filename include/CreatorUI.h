@@ -27,10 +27,10 @@ class CreatorUI
 	void DrawHeader();
 	void DrawAmiiboList();
 	void DrawSeriesList();
+	void DrawFooter();
 	int HeaderHeight;
 	int FooterHeight;
 	int ListHeight;
-	bool CheckButtonPressed(SDL_Rect*);
 	int TouchX = -1;
 	int TouchY = -1;
 	json JData;
@@ -53,4 +53,6 @@ class CreatorUI
 	int *Height;
 	int *IsDone;
 	ScrollList *SeriesList;
+	ScrollList *MenuList;
+	int SeriesListWidth;
 };

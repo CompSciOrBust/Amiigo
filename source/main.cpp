@@ -113,7 +113,9 @@ int main(int argc, char *argv[])
 					AmiigoGenUI->Width = &Width;
 					AmiigoGenUI->Height = &Height;
 					AmiigoGenUI->IsDone = &done;
+					AmiigoGenUI->SeriesListWidth = MainUI->AmiiboListWidth;
 					AmiigoGenUI->InitList();
+					AmiigoGenUI->MenuList = MainUI->MenuList;
 				}
 				//Render the UI
 				AmiigoGenUI->DrawUI();
@@ -125,6 +127,9 @@ int main(int argc, char *argv[])
 			}
 			break;
 		}
+		
+		//If exit option was selected we need to set done to 1
+		if(WindowState == 2) done = 1;
 
 		//Draw the frame
         SDL_RenderPresent(renderer);

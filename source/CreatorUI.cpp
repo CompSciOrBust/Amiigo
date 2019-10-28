@@ -30,10 +30,10 @@ class CreatorUI
 	void DrawHeader();
 	void DrawAmiiboList();
 	void DrawSeriesList();
+	void DrawFooter();
 	int HeaderHeight;
 	int FooterHeight;
 	int ListHeight;
-	bool CheckButtonPressed(SDL_Rect*);
 	int TouchX = -1;
 	int TouchY = -1;
 	json JData;
@@ -56,6 +56,8 @@ class CreatorUI
 	int *Height;
 	int *IsDone;
 	ScrollList *SeriesList;
+	ScrollList *MenuList;
+	int SeriesListWidth;
 };
 
 CreatorUI::CreatorUI()
@@ -103,8 +105,8 @@ void CreatorUI::InitList()
 	SeriesList->TouchListX = &TouchX;
 	SeriesList->TouchListY = &TouchY;
 	SeriesList->ListFont = TTF_OpenFont("romfs:/font.ttf", 32); //Load the list font
-	SeriesList->ListingsOnScreen = 11;
-	SeriesList->ListWidth = *Width;
+	SeriesList->ListingsOnScreen = 10;
+	SeriesList->ListWidth = SeriesListWidth;
 	SeriesList->renderer = renderer;
 	SeriesList->ListingTextVec = SeriesVec;
 }
@@ -113,8 +115,9 @@ void CreatorUI::DrawUI()
 {
 	//This crashes when in the constructor for some reason
 	HeaderHeight = (*Height / 100) * 10;
+	FooterHeight = (*Height / 100) * 10;
 	ListHeight = *Height - HeaderHeight;
-	SeriesList->ListHeight = *Height - HeaderHeight;
+	SeriesList->ListHeight = *Height - HeaderHeight - FooterHeight;
 	SeriesList->ListYOffset = HeaderHeight;
 	//Scan input
 	while (SDL_PollEvent(Event))
@@ -125,6 +128,9 @@ void CreatorUI::DrawUI()
 				case SDL_FINGERDOWN:
 				TouchX = Event->tfinger.x * *Width;
 				TouchY = Event->tfinger.y * *Height;
+				//Set the touch list pointers because we need them to work in both menus
+				MenuList->TouchListX = &TouchX;
+				MenuList->TouchListY = &TouchY;
 				break;
 				//Joycon button pressed
                 case SDL_JOYBUTTONDOWN:
@@ -138,33 +144,58 @@ void CreatorUI::DrawUI()
 						//Up pressed
 						else if(Event->jbutton.button == 13)
 						{
-							SeriesList->CursorIndex--;
-							SeriesList->SelectedIndex--;
+							if(SeriesList->IsActive)
+							{
+								SeriesList->CursorIndex--;
+								SeriesList->SelectedIndex--;
+							}
+							else
+							{
+								MenuList->CursorIndex--;
+								MenuList->SelectedIndex--;
+							}
 						}
 						//Down pressed
 						else if(Event->jbutton.button == 15)
 						{
-							SeriesList->CursorIndex++;
-							SeriesList->SelectedIndex++;
+							if(SeriesList->IsActive)
+							{
+								SeriesList->CursorIndex++;
+								SeriesList->SelectedIndex++;
+							}
+							else
+							{
+								MenuList->CursorIndex++;
+								MenuList->SelectedIndex++;
+							}
+						}
+						//Left or right pressed
+						else if(Event->jbutton.button == 12 || Event->jbutton.button == 14)
+						{
+							MenuList->IsActive = SeriesList->IsActive;
+							SeriesList->IsActive = !SeriesList->IsActive;
 						}
 						//A pressed
 						else if(Event->jbutton.button == 0)
 						{
-							ListSelect();
+							if(SeriesList->IsActive)
+							{
+								ListSelect();
+							}
+							else
+							{
+								*WindowState = MenuList->SelectedIndex;
+							}
 						}
 						//B pressed
 						else if(Event->jbutton.button == 1)
 						{
-							if(HasSelectedSeries)
-							{
-								//Reset some vars so we don't crash
-								SeriesList->ListingTextVec = SeriesVec;
-								SeriesList->SelectedIndex = 0;
-								SeriesList->CursorIndex = 0;
-								SeriesList->ListRenderOffset = 0;
-								HasSelectedSeries = false;
-							}
-							else *WindowState = 0;
+							//Reset some vars so we don't crash
+							SeriesList->ListingTextVec = SeriesVec;
+							SeriesList->SelectedIndex = 0;
+							SeriesList->CursorIndex = 0;
+							SeriesList->ListRenderOffset = 0;
+							HasSelectedSeries = false;
 						}
                     }
                     break;
@@ -179,6 +210,20 @@ void CreatorUI::DrawUI()
 	//Draw the UI
 	DrawHeader();
 	SeriesList->DrawList();
+	MenuList->DrawList();
+	DrawFooter();
+	//Check if list item selected via touch screen
+	if(SeriesList->ItemSelected)
+	{
+		MenuList->IsActive = false;
+		SeriesList->IsActive = true;
+	}
+	else if(MenuList->ItemSelected)
+	{
+		*WindowState = MenuList->SelectedIndex;
+		MenuList->IsActive = true;
+		SeriesList->IsActive = false;
+	}
 	
 	//Reset touch coords
 	TouchX = -1;
@@ -284,8 +329,62 @@ void CreatorUI::GetDataFromAPI(string FilterTerm)
 	JDataSize = JData["amiibo"].size();
 }
 
-bool CreatorUI::CheckButtonPressed(SDL_Rect* ButtonRect)
+void CreatorUI::DrawFooter()
 {
-	if(TouchX > ButtonRect->x && TouchX < ButtonRect->x + ButtonRect->w && TouchY > ButtonRect->y && TouchY < ButtonRect->y + ButtonRect->h) return true;
-	else return false;
+	//Draw the select footer button
+	int FooterYOffset = *Height - FooterHeight;
+	SDL_Rect SelectFooterRect = {0,FooterYOffset, *Width/2, FooterHeight};
+	string FooterText = "Select";
+	SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+	
+	//Select was pressed
+	if(CheckButtonPressed(&SelectFooterRect, TouchX, TouchY))
+	{
+		if(SeriesList->IsActive)
+		{
+			ListSelect();
+		}
+		else
+		{
+			*WindowState = MenuList->SelectedIndex;
+		}
+	}
+	
+	SDL_RenderFillRect(renderer, &SelectFooterRect);
+	
+	//Draw the text
+	SDL_Surface* SelectTextSurface = TTF_RenderUTF8_Blended_Wrapped(HeaderFont, FooterText.c_str(), TextColour, SelectFooterRect.w);
+	SDL_Texture* SelectTextTexture = SDL_CreateTextureFromSurface(renderer, SelectTextSurface);
+	SDL_Rect FooterTextRect = {(SelectFooterRect.w - SelectTextSurface->w) / 2, FooterYOffset + ((FooterHeight - SelectTextSurface->h) / 2), SelectTextSurface->w, SelectTextSurface->h};
+	SDL_RenderCopy(renderer, SelectTextTexture, NULL, &FooterTextRect);
+	//Clean up
+	SDL_DestroyTexture(SelectTextTexture);
+	SDL_FreeSurface(SelectTextSurface);
+	
+	//Draw the back footer button
+	SDL_Rect BackFooterRect = {*Width/2,FooterYOffset, *Width/2, FooterHeight};
+	FooterText = "Back";
+	SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+	
+	//Back was pressed
+	if(CheckButtonPressed(&BackFooterRect, TouchX, TouchY))
+	{
+		//Reset some vars so we don't crash
+		SeriesList->ListingTextVec = SeriesVec;
+		SeriesList->SelectedIndex = 0;
+		SeriesList->CursorIndex = 0;
+		SeriesList->ListRenderOffset = 0;
+		HasSelectedSeries = false;
+	}
+	
+	SDL_RenderFillRect(renderer, &BackFooterRect);
+	
+	//Draw the status text
+	SDL_Surface* BackTextSurface = TTF_RenderUTF8_Blended_Wrapped(HeaderFont, FooterText.c_str(), TextColour, BackFooterRect.w);
+	SDL_Texture* BackTextTexture = SDL_CreateTextureFromSurface(renderer, BackTextSurface);
+	SDL_Rect BackTextRect = {BackFooterRect.x + (BackFooterRect.w - BackTextSurface->w) / 2, FooterYOffset + ((FooterHeight - BackTextSurface->h) / 2), BackTextSurface->w, BackTextSurface->h};
+	SDL_RenderCopy(renderer, BackTextTexture, NULL, &BackTextRect);
+	//Clean up
+	SDL_DestroyTexture(BackTextTexture);
+	SDL_FreeSurface(BackTextSurface);
 }

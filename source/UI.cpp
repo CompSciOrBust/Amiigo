@@ -20,7 +20,10 @@ class ScrollList
 	SDL_Renderer *renderer;
 	TTF_Font *ListFont;
 	int ListYOffset = 0;
+	int ListXOffset = 0;
 	bool ItemSelected = false;
+	bool IsActive = false;
+	bool CenterText = false;
 };
 
 bool CheckButtonPressed(SDL_Rect* ButtonRect, int TouchX, int TouchY)
@@ -75,26 +78,44 @@ void ScrollList::DrawList()
 		//Set the background color with alternating colours
 		if(i % 2 == 1)
 		{
-			SDL_SetRenderDrawColor(renderer, 0, 184, 212, 255);
+			//Cyan A700
+			if(IsActive) SDL_SetRenderDrawColor(renderer, 0, 184, 212, 255);
+			else SDL_SetRenderDrawColor(renderer, 0, 184, 212, 255);
 		}
 		else
 		{
-			SDL_SetRenderDrawColor(renderer, 0, 229, 255, 255);
+			//Cyan A400
+			if(IsActive) SDL_SetRenderDrawColor(renderer, 0, 229, 255, 255);
+			else SDL_SetRenderDrawColor(renderer, 0, 229, 255, 255);
 		}
 		//Check if this is the highlighted file
-		if(i == CursorIndex)
+		if(i == CursorIndex && IsActive)
 		{
 			SDL_SetRenderDrawColor(renderer, 224, 247, 250, 255);
+			//Cyan 50
+			//if(IsActive) SDL_SetRenderDrawColor(renderer, 224, 247, 250, 255);
+			//else SDL_SetRenderDrawColor(renderer, 232, 234, 246, 255); //Indigo
 		}
 		
-		SDL_Rect MenuItem = {0, ListYOffset + (i * ListingHeight), ListWidth, ListingHeight};
+		SDL_Rect MenuItem = {ListXOffset, ListYOffset + (i * ListingHeight), ListWidth, ListingHeight};
 		SDL_RenderFillRect(renderer, &MenuItem);
 		
 		//Draw file names
 		SDL_Color TextColour = {0, 0, 0};
 		SDL_Surface* FileNameSurface = TTF_RenderUTF8_Blended_Wrapped(ListFont, ListingTextVec.at(i + ListRenderOffset).c_str(), TextColour, ListWidth);
 		SDL_Texture* FileNameTexture = SDL_CreateTextureFromSurface(renderer, FileNameSurface);
-		SDL_Rect AmiiboNameRect = {0, MenuItem.y + ((MenuItem.h - FileNameSurface->h) / 2), FileNameSurface->w, FileNameSurface->h};
+		//Calculate text X and Y Coords
+		int TextY = MenuItem.y + ((MenuItem.h - FileNameSurface->h) / 2);
+		int TextX = 0;
+		if(CenterText)
+		{
+			TextX = MenuItem.x + ((MenuItem.w - FileNameSurface->w) / 2);
+		}
+		else
+		{
+			TextX = MenuItem.x;
+		}
+		SDL_Rect AmiiboNameRect = {TextX, TextY, FileNameSurface->w, FileNameSurface->h};
 		SDL_RenderCopy(renderer, FileNameTexture, NULL, &AmiiboNameRect);
 		
 		//Check if option is pressed

@@ -20,7 +20,10 @@ class ScrollList
 	SDL_Renderer *renderer;
 	TTF_Font *ListFont;
 	int ListYOffset = 0;
+	int ListXOffset = 0;
 	bool ItemSelected = false;
+	bool IsActive = false;
+	bool CenterText = false;
 };
 
 bool CheckButtonPressed(SDL_Rect*, int, int);

@@ -34,14 +34,21 @@ class AmiigoUI
 	int *Width;
 	int *Height;
 	int *IsDone;
+	ScrollList *MenuList;
+	int AmiiboListWidth;
 };
 
 AmiigoUI::AmiigoUI()
 {
 	//Load the header font
 	HeaderFont = TTF_OpenFont("romfs:/font.ttf", 48);
-	//Create the list
+	//Create the lists
 	AmiiboList = new ScrollList();
+	MenuList = new ScrollList();
+	//Add items to the menu list
+	MenuList->ListingTextVec.push_back("Amiibo list");
+	MenuList->ListingTextVec.push_back("Amiigo Maker");
+	MenuList->ListingTextVec.push_back("Exit");
 	//Scan the Amiibo folder for Amiibos
 	ScanForAmiibos();
 }
@@ -57,6 +64,9 @@ void AmiigoUI::DrawUI()
 				case SDL_FINGERDOWN:
 				TouchX = Event->tfinger.x * *Width;
 				TouchY = Event->tfinger.y * *Height;
+				//Set the touch list pointers because we need them to work in both menus
+				MenuList->TouchListX = &TouchX;
+				MenuList->TouchListY = &TouchY;
 				break;
 				//TODO: Fix swiping
 				/*case SDL_FINGERMOTION:
@@ -111,19 +121,48 @@ void AmiigoUI::DrawUI()
 						//Up pressed
 						else if(Event->jbutton.button == 13)
 						{
-							AmiiboList->CursorIndex--;
-							AmiiboList->SelectedIndex--;
+							if(AmiiboList->IsActive)
+							{
+								AmiiboList->CursorIndex--;
+								AmiiboList->SelectedIndex--;
+							}
+							else
+							{
+								MenuList->CursorIndex--;
+								MenuList->SelectedIndex--;
+							}
 						}
 						//Down pressed
 						else if(Event->jbutton.button == 15)
 						{
-							AmiiboList->CursorIndex++;
-							AmiiboList->SelectedIndex++;
+							if(AmiiboList->IsActive)
+							{
+								AmiiboList->CursorIndex++;
+								AmiiboList->SelectedIndex++;
+							}
+							else
+							{
+								MenuList->CursorIndex++;
+								MenuList->SelectedIndex++;
+							}
+						}
+						//Left or right pressed
+						else if(Event->jbutton.button == 12 || Event->jbutton.button == 14)
+						{
+							MenuList->IsActive = AmiiboList->IsActive;
+							AmiiboList->IsActive = !AmiiboList->IsActive;
 						}
 						//A pressed
 						else if(Event->jbutton.button == 0)
 						{
-							SetAmiibo(AmiiboList->SelectedIndex);
+							if(AmiiboList->IsActive)
+							{
+								SetAmiibo(AmiiboList->SelectedIndex);
+							}
+							else
+							{
+								*WindowState = MenuList->SelectedIndex;
+							}
 						}
 						//B pressed so switch to Amiibo generator
 						else if(Event->jbutton.button == 1)
@@ -144,10 +183,19 @@ void AmiigoUI::DrawUI()
 	DrawHeader();
 	DrawFooter();
 	AmiiboList->DrawList();
+	MenuList->DrawList();
 	//Check if list item selected via touch screen
 	if(AmiiboList->ItemSelected)
 	{
 		SetAmiibo(AmiiboList->SelectedIndex);
+		MenuList->IsActive = false;
+		AmiiboList->IsActive = true;
+	}
+	else if(MenuList->ItemSelected)
+	{
+		*WindowState = MenuList->SelectedIndex;
+		MenuList->IsActive = true;
+		AmiiboList->IsActive = false;
 	}
 	
 	//Reset touch coords
@@ -286,18 +334,31 @@ void AmiigoUI::InitList()
 	//This crashes when in the constructor because these values aren't set yet
 	HeaderHeight = (*Height / 100) * 10;
 	FooterHeight = (*Height / 100) * 10;
+	AmiiboListWidth = (*Width / 100) * 80;
 	//Assign vars
 	AmiiboList->TouchListX = &TouchX;
 	AmiiboList->TouchListY = &TouchY;
 	AmiiboList->ListFont = TTF_OpenFont("romfs:/font.ttf", 32); //Load the list font
 	AmiiboList->ListingsOnScreen = 10;
 	AmiiboList->ListHeight = *Height - HeaderHeight - FooterHeight;
-	AmiiboList->ListWidth = *Width;
+	AmiiboList->ListWidth = AmiiboListWidth;
 	AmiiboList->ListYOffset = HeaderHeight;
 	AmiiboList->renderer = renderer;
+	AmiiboList->IsActive = true;
 	/*
 	for(int i = 0; i < Files.size(); i++)
 	{
 		AmiiboList->ListingTextVec.push_back(Files.at(i).d_name);
 	}*/
+	//Menu list
+	MenuList->TouchListX = &TouchX;
+	MenuList->TouchListY = &TouchY;
+	MenuList->ListFont = TTF_OpenFont("romfs:/font.ttf", 32); //Load the list font
+	MenuList->ListingsOnScreen = 3;
+	MenuList->ListHeight = *Height - HeaderHeight - FooterHeight;
+	MenuList->ListWidth = *Width - AmiiboListWidth;
+	MenuList->ListYOffset = HeaderHeight;
+	MenuList->ListXOffset = AmiiboListWidth;
+	MenuList->renderer = renderer;
+	MenuList->CenterText = true;
 }

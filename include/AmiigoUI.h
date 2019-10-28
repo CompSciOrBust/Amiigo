@@ -33,4 +33,6 @@ class AmiigoUI
 	int *Width;
 	int *Height;
 	int *IsDone;
+	ScrollList *MenuList;
+	int AmiiboListWidth;
 };
