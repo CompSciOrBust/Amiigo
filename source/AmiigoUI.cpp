@@ -212,6 +212,11 @@ void AmiigoUI::DrawHeader()
 	//Get the Amiibo path
 	char CurrentAmiibo[FS_MAX_PATH] = {0};
 	nfpemuGetCurrentAmiibo(CurrentAmiibo, NULL);
+	//String is empty so we need to set it to something so SDL doesn't crash
+	if(CurrentAmiibo[0] == NULL)
+	{
+		strcpy(CurrentAmiibo, "No Amiibo Selected");
+	}
 	//Draw the Amiibo path text
 	SDL_Surface* HeaderTextSurface = TTF_RenderUTF8_Blended_Wrapped(HeaderFont, CurrentAmiibo, TextColour, *Width);
 	SDL_Texture* HeaderTextTexture = SDL_CreateTextureFromSurface(renderer, HeaderTextSurface);
