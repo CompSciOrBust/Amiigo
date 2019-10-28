@@ -23,7 +23,7 @@ N3evin for [AmiiboAPI](https://github.com/N3evin/AmiiboAPI) which is used in Ami
 Everyone in the Team AtlasNX dev chat  for general help in this and other projects.
 
 ## Controls
-Up / Down on Dpad to move up and down the list.
+Up / Down on D-pad to move up and down the list.
 
 A to select a Amiibo from the list.
 
@@ -31,9 +31,11 @@ X toggles emulation state.
 
 Y moves on to the next Amiibo.
 
-B enters the Amiigo Maker. Press B again to go back to the Amiibo selection UI.
+B backs out of the Amiibo series if one is selected in Amiibo Maker.
 
-You can also use the touch screen to select an Amiibo by tapping on a item in the list, tapping the emulation status rectangle will toggle the emulation state, and tapping the currently selected Amiibo on the top rectangle will move on to the next Amiibo.
+Left or Right on the D-pad will change which menu is currently selected (used for swapping between the Amiibo list and Amiigo Maker).
+
+You can also use the touch screen to select an Amiibo by tapping on a item in the list, tapping the emulation status rectangle will toggle the emulation state, and tapping the currently selected Amiibo on the top rectangle will move on to the next Amiibo. Tapping on the right hand list options will change the menu or exit from the app.
 
 ## Support
 For support please use [the offical GBATemp thread](https://gbatemp.net/threads/amiigo-emuiibo-gui.549964/) unless you are reporting a bug in which case open a issue here on GitHub.
