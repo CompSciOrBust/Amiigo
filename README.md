@@ -1,6 +1,6 @@
 ![Logo](icon.jpg)
 # Amiigo
-A GUI for Emuiibo.
+A GUI for Emuiibo. The Emuiibo sysmodule is required in order to use Amiigo.
 
 ## Building
 To build use the latest version of [LibNX](https://github.com/switchbrew/libnx) and DevkitPro.
