@@ -34,6 +34,6 @@ B enters the Amiigo Maker. Press B again to go back to the Amiibo selection UI.
 You can also use the touch screen to select an Amiibo by tapping on a item in the list, tapping the emulation status rectangle will toggle the emulation state, and tapping the currently selected Amiibo on the top rectangle will move on to the next Amiibo.
 
 ## Screenshots
-<img src="https://raw.githubusercontent.com/CompSciOrBust/Amiigo/master/Screenshots/Screenshot_1.jpg" width="500"/> <img src="https://raw.githubusercontent.com/CompSciOrBust/Amiigo/master/Screenshots/Screenshot_2.jpg" width="500"/>
-<img src="https://raw.githubusercontent.com/CompSciOrBust/Amiigo/master/Screenshots/Screenshot_3.jpg" width="500"/> <img src="https://raw.githubusercontent.com/CompSciOrBust/Amiigo/master/Screenshots/Screenshot_4.jpg" width="500"/>
-<img src="https://raw.githubusercontent.com/CompSciOrBust/Amiigo/master/Screenshots/Screenshot_5.jpg" width="500"/> <img src="https://raw.githubusercontent.com/CompSciOrBust/Amiigo/master/Screenshots/Screenshot_6.jpg" width="500"/>
+<img src="https://raw.githubusercontent.com/CompSciOrBust/Amiigo/master/Screenshots/Screenshot_1.jpg" width="432"/> <img src="https://raw.githubusercontent.com/CompSciOrBust/Amiigo/master/Screenshots/Screenshot_2.jpg" width="432"/>
+<img src="https://raw.githubusercontent.com/CompSciOrBust/Amiigo/master/Screenshots/Screenshot_3.jpg" width="432"/> <img src="https://raw.githubusercontent.com/CompSciOrBust/Amiigo/master/Screenshots/Screenshot_4.jpg" width="432"/>
+<img src="https://raw.githubusercontent.com/CompSciOrBust/Amiigo/master/Screenshots/Screenshot_5.jpg" width="432"/> <img src="https://raw.githubusercontent.com/CompSciOrBust/Amiigo/master/Screenshots/Screenshot_6.jpg" width="432"/>
