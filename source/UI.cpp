@@ -54,6 +54,13 @@ void ScrollList::DrawList()
 		SelectedIndex = ListingTextVec.size()-1;
 		CursorIndex = ListLength;
 		ListRenderOffset = ListingTextVec.size() - ListLength-1;
+		//Don't crash if we scroll up and don't have enough items in the list to show
+		if(ListRenderOffset < 0)
+		{
+			SelectedIndex = ListingTextVec.size()-1;
+			CursorIndex = ListingTextVec.size()-1;
+			ListRenderOffset = 0;
+		}
 	}
 	else if(SelectedIndex > ListingTextVec.size()-1)
 	{

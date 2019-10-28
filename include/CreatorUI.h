@@ -1,5 +1,3 @@
-//We could probably derive this from a common UI class along with AmiigoUI but I didn't plan for that and I'm tired
-//Dear Nintendo. Don't C&D me please. Go after these guys instead amiiboapi.com.
 #include <SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <string>

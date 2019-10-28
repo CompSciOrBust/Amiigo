@@ -75,6 +75,11 @@ int main(int argc, char *argv[])
 	
 	CreatorUI *AmiigoGenUI = NULL;
 	
+	//Make the amiibo folder in case it doesn't exist
+	//Not if it exists checking first feels dirty but it doesn't error out. Should we check anyway?
+	mkdir("sdmc:/emuiibo/", 0);
+	mkdir("sdmc:/emuiibo/amiibo/", 0);
+	
     while (!done)
 	{
 		//Clear the frame

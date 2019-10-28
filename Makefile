@@ -45,7 +45,7 @@ INCLUDES	:=	include
 ROMFS	:=	romfs
 APP_TITLE := Amiigo
 APP_AUTHOR := CompSciOrBust
-APP_VERSION := 1.1
+APP_VERSION := 1.2
 
 #---------------------------------------------------------------------------------
 # options for code generation

@@ -259,9 +259,27 @@ void CreatorUI::DrawHeader()
 
 void CreatorUI::GetDataFromAPI(string FilterTerm)
 {
-	//Note we need to poke around NIFM to check that the user actually has an internet connection otherwise we'll crashes
-	string APIURI = "https://www.amiiboapi.com/api/amiibo" + FilterTerm;
-	AmiiboAPIString = RetrieveContent(APIURI, "application/json").c_str();
+	//Make the Amiigo config dir
+	mkdir("sdmc:/config/amiigo/", 0);
+	//Check we have a connection before trying to access the network
+	if(HasConnection())
+	{
+		//Get data from the api
+		string APIURI = "https://www.amiiboapi.com/api/amiibo" + FilterTerm;
+		AmiiboAPIString = RetrieveContent(APIURI, "application/json").c_str();
+		//Save the data to the SD card in case the user wants to use it offline
+        ofstream DataFileWriter("sdmc:/config/amiigo/API.json");
+        DataFileWriter << AmiiboAPIString;
+        DataFileWriter.close();
+	}
+	else
+	{
+		//No connection so load the data from the SD card
+		ifstream DataFileReader("sdmc:/config/amiigo/API.json");
+		getline(DataFileReader, AmiiboAPIString);
+		DataFileReader.close();
+	}
+	//Parse and use the JSON data
 	JData = json::parse(AmiiboAPIString);
 	JDataSize = JData["amiibo"].size();
 }

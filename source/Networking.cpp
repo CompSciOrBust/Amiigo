@@ -40,3 +40,11 @@ std::string FormatURL(std::string TextToFormat)
 	CURL *curl = curl_easy_init();
 	return curl_easy_escape(curl, TextToFormat.c_str(), 0);
 }
+
+//More stuff from Xortroll Industries
+bool HasConnection()
+{
+    u32 strg = 0;
+    nifmGetInternetConnectionStatus(NULL, &strg, NULL);
+	return (strg > 0);
+}
