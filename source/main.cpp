@@ -9,6 +9,7 @@
 #include <switch.h>
 #include <AmiigoUI.h>
 #include <CreatorUI.h>
+#include <UpdaterUI.h>
 #include <nfpemu.h>
 int main(int argc, char *argv[])
 {
@@ -59,10 +60,10 @@ int main(int argc, char *argv[])
         }
     }
 
-	romfsInit(); //Init romfs to load font
 	TTF_Init(); //Init the font
 	nfpemuInitialize(); //Init nfp ipc
-
+	plInitialize(); //Init needed for shared font
+	
 	//Give MainUI access to vars
 	AmiigoUI *MainUI = new AmiigoUI();
 	MainUI->Event = &event;
@@ -74,6 +75,7 @@ int main(int argc, char *argv[])
 	MainUI->InitList();
 	
 	CreatorUI *AmiigoGenUI = NULL;
+	UpdaterUI *UpUI = NULL;
 	
 	//Make the amiibo folder in case it doesn't exist
 	//Not if it exists checking first feels dirty but it doesn't error out. Should we check anyway?
@@ -92,7 +94,7 @@ int main(int argc, char *argv[])
 			{
 				MainUI->DrawUI();
 				//If the user has switched to the maker UI and the data isn't read show the please wait message
-				if(AmiigoGenUI == NULL && WindowState != 0)
+				if(AmiigoGenUI == NULL && WindowState == 1)
 				{
 					//Display the please wait message
 					MainUI->PleaseWait();
@@ -120,24 +122,42 @@ int main(int argc, char *argv[])
 				//Render the UI
 				AmiigoGenUI->DrawUI();
 				//If the window state has changed then we need to rescan the amiibo folder to load the new amiibos in to the list
-				if(WindowState != 1)
+				if(WindowState == 0)
 				{
 					MainUI->ScanForAmiibos();
 				}
 			}
 			break;
+			//Draw the Amiigo updater
+			case 2:
+			{
+				//Check if the UI has been initialized
+				if(UpUI == NULL)
+				{
+					UpUI = new UpdaterUI();
+					UpUI->Event = &event;
+					UpUI->WindowState = &WindowState;
+					UpUI->renderer = renderer;
+					UpUI->Width = &Width;
+					UpUI->Height = &Height;
+					UpUI->IsDone = &done;
+				}
+				UpUI->DrawUI();
+			}
+			break;
 		}
 		
 		//If exit option was selected we need to set done to 1
-		if(WindowState == 2) done = 1;
+		if(WindowState == 3) done = 1;
 
 		//Draw the frame
         SDL_RenderPresent(renderer);
     }
 
+	plExit();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
-
+	
     return 0;
 }

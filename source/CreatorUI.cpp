@@ -63,8 +63,10 @@ class CreatorUI
 CreatorUI::CreatorUI()
 {
 	nifmInitialize(); //Init nifm for connection stuff
-	HeaderFont = TTF_OpenFont("romfs:/font.ttf", 48); //Load the header font
-	ListFont = TTF_OpenFont("romfs:/font.ttf", 32); //Load the list font
+	HeaderFont = GetSharedFont(48);
+	ListFont = GetSharedFont(32);
+	//HeaderFont = TTF_OpenFont("romfs:/font.ttf", 48); //Load the header font
+	//ListFont = TTF_OpenFont("romfs:/font.ttf", 32); //Load the list font
 	GetDataFromAPI(""); //Get data from the API
 	
 	//Create the lists
@@ -104,7 +106,7 @@ void CreatorUI::InitList()
 	//Create the lists
 	SeriesList->TouchListX = &TouchX;
 	SeriesList->TouchListY = &TouchY;
-	SeriesList->ListFont = TTF_OpenFont("romfs:/font.ttf", 32); //Load the list font
+	SeriesList->ListFont = GetSharedFont(32); //Load the list font
 	SeriesList->ListingsOnScreen = 10;
 	SeriesList->ListWidth = SeriesListWidth;
 	SeriesList->renderer = renderer;
@@ -212,6 +214,7 @@ void CreatorUI::DrawUI()
 	SeriesList->DrawList();
 	MenuList->DrawList();
 	DrawFooter();
+	DrawButtonBorders(renderer, SeriesList, MenuList, HeaderHeight, FooterHeight, *Width, *Height, true);
 	//Check if list item selected via touch screen
 	if(SeriesList->ItemSelected)
 	{

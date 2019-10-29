@@ -42,10 +42,10 @@ BUILD		:=	build
 SOURCES		:=	source
 DATA		:=	data
 INCLUDES	:=	include
-ROMFS	:=	romfs
+#ROMFS	:=	romfs
 APP_TITLE := Amiigo
 APP_AUTHOR := CompSciOrBust
-APP_VERSION := 1.3.1
+APP_VERSION := 1.4.0
 
 #---------------------------------------------------------------------------------
 # options for code generation

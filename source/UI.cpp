@@ -2,6 +2,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <string>
 #include <vector>
+#include <switch.h>
 using namespace std;
 
 class ScrollList
@@ -131,4 +132,46 @@ void ScrollList::DrawList()
 		SDL_DestroyTexture(FileNameTexture);
 		SDL_FreeSurface(FileNameSurface);
 	}
+}
+
+//Thank you to Nichole Mattera for telling me how to do this
+TTF_Font *GetSharedFont(int FontSize)
+{
+	PlFontData standardFontData;
+	plGetSharedFontByType(&standardFontData, PlSharedFontType_Standard);
+	return TTF_OpenFontRW(SDL_RWFromMem(standardFontData.address, standardFontData.size), 1, FontSize);
+}
+
+void DrawButtonBorders(SDL_Renderer* renderer, ScrollList *LeftList, ScrollList *MenuList, int HeaderHeight, int FooterHeight, int Width, int Height, bool SplitFooter)
+{
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+	int BorderSize = 3;
+	//Draw border for the two lists
+	SDL_Rect BorderRect = {MenuList->ListXOffset, MenuList->ListYOffset, BorderSize, MenuList->ListHeight};
+	SDL_RenderFillRect(renderer, &BorderRect);
+	//Draw border for the header
+	BorderRect = {0, HeaderHeight, Width, BorderSize};
+	SDL_RenderFillRect(renderer, &BorderRect);
+	//Draw the menu list border
+	for(int i = 0; i < MenuList->ListingsOnScreen; i++)
+	{
+		int MenuListButtonSize = MenuList->ListHeight / MenuList->ListingsOnScreen;
+		SDL_Rect BorderRect = {MenuList->ListXOffset, MenuList->ListYOffset + (i * MenuListButtonSize), MenuList->ListWidth, BorderSize};
+		SDL_RenderFillRect(renderer, &BorderRect);
+	}
+	//Draw the left list border
+	for(int i = 1; i < LeftList->ListingsOnScreen; i++)
+	{
+		int MenuListButtonSize = LeftList->ListHeight / LeftList->ListingsOnScreen;
+		SDL_Rect BorderRect = {0, LeftList->ListYOffset + (i * MenuListButtonSize) - 1, LeftList->ListWidth, BorderSize};
+		SDL_RenderFillRect(renderer, &BorderRect);
+		if(LeftList->ListingTextVec.size() == i) break;
+	}
+	//Draw the footer border
+	BorderRect = {0, Height - FooterHeight, Width, BorderSize};
+	SDL_RenderFillRect(renderer, &BorderRect);
+	if(!SplitFooter) return;
+	//Draw the footer button border
+	BorderRect = {Width/2, Height - FooterHeight, BorderSize, Height};
+	SDL_RenderFillRect(renderer, &BorderRect);
 }

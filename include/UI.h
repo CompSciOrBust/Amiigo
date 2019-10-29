@@ -2,6 +2,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <string>
 #include <vector>
+#include <switch.h>
 using namespace std;
 
 class ScrollList
@@ -27,3 +28,5 @@ class ScrollList
 };
 
 bool CheckButtonPressed(SDL_Rect*, int, int);
+TTF_Font *GetSharedFont(int FontSize);
+void DrawButtonBorders(SDL_Renderer*, ScrollList*, ScrollList*, int, int, int, int, bool);

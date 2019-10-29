@@ -41,13 +41,16 @@ class AmiigoUI
 AmiigoUI::AmiigoUI()
 {
 	//Load the header font
-	HeaderFont = TTF_OpenFont("romfs:/font.ttf", 48);
+	//HeaderFont = TTF_OpenFont("romfs:/font.ttf", 48);
+	HeaderFont = GetSharedFont(48);
+	
 	//Create the lists
 	AmiiboList = new ScrollList();
 	MenuList = new ScrollList();
 	//Add items to the menu list
 	MenuList->ListingTextVec.push_back("Amiibo list");
 	MenuList->ListingTextVec.push_back("Amiigo Maker");
+	MenuList->ListingTextVec.push_back("Check for updates");
 	MenuList->ListingTextVec.push_back("Exit");
 	//Scan the Amiibo folder for Amiibos
 	ScanForAmiibos();
@@ -164,11 +167,6 @@ void AmiigoUI::DrawUI()
 								*WindowState = MenuList->SelectedIndex;
 							}
 						}
-						//B pressed so switch to Amiibo generator
-						else if(Event->jbutton.button == 1)
-						{
-							*WindowState = 1;
-						}
                     }
                     break;
             }
@@ -184,6 +182,8 @@ void AmiigoUI::DrawUI()
 	DrawFooter();
 	AmiiboList->DrawList();
 	MenuList->DrawList();
+	DrawButtonBorders(renderer, AmiiboList, MenuList, HeaderHeight, FooterHeight, *Width, *Height, false);
+	//DrawButtonBorders();
 	//Check if list item selected via touch screen
 	if(AmiiboList->ItemSelected)
 	{
@@ -340,10 +340,14 @@ void AmiigoUI::InitList()
 	HeaderHeight = (*Height / 100) * 10;
 	FooterHeight = (*Height / 100) * 10;
 	AmiiboListWidth = (*Width / 100) * 80;
+	//for shared font
+	PlFontData standardFontData;
+	plGetSharedFontByType(&standardFontData, PlSharedFontType_Standard);
+	
 	//Assign vars
 	AmiiboList->TouchListX = &TouchX;
 	AmiiboList->TouchListY = &TouchY;
-	AmiiboList->ListFont = TTF_OpenFont("romfs:/font.ttf", 32); //Load the list font
+	AmiiboList->ListFont = GetSharedFont(32); //Load the list font
 	AmiiboList->ListingsOnScreen = 10;
 	AmiiboList->ListHeight = *Height - HeaderHeight - FooterHeight;
 	AmiiboList->ListWidth = AmiiboListWidth;
@@ -358,8 +362,8 @@ void AmiigoUI::InitList()
 	//Menu list
 	MenuList->TouchListX = &TouchX;
 	MenuList->TouchListY = &TouchY;
-	MenuList->ListFont = TTF_OpenFont("romfs:/font.ttf", 32); //Load the list font
-	MenuList->ListingsOnScreen = 3;
+	MenuList->ListFont = GetSharedFont(32); //Load the list font
+	MenuList->ListingsOnScreen = MenuList->ListingTextVec.size();
 	MenuList->ListHeight = *Height - HeaderHeight - FooterHeight;
 	MenuList->ListWidth = *Width - AmiiboListWidth;
 	MenuList->ListYOffset = HeaderHeight;
