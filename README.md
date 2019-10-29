@@ -8,8 +8,6 @@ To build use the latest version of [LibNX](https://github.com/switchbrew/libnx) 
 ## Credits
 LibNX and DevkitPro for making the toolchain.
 
-Dalton Maag for the [Ubuntu font](https://fonts.google.com/specimen/Ubuntu).
-
 [XorTroll](https://github.com/XorTroll/) for [Emuiibo](https://github.com/XorTroll/emuiibo) and general help.
 
 nlohmann for his [JSON library](https://github.com/nlohmann/json) .
@@ -17,6 +15,8 @@ nlohmann for his [JSON library](https://github.com/nlohmann/json) .
 Victoria_Borodinova for the [sombrero](https://pixabay.com/illustrations/sombrero-hat-mexico-mexican-4280389/) used in the logo.
 
 N3evin for [AmiiboAPI](https://github.com/N3evin/AmiiboAPI) which is used in Amiigo Maker.
+
+Nichole Mattera for showing me how to load Nintendo's shared font.
 
 [Slluxx](https://github.com/Slluxx) for identifying [a crash](https://github.com/CompSciOrBust/Amiigo/commit/db6942fcdbceb55cd281822fc09f6fe93219c8e5) when no Amiibos are accessible Emuiibo and Amiigo tries to draw their path in the header and then theorizing what caused it to happen.
 
