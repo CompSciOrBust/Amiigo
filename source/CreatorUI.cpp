@@ -315,6 +315,9 @@ void CreatorUI::GetDataFromAPI(string FilterTerm)
 		//Get data from the api
 		string APIURI = "https://www.amiiboapi.com/api/amiibo" + FilterTerm;
 		AmiiboAPIString = RetrieveContent(APIURI, "application/json").c_str();
+		//Quick hack to make sure we don't overwrite a valid file with an invalid one
+		//Should fatal if invalid
+		JData = json::parse(AmiiboAPIString);
 		//Save the data to the SD card in case the user wants to use it offline
         ofstream DataFileWriter("sdmc:/config/amiigo/API.json");
         DataFileWriter << AmiiboAPIString;
