@@ -132,7 +132,7 @@ bool UpdaterUI::CheckForNewVersion()
 	//Get the release tag string from the data
 	GitAPIData = json::parse(Data);
 	//Check if GitAPI gave us a release tag otherwise we'll crash
-	if(GitAPIData.count("0") == 0)
+	if(Data.length() < 300)
 	{
 		//User is probably rate limited.
 		UpdateState = 999;
