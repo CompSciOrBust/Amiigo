@@ -76,6 +76,10 @@ void UpdaterUI::DrawUI()
 			else
 			{
 				UpdateText = "Waiting for connection.";
+				if(BPressed)
+				{
+					*WindowState = 0;
+				}
 			}
 		}
 		break;
@@ -107,6 +111,16 @@ void UpdaterUI::DrawUI()
 			*IsDone = 1;
 		}
 		break;
+		//Somethign went wrong. User should not normally end up here.
+		case 999:
+		{
+			UpdateText = "Error! Is GitHub rate limiting you?";
+			if(BPressed)
+			{
+				*WindowState = 0;
+			}
+		}
+		break;
 	}
 	DrawText(UpdateText);
 }
@@ -115,7 +129,15 @@ bool UpdaterUI::CheckForNewVersion()
 {
 	//Get data from GitHub API
 	string Data = RetrieveContent("https://api.github.com/repos/CompSciOrBust/Amiigo/releases", "application/json");
+	//Get the release tag string from the data
 	GitAPIData = json::parse(Data);
+	//Check if GitAPI gave us a release tag otherwise we'll crash
+	if(GitAPIData.count("0") == 0)
+	{
+		//User is probably rate limited.
+		UpdateState = 999;
+		return false;
+	}
     LatestID = GitAPIData[0]["tag_name"].get<std::string>();
 	//Check if we're running the latest version
 	return (LatestID != APP_VERSION);
