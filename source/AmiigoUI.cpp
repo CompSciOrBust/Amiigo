@@ -167,6 +167,15 @@ void AmiigoUI::DrawUI()
 								*WindowState = MenuList->SelectedIndex;
 							}
 						}
+						//Left stick pressed
+						else if(Event->jbutton.button == 4)
+						{
+							//Delete Amiibo. This is temporary until I have time to implement a proper menu for deleting and renaming
+							char PathToAmiibo[FS_MAX_PATH] = "sdmc:/emuiibo/amiibo/";
+							strcat(PathToAmiibo, Files.at(AmiiboList->SelectedIndex).d_name);
+							fsdevDeleteDirectoryRecursively(PathToAmiibo);
+							ScanForAmiibos();
+						}
                     }
                     break;
             }
