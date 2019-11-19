@@ -45,6 +45,7 @@ class CreatorUI
 	string AmiiboAPIString = "";
 	public:
 	CreatorUI();
+	void GetInput();
 	void DrawUI();
 	void GetDataFromAPI(string);
 	void InitList();
@@ -113,14 +114,8 @@ void CreatorUI::InitList()
 	SeriesList->ListingTextVec = SeriesVec;
 }
 
-void CreatorUI::DrawUI()
+void CreatorUI::GetInput()
 {
-	//This crashes when in the constructor for some reason
-	HeaderHeight = (*Height / 100) * 10;
-	FooterHeight = (*Height / 100) * 10;
-	ListHeight = *Height - HeaderHeight;
-	SeriesList->ListHeight = *Height - HeaderHeight - FooterHeight;
-	SeriesList->ListYOffset = HeaderHeight;
 	//Scan input
 	while (SDL_PollEvent(Event))
 		{
@@ -203,6 +198,16 @@ void CreatorUI::DrawUI()
                     break;
             }
         }
+}
+
+void CreatorUI::DrawUI()
+{
+	//This crashes when in the constructor for some reason
+	HeaderHeight = (*Height / 100) * 10;
+	FooterHeight = (*Height / 100) * 10;
+	ListHeight = *Height - HeaderHeight;
+	SeriesList->ListHeight = *Height - HeaderHeight - FooterHeight;
+	SeriesList->ListYOffset = HeaderHeight;
 		
 	//Draw the BG
 	SDL_SetRenderDrawColor(renderer, 94, 94, 94, 255);

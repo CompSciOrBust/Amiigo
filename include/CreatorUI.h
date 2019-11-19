@@ -42,6 +42,7 @@ class CreatorUI
 	string AmiiboAPIString = "";
 	public:
 	CreatorUI();
+	void GetInput();
 	void DrawUI();
 	void GetDataFromAPI(string);
 	void InitList();

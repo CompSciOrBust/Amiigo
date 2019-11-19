@@ -22,6 +22,7 @@ class AmiigoUI
 	ScrollList *AmiiboList;
 	public:
 	AmiigoUI();
+	void GetInput();
 	void DrawUI();
 	void ScanForAmiibos();
 	void PleaseWait();

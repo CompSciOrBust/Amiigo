@@ -5,6 +5,9 @@
 #include <switch.h>
 using namespace std;
 
+//Global vars
+int BorderSize = 3;
+
 class ScrollList
 {
 	public:
@@ -119,6 +122,11 @@ void ScrollList::DrawList()
 		SDL_Rect AmiiboNameRect = {TextX, TextY, FileNameSurface->w, FileNameSurface->h};
 		SDL_RenderCopy(renderer, FileNameTexture, NULL, &AmiiboNameRect);
 		
+		//Draw borders
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+		SDL_Rect BorderRect = {ListXOffset, ListYOffset + (i * ListingHeight) - 1, ListWidth, BorderSize};
+		SDL_RenderFillRect(renderer, &BorderRect);
+		
 		//Check if option is pressed
 		if(CheckButtonPressed(&MenuItem, *TouchListX, *TouchListY))
 		{
@@ -145,28 +153,12 @@ TTF_Font *GetSharedFont(int FontSize)
 void DrawButtonBorders(SDL_Renderer* renderer, ScrollList *LeftList, ScrollList *MenuList, int HeaderHeight, int FooterHeight, int Width, int Height, bool SplitFooter)
 {
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-	int BorderSize = 3;
 	//Draw border for the two lists
 	SDL_Rect BorderRect = {MenuList->ListXOffset, MenuList->ListYOffset, BorderSize, MenuList->ListHeight};
 	SDL_RenderFillRect(renderer, &BorderRect);
 	//Draw border for the header
 	BorderRect = {0, HeaderHeight, Width, BorderSize};
 	SDL_RenderFillRect(renderer, &BorderRect);
-	//Draw the menu list border
-	for(int i = 0; i < MenuList->ListingsOnScreen; i++)
-	{
-		int MenuListButtonSize = MenuList->ListHeight / MenuList->ListingsOnScreen;
-		SDL_Rect BorderRect = {MenuList->ListXOffset, MenuList->ListYOffset + (i * MenuListButtonSize), MenuList->ListWidth, BorderSize};
-		SDL_RenderFillRect(renderer, &BorderRect);
-	}
-	//Draw the left list border
-	for(int i = 1; i < LeftList->ListingsOnScreen; i++)
-	{
-		int MenuListButtonSize = LeftList->ListHeight / LeftList->ListingsOnScreen;
-		SDL_Rect BorderRect = {0, LeftList->ListYOffset + (i * MenuListButtonSize) - 1, LeftList->ListWidth, BorderSize};
-		SDL_RenderFillRect(renderer, &BorderRect);
-		if(LeftList->ListingTextVec.size() == i) break;
-	}
 	//Draw the footer border
 	BorderRect = {0, Height - FooterHeight, Width, BorderSize};
 	SDL_RenderFillRect(renderer, &BorderRect);

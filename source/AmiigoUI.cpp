@@ -23,6 +23,7 @@ class AmiigoUI
 	ScrollList *AmiiboList;
 	public:
 	AmiigoUI();
+	void GetInput();
 	void DrawUI();
 	void ScanForAmiibos();
 	void PleaseWait();
@@ -56,8 +57,8 @@ AmiigoUI::AmiigoUI()
 	ScanForAmiibos();
 }
 
-void AmiigoUI::DrawUI()
-{		
+void AmiigoUI::GetInput()
+{
 	//Scan input
 	while (SDL_PollEvent(Event))
 		{
@@ -180,7 +181,10 @@ void AmiigoUI::DrawUI()
                     break;
             }
         }
-		
+}
+
+void AmiigoUI::DrawUI()
+{		
 	//Draw the BG
 	SDL_SetRenderDrawColor(renderer, 94, 94, 94, 255);
 	SDL_Rect BGRect = {0,0, *Width, *Height};

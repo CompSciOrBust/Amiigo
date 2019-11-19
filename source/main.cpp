@@ -92,6 +92,7 @@ int main(int argc, char *argv[])
 			//Draw the main UI
 			case 0:
 			{
+				MainUI->GetInput();
 				MainUI->DrawUI();
 				//If the user has switched to the maker UI and the data isn't read show the please wait message
 				if(AmiigoGenUI == NULL && WindowState == 1)
@@ -120,6 +121,7 @@ int main(int argc, char *argv[])
 					AmiigoGenUI->MenuList = MainUI->MenuList;
 				}
 				//Render the UI
+				AmiigoGenUI->GetInput();
 				AmiigoGenUI->DrawUI();
 				//If the window state has changed then we need to rescan the amiibo folder to load the new amiibos in to the list
 				if(WindowState == 0)
