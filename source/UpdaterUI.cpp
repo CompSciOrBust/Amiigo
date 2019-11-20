@@ -28,6 +28,7 @@ class UpdaterUI
 	int *Width;
 	int *Height;
 	int *IsDone;
+	bool NewVersion;
 };
 
 UpdaterUI::UpdaterUI()
@@ -71,6 +72,7 @@ void UpdaterUI::DrawUI()
 			//Check we have a connection before trying to access the network
 			if(HasConnection())
 			{
+				NewVersion = CheckForNewVersion();
 				UpdateState++;
 			}
 			else
@@ -86,7 +88,7 @@ void UpdaterUI::DrawUI()
 		//Check if newer version stage
 		case 1:
 		{
-			if(CheckForNewVersion())
+			if(NewVersion)
 			{
 				UpdateState++;
 				UpdateText = "Downloading " + LatestID + ". This might take a while.";

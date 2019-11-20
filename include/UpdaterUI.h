@@ -14,11 +14,11 @@ class UpdaterUI
 	void DrawText(std::string);
 	int UpdateState = 0;
 	bool CheckForNewVersion();
-	std::string UpdateText = "null";
+	std::string UpdateText = " ";
 	TTF_Font *TextFont;
 	SDL_Color TextColour = {0, 0, 0};
 	json GitAPIData;
-	string latestid;
+	string LatestID;
 	public:
 	UpdaterUI();
 	void DrawUI();
@@ -28,4 +28,5 @@ class UpdaterUI
 	int *Width;
 	int *Height;
 	int *IsDone;
+	bool NewVersion;
 };
