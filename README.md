@@ -1,5 +1,5 @@
 ![Logo](icon.jpg)
-# Amiigo
+# Amiigo ![Downloads](https://img.shields.io/github/downloads/CompSciOrBust/Amiigo/total?style=for-the-badge)
 A GUI for Emuiibo. The Emuiibo sysmodule is required in order to use Amiigo.
 
 ## Building
@@ -32,6 +32,8 @@ X toggles emulation state.
 Y moves on to the next Amiibo.
 
 B backs out of the Amiibo series if one is selected in Amiibo Maker.
+
+Left stick pressed down (like a button) delete an Amiibo
 
 Left or Right on the D-pad will change which menu is currently selected (used for swapping between the Amiibo list and Amiigo Maker).
 
