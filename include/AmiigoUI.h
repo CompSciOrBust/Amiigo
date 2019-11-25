@@ -36,4 +36,5 @@ class AmiigoUI
 	int *IsDone;
 	ScrollList *MenuList;
 	int AmiiboListWidth;
+	string ListDir = "sdmc:/emuiibo/amiibo/";
 };

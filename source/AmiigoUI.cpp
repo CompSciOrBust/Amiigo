@@ -5,6 +5,7 @@
 #include <vector>
 #include <dirent.h>
 #include <UI.h>
+#include <Utils.h>
 using namespace std;
 
 class AmiigoUI
@@ -37,6 +38,7 @@ class AmiigoUI
 	int *IsDone;
 	ScrollList *MenuList;
 	int AmiiboListWidth;
+	string ListDir = "sdmc:/emuiibo/amiibo/";
 };
 
 AmiigoUI::AmiigoUI()
@@ -168,11 +170,18 @@ void AmiigoUI::GetInput()
 								*WindowState = MenuList->SelectedIndex;
 							}
 						}
+						//B pressed
+						else if(Event->jbutton.button == 1)
+						{
+							ListDir = GoUpDir(ListDir);
+							ScanForAmiibos();
+						}
 						//Left stick pressed
 						else if(Event->jbutton.button == 4)
 						{
 							//Delete Amiibo. This is temporary until I have time to implement a proper menu for deleting and renaming
-							char PathToAmiibo[FS_MAX_PATH] = "sdmc:/emuiibo/amiibo/";
+							char PathToAmiibo[FS_MAX_PATH] = ""; //Without assigning we get a random char. Why?
+							strcat(PathToAmiibo, ListDir.c_str());
 							strcat(PathToAmiibo, Files.at(AmiiboList->SelectedIndex).d_name);
 							fsdevDeleteDirectoryRecursively(PathToAmiibo);
 							ScanForAmiibos();
@@ -181,6 +190,20 @@ void AmiigoUI::GetInput()
                     break;
             }
         }
+		
+	//Check if list item selected via touch screen
+	if(AmiiboList->ItemSelected)
+	{
+		SetAmiibo(AmiiboList->SelectedIndex);
+		MenuList->IsActive = false;
+		AmiiboList->IsActive = true;
+	}
+	else if(MenuList->ItemSelected)
+	{
+		*WindowState = MenuList->SelectedIndex;
+		MenuList->IsActive = true;
+		AmiiboList->IsActive = false;
+	}
 }
 
 void AmiigoUI::DrawUI()
@@ -196,20 +219,6 @@ void AmiigoUI::DrawUI()
 	AmiiboList->DrawList();
 	MenuList->DrawList();
 	DrawButtonBorders(renderer, AmiiboList, MenuList, HeaderHeight, FooterHeight, *Width, *Height, false);
-	//DrawButtonBorders();
-	//Check if list item selected via touch screen
-	if(AmiiboList->ItemSelected)
-	{
-		SetAmiibo(AmiiboList->SelectedIndex);
-		MenuList->IsActive = false;
-		AmiiboList->IsActive = true;
-	}
-	else if(MenuList->ItemSelected)
-	{
-		*WindowState = MenuList->SelectedIndex;
-		MenuList->IsActive = true;
-		AmiiboList->IsActive = false;
-	}
 	
 	//Reset touch coords
 	TouchX = -1;
@@ -310,7 +319,7 @@ void AmiigoUI::ScanForAmiibos()
 	//Do the actual scanning
 	DIR* dir;
 	struct dirent* ent;
-	dir = opendir("sdmc:/emuiibo/amiibo/");
+	dir = opendir(ListDir.c_str());
 	while ((ent = readdir(dir)))
 	{
 		Files.push_back(*ent);
@@ -342,9 +351,19 @@ void AmiigoUI::PleaseWait()
 
 void AmiigoUI::SetAmiibo(int Index)
 {
-	char PathToAmiibo[FS_MAX_PATH] = "sdmc:/emuiibo/amiibo/";
+	char PathToAmiibo[FS_MAX_PATH] = "";
+	strcat(PathToAmiibo, ListDir.c_str());
 	strcat(PathToAmiibo, Files.at(Index).d_name);
-	nfpemuSetCustomAmiibo(PathToAmiibo);
+	//Check if Amiibo or empty folder
+	string TagPath = PathToAmiibo;
+	TagPath += "/tag.json";
+	if(CheckFileExists(TagPath))
+	{
+		ListDir = PathToAmiibo;
+		ListDir += "/";
+		ScanForAmiibos();
+	}
+	else nfpemuSetCustomAmiibo(PathToAmiibo);
 }
 
 void AmiigoUI::InitList()
