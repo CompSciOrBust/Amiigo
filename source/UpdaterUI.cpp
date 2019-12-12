@@ -33,7 +33,7 @@ class UpdaterUI
 
 UpdaterUI::UpdaterUI()
 {
-	nifmInitialize(); //Init nifm for connection stuff
+	nifmInitialize(NifmServiceType_User); //Init nifm for connection stuff
 	TextFont = GetSharedFont(48);
 }
 

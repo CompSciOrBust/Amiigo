@@ -64,7 +64,7 @@ class CreatorUI
 
 CreatorUI::CreatorUI()
 {
-	nifmInitialize(); //Init nifm for connection stuff
+	nifmInitialize(NifmServiceType_User); //Init nifm for connection stuff
 	HeaderFont = GetSharedFont(48);
 	ListFont = GetSharedFont(32);
 	//HeaderFont = TTF_OpenFont("romfs:/font.ttf", 48); //Load the header font

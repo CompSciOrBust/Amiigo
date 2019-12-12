@@ -21,7 +21,6 @@ int main(int argc, char *argv[])
 	int Width = 1280;
 	int Height = 720;
 	int WindowState = 0;
-	
     // mandatory at least on switch, else gfx is not properly closed
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
         SDL_Log("SDL_Init: %s\n", SDL_GetError());
@@ -61,8 +60,8 @@ int main(int argc, char *argv[])
     }
 
 	TTF_Init(); //Init the font
-	nfpemuInitialize(); //Init nfp ipc
 	plInitialize(); //Init needed for shared font
+	nfpemuInitialize(); //Init nfp ipc
 	
 	//Give MainUI access to vars
 	AmiigoUI *MainUI = new AmiigoUI();
@@ -81,7 +80,6 @@ int main(int argc, char *argv[])
 	//Not if it exists checking first feels dirty but it doesn't error out. Should we check anyway?
 	mkdir("sdmc:/emuiibo/", 0);
 	mkdir("sdmc:/emuiibo/amiibo/", 0);
-	
     while (!done)
 	{
 		//Clear the frame

@@ -106,7 +106,7 @@ void AmiigoUI::GetInput()
 						else if (Event->jbutton.button == 2)
 						{
                             //Get info about the current status
-							EmuEmulationStatus CurrentStatus;
+							NfpEmuEmulationStatus CurrentStatus;
 							nfpemuGetStatus(&CurrentStatus);
 							//Change Emuiibo status
 							switch(CurrentStatus)
@@ -126,7 +126,7 @@ void AmiigoUI::GetInput()
 						//Y pressed
 						else if(Event->jbutton.button == 3)
 						{
-							nfpemuMoveToNextAmiibo(NULL);
+							nfpemuMoveToNextAmiibo();
 						}
 						//Up pressed
 						else if(Event->jbutton.button == 13)
@@ -238,7 +238,7 @@ void AmiigoUI::DrawHeader()
 	//Get the Amiibo path
 	char CurrentAmiibo[FS_MAX_PATH] = {0};
 	string HeaderText = "";
-	nfpemuGetCurrentAmiibo(CurrentAmiibo, NULL);
+	nfpemuGetCurrentAmiibo(CurrentAmiibo);
 	//String is empty so we need to set it to something so SDL doesn't crash
 	if(CurrentAmiibo[0] == NULL)
 	{
@@ -278,14 +278,14 @@ void AmiigoUI::DrawHeader()
 	//Switch to next Amiibo
 	if(CheckButtonPressed(&HeaderRect, TouchX, TouchY))
 	{
-		nfpemuMoveToNextAmiibo(NULL);
+		nfpemuMoveToNextAmiibo();
 	}
 }
 
 void AmiigoUI::DrawFooter()
 {
 	//Get info about the current status
-	EmuEmulationStatus CurrentStatus;
+	NfpEmuEmulationStatus CurrentStatus;
 	nfpemuGetStatus(&CurrentStatus);
 	//Draw the footer
 	int FooterYOffset = *Height - FooterHeight;
