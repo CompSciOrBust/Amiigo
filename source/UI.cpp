@@ -126,6 +126,12 @@ void ScrollList::DrawList()
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		SDL_Rect BorderRect = {ListXOffset, ListYOffset + (i * ListingHeight) - 1, ListWidth, BorderSize};
 		SDL_RenderFillRect(renderer, &BorderRect);
+		//Check if we need to draw one more border
+		if(ListLength < ListingsOnScreen && i == ListLength - 1)
+		{
+			BorderRect = {ListXOffset, ListYOffset + (++i * ListingHeight) - 1, ListWidth, BorderSize};
+			SDL_RenderFillRect(renderer, &BorderRect);
+		}
 		
 		//Check if option is pressed
 		if(CheckButtonPressed(&MenuItem, *TouchListX, *TouchListY))

@@ -158,6 +158,7 @@ int main(int argc, char *argv[])
     }
 
 	plExit();
+	nfpemuExit();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
