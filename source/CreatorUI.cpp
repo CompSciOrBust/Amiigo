@@ -59,6 +59,7 @@ class CreatorUI
 	ScrollList *SeriesList;
 	ScrollList *MenuList;
 	int SeriesListWidth;
+	string *CurrentPath;
 };
 
 CreatorUI::CreatorUI()
@@ -244,7 +245,7 @@ void CreatorUI::ListSelect()
 	if(HasSelectedSeries)
 	{
 		int IndexInJdata = SortedAmiiboVarsVec.at(SeriesList->SelectedIndex).ListIndex;
-        string AmiiboPath = "sdmc:/emuiibo/amiibo/" + JData["amiibo"][IndexInJdata]["name"].get<std::string>();
+        string AmiiboPath = *CurrentPath + JData["amiibo"][IndexInJdata]["name"].get<std::string>();
         mkdir(AmiiboPath.c_str(), 0);
         //Write common.json
         string FilePath = AmiiboPath + "/common.json";

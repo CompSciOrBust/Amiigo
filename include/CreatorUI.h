@@ -56,4 +56,5 @@ class CreatorUI
 	ScrollList *SeriesList;
 	ScrollList *MenuList;
 	int SeriesListWidth;
+	string *CurrentPath;
 };

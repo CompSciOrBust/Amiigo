@@ -119,6 +119,7 @@ int main(int argc, char *argv[])
 					AmiigoGenUI->SeriesListWidth = MainUI->AmiiboListWidth;
 					AmiigoGenUI->InitList();
 					AmiigoGenUI->MenuList = MainUI->MenuList;
+					AmiigoGenUI->CurrentPath = &MainUI->ListDir;
 				}
 				//Render the UI
 				AmiigoGenUI->GetInput();
