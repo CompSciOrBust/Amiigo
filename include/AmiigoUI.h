@@ -4,7 +4,9 @@
 #include <vector>
 #include <dirent.h>
 #include <UI.h>
+#include "nlohmann/json.hpp"
 using namespace std;
+using json = nlohmann::json;
 
 class AmiigoUI
 {
@@ -20,6 +22,7 @@ class AmiigoUI
 	int TouchX = -1;
 	int TouchY = -1;
 	ScrollList *AmiiboList;
+	json JData;
 	public:
 	AmiigoUI();
 	void GetInput();

@@ -6,7 +6,10 @@
 #include <dirent.h>
 #include <UI.h>
 #include <Utils.h>
+#include "nlohmann/json.hpp"
+#include <fstream>
 using namespace std;
+using json = nlohmann::json;
 
 class AmiigoUI
 {
@@ -22,6 +25,7 @@ class AmiigoUI
 	int TouchX = -1;
 	int TouchY = -1;
 	ScrollList *AmiiboList;
+	json JData;
 	public:
 	AmiigoUI();
 	void GetInput();
@@ -233,14 +237,38 @@ void AmiigoUI::DrawHeader()
 	SDL_RenderFillRect(renderer, &HeaderRect);
 	//Get the Amiibo path
 	char CurrentAmiibo[FS_MAX_PATH] = {0};
+	string HeaderText = "";
 	nfpemuGetCurrentAmiibo(CurrentAmiibo, NULL);
 	//String is empty so we need to set it to something so SDL doesn't crash
 	if(CurrentAmiibo[0] == NULL)
 	{
-		strcpy(CurrentAmiibo, "No Amiibo Selected");
+		HeaderText = "No Amiibo Selected";
+	}
+	//Get the Amiibo name from the json
+	else
+	{
+		//Append the register path to the current amiibo var
+		strcat(CurrentAmiibo, "/register.json");
+		string FileContents = "";
+		ifstream FileReader(CurrentAmiibo);
+		//If the register file doesn't exist display message. This prevents a infinate loop.
+		if(!FileReader) HeaderText = "Missing register json!";
+		else //Else get the amiibo name from the json
+		{
+			//Read each line
+			for(int i = 0; !FileReader.eof(); i++)
+			{
+				string TempLine = "";
+				getline(FileReader, TempLine);
+				FileContents += TempLine;
+			}
+			//Parse the data and set the HeaderText var
+			JData = json::parse(FileContents);
+			HeaderText = JData["name"].get<std::string>();
+		}
 	}
 	//Draw the Amiibo path text
-	SDL_Surface* HeaderTextSurface = TTF_RenderUTF8_Blended_Wrapped(HeaderFont, CurrentAmiibo, TextColour, *Width);
+	SDL_Surface* HeaderTextSurface = TTF_RenderUTF8_Blended_Wrapped(HeaderFont, HeaderText.c_str(), TextColour, *Width);
 	SDL_Texture* HeaderTextTexture = SDL_CreateTextureFromSurface(renderer, HeaderTextSurface);
 	SDL_Rect HeaderTextRect = {(*Width - HeaderTextSurface->w) / 2, (HeaderHeight - HeaderTextSurface->h) / 2, HeaderTextSurface->w, HeaderTextSurface->h};
 	SDL_RenderCopy(renderer, HeaderTextTexture, NULL, &HeaderTextRect);
