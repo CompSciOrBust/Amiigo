@@ -8,6 +8,9 @@ using namespace std;
 //Global vars
 int BorderSize = 3;
 
+//Colors taken from here
+//https://material-ui.com/customization/color/
+
 class ScrollList
 {
 	public:
@@ -79,23 +82,13 @@ void ScrollList::DrawList()
 	//Draw the Amiibo list
 	for(int i = 0; i < ListLength; i++)
 	{
-		//Set the background color with alternating colours
-		if(i % 2 == 1)
-		{
-			//Cyan A700
-			if(IsActive) SDL_SetRenderDrawColor(renderer, 0, 184, 212, 255);
-			else SDL_SetRenderDrawColor(renderer, 0, 184, 212, 255);
-		}
-		else
-		{
-			//Cyan A400
-			if(IsActive) SDL_SetRenderDrawColor(renderer, 0, 229, 255, 255);
-			else SDL_SetRenderDrawColor(renderer, 0, 229, 255, 255);
-		}
+		//Set the background color
+		if(IsActive) SDL_SetRenderDrawColor(renderer, 96, 204, 204, 255);
+		else SDL_SetRenderDrawColor(renderer, 96, 204, 204, 255);
 		//Check if this is the highlighted file
 		if(i == CursorIndex && IsActive)
 		{
-			SDL_SetRenderDrawColor(renderer, 224, 247, 250, 255);
+			SDL_SetRenderDrawColor(renderer, 136, 254, 254, 255);
 			//Cyan 50
 			//if(IsActive) SDL_SetRenderDrawColor(renderer, 224, 247, 250, 255);
 			//else SDL_SetRenderDrawColor(renderer, 232, 234, 246, 255); //Indigo
