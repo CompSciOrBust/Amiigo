@@ -14,6 +14,7 @@ typedef enum {
     EmuEmulationStatus_OnForever = 0,
     EmuEmulationStatus_OnOnce = 1,
     EmuEmulationStatus_Off = 2,
+	EmuEmulationStatus_NotLoaded = 3,
 } NfpEmuEmulationStatus;
 
 typedef struct {
