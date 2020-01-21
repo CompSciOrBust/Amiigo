@@ -83,12 +83,12 @@ void ScrollList::DrawList()
 	for(int i = 0; i < ListLength; i++)
 	{
 		//Set the background color
-		if(IsActive) SDL_SetRenderDrawColor(renderer, 96, 204, 204, 255);
-		else SDL_SetRenderDrawColor(renderer, 96, 204, 204, 255);
+		if(IsActive) SDL_SetRenderDrawColor(renderer, 136, 254, 254, 255);
+		else SDL_SetRenderDrawColor(renderer, 0, 178, 212, 255);
 		//Check if this is the highlighted file
 		if(i == CursorIndex && IsActive)
 		{
-			SDL_SetRenderDrawColor(renderer, 136, 254, 254, 255);
+			SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 			//Cyan 50
 			//if(IsActive) SDL_SetRenderDrawColor(renderer, 224, 247, 250, 255);
 			//else SDL_SetRenderDrawColor(renderer, 232, 234, 246, 255); //Indigo
