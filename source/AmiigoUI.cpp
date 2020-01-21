@@ -285,7 +285,7 @@ void AmiigoUI::DrawHeader()
 void AmiigoUI::DrawFooter()
 {
 	//Get info about the current status
-	NfpEmuEmulationStatus CurrentStatus;
+	NfpEmuEmulationStatus CurrentStatus = (NfpEmuEmulationStatus)3;
 	nfpemuGetStatus(&CurrentStatus);
 	//Draw the footer
 	int FooterYOffset = *Height - FooterHeight;

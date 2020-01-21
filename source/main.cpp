@@ -61,6 +61,7 @@ int main(int argc, char *argv[])
 
 	TTF_Init(); //Init the font
 	plInitialize(); //Init needed for shared font
+	if (nfpemuIsAccessible())
 	nfpemuInitialize(); //Init nfp ipc
 	
 	//Give MainUI access to vars
