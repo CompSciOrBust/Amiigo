@@ -18,7 +18,9 @@ Result nfpemuInitialize()
 {
     atomicIncrement64(&g_refCnt);
     if(serviceIsActive(&g_nfpEmuSrv)) return 0;
+	if (nfpemuIsAccessible())
     return smGetService(&g_nfpEmuSrv, "nfp:emu");
+	return 0;
 }
 
 void nfpemuExit()
@@ -277,6 +279,7 @@ Result nfpemuMoveToNextAmiibo()
 
 Result nfpemuGetStatus(NfpEmuEmulationStatus *out)
 {
+	*out = 3;
     IpcCommand c;
     ipcInitialize(&c);
     struct {

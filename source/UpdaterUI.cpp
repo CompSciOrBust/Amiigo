@@ -142,7 +142,7 @@ bool UpdaterUI::CheckForNewVersion()
 	}
     LatestID = GitAPIData[0]["tag_name"].get<std::string>();
 	//Check if we're running the latest version
-	return (LatestID != APP_VERSION);
+	return (LatestID != VERSION);
 }
 
 void UpdaterUI::DrawText(std::string Message)

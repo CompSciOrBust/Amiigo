@@ -305,6 +305,13 @@ void AmiigoUI::DrawFooter()
 		SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
 		StatusText = "Off";
 		break;
+		case 3:
+		SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+		StatusText = "Emuiibo Not loaded";
+		break;
+		default:
+		SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+		StatusText = "Internal Error";
 	}
 	
 	//Footer was pressed so we should change the status
