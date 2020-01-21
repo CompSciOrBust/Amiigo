@@ -18,7 +18,7 @@ class UpdaterUI
 	TTF_Font *TextFont;
 	SDL_Color TextColour = {0, 0, 0};
 	json GitAPIData;
-	string LatestID;
+	std::string LatestID;
 	public:
 	UpdaterUI();
 	void DrawUI();
@@ -29,6 +29,7 @@ class UpdaterUI
 	int *Height;
 	int *IsDone;
 	bool NewVersion;
+	std::string NROPath = "sdmc:/switch/Amiigo.nro";
 };
 
 UpdaterUI::UpdaterUI()
@@ -108,8 +109,8 @@ void UpdaterUI::DrawUI()
 		{
 			string UpdateFileURL = "https://github.com/CompSciOrBust/Amiigo/releases/download/" + LatestID + "/Amiigo.nro";
 			RetrieveToFile(UpdateFileURL, "sdmc:/switch/Failed_Amiigo_Update.nro");
-			remove("sdmc:/switch/Amiigo.nro");
-			rename("sdmc:/switch/Failed_Amiigo_Update.nro", "sdmc:/switch/Amiigo.nro");
+			remove(NROPath.c_str());
+			rename("sdmc:/switch/Failed_Amiigo_Update.nro", NROPath.c_str());
 			*IsDone = 1;
 		}
 		break;

@@ -142,6 +142,7 @@ int main(int argc, char *argv[])
 					UpUI->Width = &Width;
 					UpUI->Height = &Height;
 					UpUI->IsDone = &done;
+					UpUI->NROPath = argv[0];
 				}
 				UpUI->DrawUI();
 			}

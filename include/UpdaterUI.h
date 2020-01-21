@@ -18,7 +18,7 @@ class UpdaterUI
 	TTF_Font *TextFont;
 	SDL_Color TextColour = {0, 0, 0};
 	json GitAPIData;
-	string LatestID;
+	std::string LatestID;
 	public:
 	UpdaterUI();
 	void DrawUI();
@@ -29,4 +29,5 @@ class UpdaterUI
 	int *Height;
 	int *IsDone;
 	bool NewVersion;
+	std::string NROPath = "sdmc:/switch/Amiigo.nro";
 };
