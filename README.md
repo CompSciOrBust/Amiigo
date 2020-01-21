@@ -12,11 +12,13 @@ LibNX and DevkitPro for making the toolchain.
 
 nlohmann for his [JSON library](https://github.com/nlohmann/json) .
 
-Victoria_Borodinova for the [sombrero](https://pixabay.com/illustrations/sombrero-hat-mexico-mexican-4280389/) used in the logo.
+[Kronos2308](https://github.com/Kronos2308) for writing the [code](https://github.com/CompSciOrBust/Amiigo/pull/4) for when Emuiibo isn't running.
 
 N3evin for [AmiiboAPI](https://github.com/N3evin/AmiiboAPI) which is used in Amiigo Maker.
 
 Nichole Mattera for showing me how to load Nintendo's shared font.
+
+Victoria_Borodinova for the [sombrero](https://pixabay.com/illustrations/sombrero-hat-mexico-mexican-4280389/) used in the logo.
 
 [Slluxx](https://github.com/Slluxx) for identifying [a crash](https://github.com/CompSciOrBust/Amiigo/commit/db6942fcdbceb55cd281822fc09f6fe93219c8e5) when no Amiibos are accessible Emuiibo and Amiigo tries to draw their path in the header and then theorizing what caused it to happen.
 
