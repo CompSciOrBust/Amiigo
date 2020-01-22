@@ -275,7 +275,7 @@ void CreatorUI::ListSelect()
 		//create icon
 		mkdir("sdmc:/config/amiigo/IMG/", 0);
 		string iconname = "sdmc:/config/amiigo/IMG/"+JData["amiibo"][IndexInJdata]["head"].get<std::string>()+JData["amiibo"][IndexInJdata]["tail"].get<std::string>()+".png";
-		if(CheckFileExists(iconname))
+		if(!CheckFileExists(iconname))
 		RetrieveToFile(JData["amiibo"][IndexInJdata]["image"].get<std::string>(), iconname);
 	}
 	//Add the Amiibos from the selected series to the list
@@ -297,9 +297,9 @@ void CreatorUI::ListSelect()
 			{
 				SortedAmiiboVarsVec.push_back(AmiiboVarsVec.at(i));
 				if(CheckFileExists(*CurrentPath + AmiiboVarsVec.at(i).AmiiboName +"/tag.json"))
-					SeriesList->ListingTextVec.push_back(AmiiboVarsVec.at(i).AmiiboName);
-					else
 					SeriesList->ListingTextVec.push_back(AmiiboVarsVec.at(i).AmiiboName+" *");
+					else
+					SeriesList->ListingTextVec.push_back(AmiiboVarsVec.at(i).AmiiboName);
 
 				//SeriesList->ListingTextVec.push_back(SortedAmiiboVarsVec.at(SortedAmiiboVarsVec.size()-1).AmiiboName);
 			}

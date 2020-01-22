@@ -280,14 +280,13 @@ void AmiigoUI::DrawHeader()
 			HeaderText = JData["name"].get<std::string>();
 			//load amiiboo image test 
 			string imageI = "sdmc:/config/amiigo/IMG/"+AmiiboID+".png";
-//			string imageI = "sdmc:/config/amiigo/IMG/"+JData["head"].get<std::string>()+"-"+JData["tail"].get<std::string>()+".png";
-//			if(CheckFileExists(imageI))
-//			{
+			if(CheckFileExists(imageI))
+			{
 			SDL_Surface* AIcon = IMG_Load(imageI.c_str());
 			SDL_Texture* Headericon = SDL_CreateTextureFromSurface(renderer, AIcon);
 			SDL_Rect ImagetRect = {5, 0 , 80, 70};
 			SDL_RenderCopy(renderer, Headericon , NULL, &ImagetRect);
-//			}
+			}
 		}
 	}
 	//Draw the Amiibo path text
@@ -416,7 +415,7 @@ void AmiigoUI::SetAmiibo(int Index)
 	//Check if Amiibo or empty folder
 	string TagPath = PathToAmiibo;
 	TagPath += "/tag.json";
-	if(CheckFileExists(TagPath))
+	if(!CheckFileExists(TagPath))
 	{
 		ListDir = PathToAmiibo;
 		ListDir += "/";

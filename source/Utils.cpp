@@ -2,12 +2,22 @@
 #include <string>
 #include <sys/stat.h>
 #include <cstring>
+#include <fstream>
 using namespace std;
 
 bool CheckFileExists(string Path)
 {
-	struct stat Buffer;   
-	return !(stat (Path.c_str(), &Buffer) == 0); 
+	ifstream file(Path);
+    if(file){
+	file.close();
+	return true;
+	}else{
+	file.close();
+	return false;
+	}
+
+//	struct stat Buffer;   
+//	return !(stat (Path.c_str(), &Buffer) == 0); 
 }
 
 string GoUpDir(string Path)

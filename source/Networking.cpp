@@ -98,6 +98,7 @@ void APIDownloader()
 	rename("sdmc:/config/amiigo/API.json", "sdmc:/config/amiigo/API-old.json");
 	rename("sdmc:/config/amiigo/API-D.json", "sdmc:/config/amiigo/API.json");
 	remove("sdmc:/config/amiigo/API-old.json");
+	remove("sdmc:/config/amiigo/API-D.json");
 }
 
 void IconDownloader()
