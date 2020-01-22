@@ -280,7 +280,7 @@ void AmiigoUI::DrawHeader()
 			HeaderText = JData["name"].get<std::string>();
 			//load amiiboo image test 
 			string imageI = "sdmc:/config/amiigo/IMG/"+AmiiboID+".png";
-			if(CheckFileExists(imageI)&(fsize(amiiID) == 0))
+			if(CheckFileExists(imageI)&(fsize(imageI) == 0))
 			{
 			SDL_Surface* AIcon = IMG_Load(imageI.c_str());
 			SDL_Texture* Headericon = SDL_CreateTextureFromSurface(renderer, AIcon);
