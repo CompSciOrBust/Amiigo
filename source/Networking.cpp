@@ -28,7 +28,6 @@ std::size_t CurlFileWrite(const char* in, std::size_t size, std::size_t num, FIL
 
 std::string RetrieveContent(std::string URL, std::string MIMEType)
 {
-    socketInitializeDefault();
     std::string cnt;
     CURL *curl = curl_easy_init();
     if(!MIMEType.empty())
@@ -53,7 +52,6 @@ std::string RetrieveContent(std::string URL, std::string MIMEType)
 
 void RetrieveToFile(std::string URL, std::string Path)
 {
-    socketInitializeDefault();
     FILE *f = fopen(Path.c_str(), "wb");
     if(f)
     {
@@ -84,6 +82,7 @@ std::string FormatURL(std::string TextToFormat)
 bool HasConnection()
 {
     u32 strg = 0;
+	socketInitializeDefault();
 	nifmInitialize(NifmServiceType_User);
     nifmGetInternetConnectionStatus(NULL, &strg, NULL);
 	return (strg > 0);
