@@ -11,7 +11,6 @@
 #include <vector>
 #include <UI.h>
 #include "Utils.h"
-
 using namespace std;
 using json = nlohmann::json;
 
@@ -90,7 +89,7 @@ CreatorUI::CreatorUI()
 		AmiiboVarsVec.push_back(TempAmiiboVars);
 		
 		//Loop through every element in the vector
-		for(u32 j = 0; j < SeriesVec.size(); j++)
+		for(int j = 0; j < SeriesVec.size(); j++)
 		{
 			//If the vector has the name we break the loop
 			if(SeriesVec.at(j) == SeriesName)
@@ -287,7 +286,7 @@ void CreatorUI::ListSelect()
 		string SelectedSeries = SeriesVec.at(SeriesList->SelectedIndex);
 		SeriesList->ListingTextVec.clear();
 		SortedAmiiboVarsVec.clear();
-		for(u32 i = 0; i < AmiiboVarsVec.size(); i++)
+		for(int i = 0; i < AmiiboVarsVec.size(); i++)
 		{
 			//There's something happening here
 			//What it is ain't exactly clear

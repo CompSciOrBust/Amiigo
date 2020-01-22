@@ -10,6 +10,7 @@
 #include <chrono>
 #include <thread>
 #include "Utils.h"
+
 extern int destroyer;
 //Stolen from Goldleaf
 //Thank you XOR
@@ -128,6 +129,7 @@ void APIDownloader()
 			}
 		}
 	}
+destroyer = 1;
 }
 
 void IconDownloader()

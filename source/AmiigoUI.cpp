@@ -250,44 +250,57 @@ void AmiigoUI::DrawHeader()
 	{
 		//get amiibo id
 		string AmiiboID;
+		string IDContents;
 		ifstream IDReader(std::string(CurrentAmiibo) +"/model.json");
-		if(!IDReader) HeaderText = "Missing register json!";
+		if(!IDReader) HeaderText = "Missing model json!";
 		else //Else get the amiibo name from the json
 		{
-			string TempLine = "";
-			getline(IDReader, TempLine);
-			JData = json::parse(TempLine);
+						//Read each line
+				for(int i = 0; !IDReader.eof(); i++)
+				{
+					string TempLine = "";
+					getline(IDReader, TempLine);
+					IDContents += TempLine;
+				}
+			JData = json::parse(IDContents);
 			AmiiboID = JData["amiiboId"].get<std::string>();
-		}
-		
-		//Append the register path to the current amiibo var
-		strcat(CurrentAmiibo, "/register.json");
-		string FileContents = "";
-		ifstream FileReader(CurrentAmiibo);
-		//If the register file doesn't exist display message. This prevents a infinate loop.
-		if(!FileReader) HeaderText = "Missing register json!";
-		else //Else get the amiibo name from the json
-		{
-			//Read each line
-			for(int i = 0; !FileReader.eof(); i++)
-			{
-				string TempLine = "";
-				getline(FileReader, TempLine);
-				FileContents += TempLine;
-			}
-			//Parse the data and set the HeaderText var
-			JData = json::parse(FileContents);
-			HeaderText = JData["name"].get<std::string>();
+			IDReader.close();
 			//load amiiboo image test 
-			string imageI = "sdmc:/config/amiigo/IMG/"+AmiiboID+".png";
-			if(CheckFileExists(imageI)&(fsize(imageI) == 0))
+				string imageI = "sdmc:/config/amiigo/IMG/"+AmiiboID+".png";
+				if(CheckFileExists(imageI)&(fsize(imageI) != 0))
+				{
+					SDL_Surface* AIcon = IMG_Load(imageI.c_str());
+					SDL_Texture* Headericon = SDL_CreateTextureFromSurface(renderer, AIcon);
+					SDL_Rect ImagetRect = {5, 0 , 65, 80};
+					SDL_RenderCopy(renderer, Headericon , NULL, &ImagetRect);
+					SDL_DestroyTexture(Headericon);
+					SDL_FreeSurface(AIcon);
+				}
+		}	
+				
+			//Append the register path to the current amiibo var
+			strcat(CurrentAmiibo, "/register.json");
+			string FileContents = "";
+			ifstream FileReader(CurrentAmiibo);
+			//If the register file doesn't exist display message. This prevents a infinate loop.
+			if(!FileReader) HeaderText = "Missing register json!";
+			else //Else get the amiibo name from the json
 			{
-			SDL_Surface* AIcon = IMG_Load(imageI.c_str());
-			SDL_Texture* Headericon = SDL_CreateTextureFromSurface(renderer, AIcon);
-			SDL_Rect ImagetRect = {5, 0 , 60, 80};
-			SDL_RenderCopy(renderer, Headericon , NULL, &ImagetRect);
+				//Read each line
+				for(int i = 0; !FileReader.eof(); i++)
+				{
+					string TempLine = "";
+					getline(FileReader, TempLine);
+					FileContents += TempLine;
+				}
+				FileReader.close();
+				//Parse the data and set the HeaderText var
+				JData = json::parse(FileContents);
+				HeaderText = JData["name"].get<std::string>();
+
 			}
-		}
+		
+		
 	}
 	//Draw the Amiibo path text
 	SDL_Surface* HeaderTextSurface = TTF_RenderUTF8_Blended_Wrapped(HeaderFont, HeaderText.c_str(), TextColour, *Width);

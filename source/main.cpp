@@ -16,7 +16,8 @@ int destroyer = 0;
 int main(int argc, char *argv[])
 {
 socketInitializeDefault();
-std::thread first = std::thread(APIDownloader);
+std::thread  first;
+first = std::thread(APIDownloader);
 //std::thread second = std::thread(IconDownloader);
 	//Vars
     SDL_Event event;
@@ -160,6 +161,10 @@ std::thread first = std::thread(APIDownloader);
 
 		//Draw the frame
         SDL_RenderPresent(renderer);
+		
+		//automatic join after finish	
+		if ((first.joinable())&(destroyer == 1))
+			first.join();
     }
 	
 	//join threads before exit

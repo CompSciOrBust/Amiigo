@@ -22,17 +22,8 @@ int fsize(string fil) {
 
 bool CheckFileExists(string Path)
 {
-	ifstream file(Path);
-    if(file){
-	file.close();
-	return true;
-	}else{
-	file.close();
-	return false;
-	}
-
-//	struct stat Buffer;   
-//	return !(stat (Path.c_str(), &Buffer) == 0); 
+	struct stat Buffer;   
+	return (stat (Path.c_str(), &Buffer) == 0); 
 }
 
 string GoUpDir(string Path)
