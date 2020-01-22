@@ -1,7 +1,12 @@
 #include <switch.h>
 #include <curl/curl.h>
 #include <string>
-
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include <stdlib.h>
+#include <stdio.h>
+#include <AmiigoUI.h>
 //Stolen from Goldleaf
 //Thank you XOR
 std::size_t CurlStrWrite(const char* in, std::size_t size, std::size_t num, std::string* out)
@@ -75,6 +80,20 @@ std::string FormatURL(std::string TextToFormat)
 bool HasConnection()
 {
     u32 strg = 0;
+	nifmInitialize(NifmServiceType_Admin);
     nifmGetInternetConnectionStatus(NULL, &strg, NULL);
 	return (strg > 0);
+}
+
+void APIDownloader()
+{
+mkdir("sdmc:/config/amiigo/", 0);
+if(HasConnection())
+RetrieveToFile("https://www.amiiboapi.com/api/amiibo", "sdmc:/config/amiigo/API-D.json");
+
+ifstream json("sdmc:/config/amiigo/API-D.json");
+if (json)
+remove("sdmc:/config/amiigo/API.json");
+json.close();
+rename("sdmc:/config/amiigo/API-D.json", "sdmc:/config/amiigo/API.json");
 }

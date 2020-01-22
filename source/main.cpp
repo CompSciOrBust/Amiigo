@@ -11,8 +11,11 @@
 #include <CreatorUI.h>
 #include <UpdaterUI.h>
 #include <nfpemu.h>
+#include <thread>
 int main(int argc, char *argv[])
 {
+std::thread first;
+first = std::thread(APIDownloader);
 	//Vars
     SDL_Event event;
     SDL_Window *window;
@@ -156,7 +159,7 @@ int main(int argc, char *argv[])
 		//Draw the frame
         SDL_RenderPresent(renderer);
     }
-
+	if (first.joinable()) first.join();
 	plExit();
 	nfpemuExit();
     SDL_DestroyRenderer(renderer);
