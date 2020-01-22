@@ -7,6 +7,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <AmiigoUI.h>
+#include <chrono>
+#include <thread>
+#include "Utils.h"
+
 //Stolen from Goldleaf
 //Thank you XOR
 std::size_t CurlStrWrite(const char* in, std::size_t size, std::size_t num, std::string* out)
@@ -80,20 +84,23 @@ std::string FormatURL(std::string TextToFormat)
 bool HasConnection()
 {
     u32 strg = 0;
-	nifmInitialize(NifmServiceType_Admin);
+	nifmInitialize(NifmServiceType_User);
     nifmGetInternetConnectionStatus(NULL, &strg, NULL);
 	return (strg > 0);
 }
 
 void APIDownloader()
 {
-mkdir("sdmc:/config/amiigo/", 0);
-if(HasConnection())
-RetrieveToFile("https://www.amiiboapi.com/api/amiibo", "sdmc:/config/amiigo/API-D.json");
+	mkdir("sdmc:/config/amiigo/", 0);
+	if(HasConnection())
+	RetrieveToFile("https://www.amiiboapi.com/api/amiibo", "sdmc:/config/amiigo/API-D.json");
+	if(CheckFileExists("sdmc:/config/amiigo/API-D.json"))
+	rename("sdmc:/config/amiigo/API.json", "sdmc:/config/amiigo/API-old.json");
+	rename("sdmc:/config/amiigo/API-D.json", "sdmc:/config/amiigo/API.json");
+	remove("sdmc:/config/amiigo/API-old.json");
+}
 
-ifstream json("sdmc:/config/amiigo/API-D.json");
-if (json)
-remove("sdmc:/config/amiigo/API.json");
-json.close();
-rename("sdmc:/config/amiigo/API-D.json", "sdmc:/config/amiigo/API.json");
+void IconDownloader()
+{
+	
 }

@@ -1,5 +1,6 @@
 #include <SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL_image.h>
 #include <string>
 #include <nfpemu.h>
 #include <vector>
@@ -247,6 +248,18 @@ void AmiigoUI::DrawHeader()
 	//Get the Amiibo name from the json
 	else
 	{
+		//get amiibo id
+		string AmiiboID;
+		ifstream IDReader(std::string(CurrentAmiibo) +"/model.json");
+		if(!IDReader) HeaderText = "Missing register json!";
+		else //Else get the amiibo name from the json
+		{
+			string TempLine = "";
+			getline(IDReader, TempLine);
+			JData = json::parse(TempLine);
+			AmiiboID = JData["amiiboId"].get<std::string>();
+		}
+		
 		//Append the register path to the current amiibo var
 		strcat(CurrentAmiibo, "/register.json");
 		string FileContents = "";
@@ -265,6 +278,16 @@ void AmiigoUI::DrawHeader()
 			//Parse the data and set the HeaderText var
 			JData = json::parse(FileContents);
 			HeaderText = JData["name"].get<std::string>();
+			//load amiiboo image test 
+			string imageI = "sdmc:/config/amiigo/IMG/"+AmiiboID+".png";
+//			string imageI = "sdmc:/config/amiigo/IMG/"+JData["head"].get<std::string>()+"-"+JData["tail"].get<std::string>()+".png";
+//			if(CheckFileExists(imageI))
+//			{
+			SDL_Surface* AIcon = IMG_Load(imageI.c_str());
+			SDL_Texture* Headericon = SDL_CreateTextureFromSurface(renderer, AIcon);
+			SDL_Rect ImagetRect = {5, 0 , 80, 70};
+			SDL_RenderCopy(renderer, Headericon , NULL, &ImagetRect);
+//			}
 		}
 	}
 	//Draw the Amiibo path text

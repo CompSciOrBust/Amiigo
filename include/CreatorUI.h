@@ -40,6 +40,7 @@ class CreatorUI
 	vector<AmiiboVars> AmiiboVarsVec;
 	vector<AmiiboVars> SortedAmiiboVarsVec;
 	string AmiiboAPIString = "";
+	void PleaseWait(string mensage);
 	public:
 	CreatorUI();
 	void GetInput();

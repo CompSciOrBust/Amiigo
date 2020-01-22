@@ -10,6 +10,8 @@
 #include <dirent.h>
 #include <vector>
 #include <UI.h>
+#include "Utils.h"
+
 using namespace std;
 using json = nlohmann::json;
 
@@ -43,6 +45,7 @@ class CreatorUI
 	vector<AmiiboVars> AmiiboVarsVec;
 	vector<AmiiboVars> SortedAmiiboVarsVec;
 	string AmiiboAPIString = "";
+	void PleaseWait(string mensage);
 	public:
 	CreatorUI();
 	void GetInput();
@@ -87,7 +90,7 @@ CreatorUI::CreatorUI()
 		AmiiboVarsVec.push_back(TempAmiiboVars);
 		
 		//Loop through every element in the vector
-		for(int j = 0; j < SeriesVec.size(); j++)
+		for(u32 j = 0; j < SeriesVec.size(); j++)
 		{
 			//If the vector has the name we break the loop
 			if(SeriesVec.at(j) == SeriesName)
@@ -244,6 +247,7 @@ void CreatorUI::ListSelect()
 	//Create the virtual amiibo on the SD card
 	if(HasSelectedSeries)
 	{
+		PleaseWait("Please wait, building amiibo...");
 		int IndexInJdata = SortedAmiiboVarsVec.at(SeriesList->SelectedIndex).ListIndex;
         string AmiiboPath = *CurrentPath + JData["amiibo"][IndexInJdata]["name"].get<std::string>();
         mkdir(AmiiboPath.c_str(), 0);
@@ -267,15 +271,23 @@ void CreatorUI::ListSelect()
         ofstream RegFileWriter(FilePath.c_str());
         RegFileWriter << "{\"name\": \"" + JData["amiibo"][IndexInJdata]["name"].get<std::string>() + "\",\"firstWriteDate\": \"2019-01-01\",\"miiCharInfo\": \"mii-charinfo.bin\"}";
         RegFileWriter.close();
+		
+		//create icon
+		mkdir("sdmc:/config/amiigo/IMG/", 0);
+		string iconname = "sdmc:/config/amiigo/IMG/"+JData["amiibo"][IndexInJdata]["head"].get<std::string>()+JData["amiibo"][IndexInJdata]["tail"].get<std::string>()+".png";
+		if(CheckFileExists(iconname))
+		RetrieveToFile(JData["amiibo"][IndexInJdata]["image"].get<std::string>(), iconname);
 	}
 	//Add the Amiibos from the selected series to the list
 	else
 	{
+
+
 		HasSelectedSeries = true;
 		string SelectedSeries = SeriesVec.at(SeriesList->SelectedIndex);
 		SeriesList->ListingTextVec.clear();
 		SortedAmiiboVarsVec.clear();
-		for(int i = 0; i < AmiiboVarsVec.size(); i++)
+		for(u32 i = 0; i < AmiiboVarsVec.size(); i++)
 		{
 			//There's something happening here
 			//What it is ain't exactly clear
@@ -284,7 +296,11 @@ void CreatorUI::ListSelect()
 			if(AmiiboVarsVec.at(i).AmiiboSeries == SelectedSeries)
 			{
 				SortedAmiiboVarsVec.push_back(AmiiboVarsVec.at(i));
-				SeriesList->ListingTextVec.push_back(AmiiboVarsVec.at(i).AmiiboName);
+				if(CheckFileExists(*CurrentPath + AmiiboVarsVec.at(i).AmiiboName +"/tag.json"))
+					SeriesList->ListingTextVec.push_back(AmiiboVarsVec.at(i).AmiiboName);
+					else
+					SeriesList->ListingTextVec.push_back(AmiiboVarsVec.at(i).AmiiboName+" *");
+
 				//SeriesList->ListingTextVec.push_back(SortedAmiiboVarsVec.at(SortedAmiiboVarsVec.size()-1).AmiiboName);
 			}
 		}
@@ -390,4 +406,22 @@ void CreatorUI::DrawFooter()
 	//Clean up
 	SDL_DestroyTexture(BackTextTexture);
 	SDL_FreeSurface(BackTextSurface);
+}
+
+void CreatorUI::PleaseWait(string mensage)
+{
+	//Draw the rect
+	SDL_SetRenderDrawColor(renderer, 0, 188, 212, 255);
+	SDL_Rect MessageRect = {0,0, *Width, *Height};
+	SDL_RenderFillRect(renderer, &MessageRect);
+	//Draw the please wait text
+	SDL_Surface* MessageTextSurface = TTF_RenderUTF8_Blended_Wrapped(HeaderFont, mensage.c_str(), TextColour, *Width);
+	SDL_Texture* MessagerTextTexture = SDL_CreateTextureFromSurface(renderer, MessageTextSurface);
+	SDL_Rect HeaderTextRect = {(*Width - MessageTextSurface->w) / 2, (*Height - MessageTextSurface->h) / 2, MessageTextSurface->w, MessageTextSurface->h};
+	SDL_RenderCopy(renderer, MessagerTextTexture, NULL, &HeaderTextRect);
+	//Clean up
+	SDL_DestroyTexture(MessagerTextTexture);
+	SDL_FreeSurface(MessageTextSurface);
+
+	SDL_RenderPresent(renderer);
 }

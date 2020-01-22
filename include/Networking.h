@@ -9,3 +9,4 @@ void RetrieveToFile(std::string, std::string);
 std::string FormatURL(std::string TextToFormat);
 bool HasConnection();
 void APIDownloader();
+void IconDownloader();

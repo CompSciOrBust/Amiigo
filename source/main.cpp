@@ -14,8 +14,8 @@
 #include <thread>
 int main(int argc, char *argv[])
 {
-std::thread first;
-first = std::thread(APIDownloader);
+std::thread first = std::thread(APIDownloader);
+//std::thread second = std::thread(IconDownloader);
 	//Vars
     SDL_Event event;
     SDL_Window *window;
@@ -159,7 +159,10 @@ first = std::thread(APIDownloader);
 		//Draw the frame
         SDL_RenderPresent(renderer);
     }
+	
+	//join threads before exit
 	if (first.joinable()) first.join();
+//	if (second.joinable()) second.join();
 	plExit();
 	nfpemuExit();
     SDL_DestroyRenderer(renderer);

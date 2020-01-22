@@ -62,7 +62,7 @@ CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:=	-lfreetype -lSDL2_ttf `sdl2-config --libs` `freetype-config --libs` -lcurl -lz -lmbedtls -lmbedcrypto -lmbedx509 -lnx
+LIBS	:=	-lfreetype -lSDL2_ttf -lSDL2_image `sdl2-config --libs` `freetype-config --libs` -lcurl -lz -lmbedtls -lmbedcrypto -lmbedx509 -lnx   -lSDL2_mixer -lmodplug -lmpg123 -lvorbisidec -logg  -lSDL2_gfx -lpng -ljpeg `sdl2-config --libs` `freetype-config --libs` -lcurl -lmbedtls -lmbedx509 -lmbedcrypto -lz -lnx -lopusfile -lopus -lwebp
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
