@@ -12,8 +12,10 @@
 #include <UpdaterUI.h>
 #include <nfpemu.h>
 #include <thread>
+int destroyer = 0;
 int main(int argc, char *argv[])
 {
+socketInitializeDefault();
 std::thread first = std::thread(APIDownloader);
 //std::thread second = std::thread(IconDownloader);
 	//Vars
@@ -163,13 +165,25 @@ std::thread first = std::thread(APIDownloader);
 	//join threads before exit
 	if (first.joinable())
 	{
-	socketExit();
-	nifmExit();
+	destroyer = 1;
 		MainUI->PleaseWait("Please wait, Thread is Still Working on DataBase...");
 		SDL_RenderPresent(renderer);
 		first.join();
 	}
 //	if (second.joinable()) second.join();
+	nifmExit();
+	fsdevUnmountAll();
+	pcvExit();
+	psmExit();
+	nsExit();
+	apmExit();
+	appletExit();
+	socketExit();
+	nifmExit();
+	splExit();
+	setsysExit();
+	setExit();
+
 	plExit();
 	nfpemuExit();
     SDL_DestroyRenderer(renderer);

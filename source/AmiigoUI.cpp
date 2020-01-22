@@ -284,7 +284,7 @@ void AmiigoUI::DrawHeader()
 			{
 			SDL_Surface* AIcon = IMG_Load(imageI.c_str());
 			SDL_Texture* Headericon = SDL_CreateTextureFromSurface(renderer, AIcon);
-			SDL_Rect ImagetRect = {5, 0 , 80, 70};
+			SDL_Rect ImagetRect = {5, 0 , 60, 80};
 			SDL_RenderCopy(renderer, Headericon , NULL, &ImagetRect);
 			}
 		}

@@ -10,7 +10,7 @@
 #include <chrono>
 #include <thread>
 #include "Utils.h"
-
+extern int destroyer;
 //Stolen from Goldleaf
 //Thank you XOR
 std::size_t CurlStrWrite(const char* in, std::size_t size, std::size_t num, std::string* out)
@@ -46,7 +46,6 @@ std::string RetrieveContent(std::string URL, std::string MIMEType)
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &cnt);
     curl_easy_perform(curl);
     curl_easy_cleanup(curl);
-    socketExit();
     return cnt;
 }
 
@@ -68,7 +67,6 @@ void RetrieveToFile(std::string URL, std::string Path)
         curl_easy_cleanup(curl);
     }
     fclose(f);
-    socketExit();
 }
 
 //I made this so even though it's only one two calls it's probably janky.
@@ -82,7 +80,6 @@ std::string FormatURL(std::string TextToFormat)
 bool HasConnection()
 {
     u32 strg = 0;
-	socketInitializeDefault();
 	nifmInitialize(NifmServiceType_User);
     nifmGetInternetConnectionStatus(NULL, &strg, NULL);
 	return (strg > 0);
@@ -98,6 +95,7 @@ void APIDownloader()
 	rename("sdmc:/config/amiigo/API-D.json", "sdmc:/config/amiigo/API.json");
 	remove("sdmc:/config/amiigo/API-old.json");
 	remove("sdmc:/config/amiigo/API-D.json");
+
 	mkdir("sdmc:/config/amiigo/IMG/", 0);
 	mkdir("sdmc:/config/amiigo/IMG/Cache/", 0);
 		ifstream DataFileReader("sdmc:/config/amiigo/API.json");
@@ -115,6 +113,7 @@ void APIDownloader()
 		//Get all of the Series' names and add Amiibos to the AmiiboVarsVec
 		for(int i = 0; i < JDataSize; i++)
 		{
+			if (destroyer != 0) break;
 			string amiiboicon = JData["amiibo"][i]["image"].get<std::string>();
 			string amiiID = "sdmc:/config/amiigo/IMG/"+JData["amiibo"][i]["head"].get<std::string>()+JData["amiibo"][i]["tail"].get<std::string>()+".png";
 			string amiifail = "sdmc:/config/amiigo/IMG/Cache/"+JData["amiibo"][i]["head"].get<std::string>()+JData["amiibo"][i]["tail"].get<std::string>()+".png";
