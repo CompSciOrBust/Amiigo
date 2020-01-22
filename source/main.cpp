@@ -170,20 +170,9 @@ std::thread first = std::thread(APIDownloader);
 		SDL_RenderPresent(renderer);
 		first.join();
 	}
-//	if (second.joinable()) second.join();
-	nifmExit();
-	fsdevUnmountAll();
-	pcvExit();
-	psmExit();
-	nsExit();
-	apmExit();
-	appletExit();
+
 	socketExit();
 	nifmExit();
-	splExit();
-	setsysExit();
-	setExit();
-
 	plExit();
 	nfpemuExit();
     SDL_DestroyRenderer(renderer);

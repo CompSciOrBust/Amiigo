@@ -5,6 +5,21 @@
 #include <fstream>
 using namespace std;
 
+int fsize(string fil) {
+ std::streampos fsize = 0;
+
+    std::ifstream myfile (fil, ios::in);  // File is of type const char*
+
+    fsize = myfile.tellg();         // The file pointer is currently at the beginning
+    myfile.seekg(0, ios::end);      // Place the file pointer at the end of file
+
+    fsize = myfile.tellg() - fsize;
+    myfile.close();
+
+    static_assert(sizeof(fsize) >= sizeof(long long), "Oops.");
+    return fsize;
+}
+
 bool CheckFileExists(string Path)
 {
 	ifstream file(Path);

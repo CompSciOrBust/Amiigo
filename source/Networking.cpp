@@ -117,6 +117,10 @@ void APIDownloader()
 			string amiiboicon = JData["amiibo"][i]["image"].get<std::string>();
 			string amiiID = "sdmc:/config/amiigo/IMG/"+JData["amiibo"][i]["head"].get<std::string>()+JData["amiibo"][i]["tail"].get<std::string>()+".png";
 			string amiifail = "sdmc:/config/amiigo/IMG/Cache/"+JData["amiibo"][i]["head"].get<std::string>()+JData["amiibo"][i]["tail"].get<std::string>()+".png";
+			
+			if((CheckFileExists(amiiID))&(fsize(amiiID) == 0))
+			remove(amiiID.c_str());
+		
 			if(!CheckFileExists(amiiID))
 			{
 				RetrieveToFile(amiiboicon, amiifail);
