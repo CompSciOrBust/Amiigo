@@ -99,11 +99,12 @@ void APIDownloader()
 	rename("sdmc:/config/amiigo/API-D.json", "sdmc:/config/amiigo/API.json");
 	remove("sdmc:/config/amiigo/API-old.json");
 	remove("sdmc:/config/amiigo/API-D.json");
+	mkdir("sdmc:/config/amiigo/IMG/", 0);
+	mkdir("sdmc:/config/amiigo/IMG/Cache/", 0);
 		ifstream DataFileReader("sdmc:/config/amiigo/API.json");
 		string AmiiboAPIString;
 		getline(DataFileReader, AmiiboAPIString);
 		DataFileReader.close();		
-
 	if(json::accept(AmiiboAPIString))
 	{
 		//Parse and use the JSON data
@@ -117,8 +118,12 @@ void APIDownloader()
 		{
 			string amiiboicon = JData["amiibo"][i]["image"].get<std::string>();
 			string amiiID = "sdmc:/config/amiigo/IMG/"+JData["amiibo"][i]["head"].get<std::string>()+JData["amiibo"][i]["tail"].get<std::string>()+".png";
-		if(!CheckFileExists(amiiID))
-		RetrieveToFile(amiiboicon, amiiID);
+			string amiifail = "sdmc:/config/amiigo/IMG/Cache/"+JData["amiibo"][i]["head"].get<std::string>()+JData["amiibo"][i]["tail"].get<std::string>()+".png";
+			if(!CheckFileExists(amiiID))
+			{
+				RetrieveToFile(amiiboicon, amiifail);
+				rename(amiifail.c_str(), amiiID.c_str());
+			}
 		}
 	}
 }

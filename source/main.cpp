@@ -163,7 +163,7 @@ std::thread first = std::thread(APIDownloader);
 	//join threads before exit
 	if (first.joinable())
 	{
-		MainUI->PleaseWait("Please wait Thread is still Working...");
+		MainUI->PleaseWait("Please wait, Thread is Still Working on DataBase...");
 		SDL_RenderPresent(renderer);
 		first.join();
 	}
