@@ -100,7 +100,7 @@ std::thread first = std::thread(APIDownloader);
 				if(AmiigoGenUI == NULL && WindowState == 1)
 				{
 					//Display the please wait message
-					MainUI->PleaseWait();
+					MainUI->PleaseWait("Please wait while we get data from the Amiibo API...");
 				}
 			}
 			break;
@@ -161,7 +161,12 @@ std::thread first = std::thread(APIDownloader);
     }
 	
 	//join threads before exit
-	if (first.joinable()) first.join();
+	if (first.joinable())
+	{
+		MainUI->PleaseWait("Please wait Thread is still Working...");
+		SDL_RenderPresent(renderer);
+		first.join();
+	}
 //	if (second.joinable()) second.join();
 	plExit();
 	nfpemuExit();

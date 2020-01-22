@@ -99,6 +99,28 @@ void APIDownloader()
 	rename("sdmc:/config/amiigo/API-D.json", "sdmc:/config/amiigo/API.json");
 	remove("sdmc:/config/amiigo/API-old.json");
 	remove("sdmc:/config/amiigo/API-D.json");
+		ifstream DataFileReader("sdmc:/config/amiigo/API.json");
+		string AmiiboAPIString;
+		getline(DataFileReader, AmiiboAPIString);
+		DataFileReader.close();		
+
+	if(json::accept(AmiiboAPIString))
+	{
+		//Parse and use the JSON data
+		json JData;
+		int JDataSize = 0;
+		JData = json::parse(AmiiboAPIString);
+		JDataSize = JData["amiibo"].size();
+		
+		//Get all of the Series' names and add Amiibos to the AmiiboVarsVec
+		for(int i = 0; i < JDataSize; i++)
+		{
+			string amiiboicon = JData["amiibo"][i]["image"].get<std::string>();
+			string amiiID = "sdmc:/config/amiigo/IMG/"+JData["amiibo"][i]["head"].get<std::string>()+JData["amiibo"][i]["tail"].get<std::string>()+".png";
+		if(!CheckFileExists(amiiID))
+		RetrieveToFile(amiiboicon, amiiID);
+		}
+	}
 }
 
 void IconDownloader()

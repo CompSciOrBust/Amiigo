@@ -28,7 +28,7 @@ class AmiigoUI
 	void GetInput();
 	void DrawUI();
 	void ScanForAmiibos();
-	void PleaseWait();
+	void PleaseWait(string mensage);
 	void InitList();
 	void SetAmiibo(int);
 	SDL_Event *Event;

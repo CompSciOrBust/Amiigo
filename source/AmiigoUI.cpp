@@ -32,7 +32,7 @@ class AmiigoUI
 	void GetInput();
 	void DrawUI();
 	void ScanForAmiibos();
-	void PleaseWait();
+	void PleaseWait(string mensage);
 	void InitList();
 	void SetAmiibo(int);
 	SDL_Event *Event;
@@ -391,14 +391,14 @@ void AmiigoUI::ScanForAmiibos()
 	}
 }
 
-void AmiigoUI::PleaseWait()
+void AmiigoUI::PleaseWait(string mensage)
 {
 	//Draw the rect
 	SDL_SetRenderDrawColor(renderer, 0, 188, 212, 255);
 	SDL_Rect MessageRect = {0,0, *Width, *Height};
 	SDL_RenderFillRect(renderer, &MessageRect);
 	//Draw the please wait text
-	SDL_Surface* MessageTextSurface = TTF_RenderUTF8_Blended_Wrapped(HeaderFont, "Please wait while we get data from the Amiibo API...", TextColour, *Width);
+	SDL_Surface* MessageTextSurface = TTF_RenderUTF8_Blended_Wrapped(HeaderFont, mensage.c_str(), TextColour, *Width);
 	SDL_Texture* MessagerTextTexture = SDL_CreateTextureFromSurface(renderer, MessageTextSurface);
 	SDL_Rect HeaderTextRect = {(*Width - MessageTextSurface->w) / 2, (*Height - MessageTextSurface->h) / 2, MessageTextSurface->w, MessageTextSurface->h};
 	SDL_RenderCopy(renderer, MessagerTextTexture, NULL, &HeaderTextRect);
