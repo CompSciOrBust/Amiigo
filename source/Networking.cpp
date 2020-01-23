@@ -1,7 +1,17 @@
 #include <switch.h>
 #include <curl/curl.h>
 #include <string>
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include <stdlib.h>
+#include <stdio.h>
+#include <AmiigoUI.h>
+#include <chrono>
+#include <thread>
+#include "Utils.h"
 
+extern int destroyer;
 //Stolen from Goldleaf
 //Thank you XOR
 std::size_t CurlStrWrite(const char* in, std::size_t size, std::size_t num, std::string* out)
@@ -19,7 +29,6 @@ std::size_t CurlFileWrite(const char* in, std::size_t size, std::size_t num, FIL
 
 std::string RetrieveContent(std::string URL, std::string MIMEType)
 {
-    socketInitializeDefault();
     std::string cnt;
     CURL *curl = curl_easy_init();
     if(!MIMEType.empty())
@@ -38,13 +47,11 @@ std::string RetrieveContent(std::string URL, std::string MIMEType)
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &cnt);
     curl_easy_perform(curl);
     curl_easy_cleanup(curl);
-    socketExit();
     return cnt;
 }
 
 void RetrieveToFile(std::string URL, std::string Path)
 {
-    socketInitializeDefault();
     FILE *f = fopen(Path.c_str(), "wb");
     if(f)
     {
@@ -61,7 +68,6 @@ void RetrieveToFile(std::string URL, std::string Path)
         curl_easy_cleanup(curl);
     }
     fclose(f);
-    socketExit();
 }
 
 //I made this so even though it's only one two calls it's probably janky.
@@ -75,6 +81,58 @@ std::string FormatURL(std::string TextToFormat)
 bool HasConnection()
 {
     u32 strg = 0;
+	nifmInitialize(NifmServiceType_User);
     nifmGetInternetConnectionStatus(NULL, &strg, NULL);
 	return (strg > 0);
+}
+
+void APIDownloader()
+{
+	mkdir("sdmc:/config/amiigo/", 0);
+	if(HasConnection())
+	RetrieveToFile("https://www.amiiboapi.com/api/amiibo", "sdmc:/config/amiigo/API-D.json");
+	if(CheckFileExists("sdmc:/config/amiigo/API-D.json"))
+	rename("sdmc:/config/amiigo/API.json", "sdmc:/config/amiigo/API-old.json");
+	rename("sdmc:/config/amiigo/API-D.json", "sdmc:/config/amiigo/API.json");
+	remove("sdmc:/config/amiigo/API-old.json");
+	remove("sdmc:/config/amiigo/API-D.json");
+
+	mkdir("sdmc:/config/amiigo/IMG/", 0);
+	mkdir("sdmc:/config/amiigo/IMG/Cache/", 0);
+		ifstream DataFileReader("sdmc:/config/amiigo/API.json");
+		string AmiiboAPIString;
+		getline(DataFileReader, AmiiboAPIString);
+		DataFileReader.close();		
+	if(json::accept(AmiiboAPIString))
+	{
+		//Parse and use the JSON data
+		json JData;
+		int JDataSize = 0;
+		JData = json::parse(AmiiboAPIString);
+		JDataSize = JData["amiibo"].size();
+		
+		//Get all of the Series' names and add Amiibos to the AmiiboVarsVec
+		for(int i = 0; i < JDataSize; i++)
+		{
+			if (destroyer != 0) break;
+			string amiiboicon = JData["amiibo"][i]["image"].get<std::string>();
+			string amiiID = "sdmc:/config/amiigo/IMG/"+JData["amiibo"][i]["head"].get<std::string>()+JData["amiibo"][i]["tail"].get<std::string>()+".png";
+			string amiifail = "sdmc:/config/amiigo/IMG/Cache/"+JData["amiibo"][i]["head"].get<std::string>()+JData["amiibo"][i]["tail"].get<std::string>()+".png";
+			
+			if((CheckFileExists(amiiID))&(fsize(amiiID) == 0))
+			remove(amiiID.c_str());
+		
+			if(!CheckFileExists(amiiID))
+			{
+				RetrieveToFile(amiiboicon, amiifail);
+				rename(amiifail.c_str(), amiiID.c_str());
+			}
+		}
+	}
+destroyer = 1;
+}
+
+void IconDownloader()
+{
+	
 }

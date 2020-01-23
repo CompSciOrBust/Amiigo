@@ -2,7 +2,7 @@
 #include <SDL.h>
 #include <SDL2/SDL_ttf.h>
 //#include <UI.h>
-#include "networking.h"
+#include "Networking.h"
 #include "nlohmann/json.hpp"
 #include <fstream>
 using namespace std;

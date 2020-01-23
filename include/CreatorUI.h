@@ -2,7 +2,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <string>
 #include "nlohmann/json.hpp"
-#include "networking.h"
+#include "Networking.h"
 #include <fstream>
 #include <dirent.h>
 #include <vector>
@@ -40,6 +40,7 @@ class CreatorUI
 	vector<AmiiboVars> AmiiboVarsVec;
 	vector<AmiiboVars> SortedAmiiboVarsVec;
 	string AmiiboAPIString = "";
+	void PleaseWait(string mensage);
 	public:
 	CreatorUI();
 	void GetInput();

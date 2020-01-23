@@ -1,5 +1,6 @@
 #include <SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL_image.h>
 #include <string>
 #include <nfpemu.h>
 #include <vector>
@@ -10,6 +11,8 @@
 #include <fstream>
 using namespace std;
 using json = nlohmann::json;
+SDL_Surface* AIcon;//surface buffer to amiibo image
+int dctut = 1; //load image triger
 
 class AmiigoUI
 {
@@ -31,7 +34,7 @@ class AmiigoUI
 	void GetInput();
 	void DrawUI();
 	void ScanForAmiibos();
-	void PleaseWait();
+	void PleaseWait(string mensage);
 	void InitList();
 	void SetAmiibo(int);
 	SDL_Event *Event;
@@ -247,10 +250,44 @@ void AmiigoUI::DrawHeader()
 	//Get the Amiibo name from the json
 	else
 	{
+		//get amiibo id
+		string AmiiboID;
+		string IDContents;
+		ifstream IDReader(std::string(CurrentAmiibo) +"/model.json");
+		if(!IDReader) HeaderText = "Missing model json!";
+		else //Else get the amiibo name from the json
+		{
+			if(dctut > 0)//load image triger
+			{
+				//Read each line
+				for(int i = 0; !IDReader.eof(); i++)
+				{
+					string TempLine = "";
+					getline(IDReader, TempLine);
+					IDContents += TempLine;
+				}
+				IDReader.close();
+				if(json::accept(IDContents))
+				{
+					JData = json::parse(IDContents);
+					AmiiboID = JData["amiiboId"].get<std::string>();
+				}
+				
+				//load amiiboo image test
+				string imageI = "sdmc:/config/amiigo/IMG/"+AmiiboID+".png";
+				if(CheckFileExists(imageI)&(fsize(imageI) != 0)) //need be optimized
+				{
+						dctut = 0;//set image triger off
+						AIcon = IMG_Load(imageI.c_str());
+									
+				}else AIcon = NULL;//empty icon
+			}
+		}
+		
 		//Append the register path to the current amiibo var
 		strcat(CurrentAmiibo, "/register.json");
 		string FileContents = "";
-		ifstream FileReader(CurrentAmiibo);
+			ifstream FileReader(CurrentAmiibo);
 		//If the register file doesn't exist display message. This prevents a infinate loop.
 		if(!FileReader) HeaderText = "Missing register json!";
 		else //Else get the amiibo name from the json
@@ -262,11 +299,24 @@ void AmiigoUI::DrawHeader()
 				getline(FileReader, TempLine);
 				FileContents += TempLine;
 			}
+			FileReader.close();
 			//Parse the data and set the HeaderText var
-			JData = json::parse(FileContents);
-			HeaderText = JData["name"].get<std::string>();
+		
+			if(json::accept(FileContents))
+			{
+				JData = json::parse(FileContents);
+				HeaderText = JData["name"].get<std::string>();
+			}else HeaderText = "register.json bad sintax";
 		}
+
+
 	}
+	//draw amiibo image
+				SDL_Texture* Headericon = SDL_CreateTextureFromSurface(renderer, AIcon);
+				SDL_Rect ImagetRect = {5, 0 , 65, 80};
+				SDL_RenderCopy(renderer, Headericon , NULL, &ImagetRect);
+				SDL_DestroyTexture(Headericon);
+				
 	//Draw the Amiibo path text
 	SDL_Surface* HeaderTextSurface = TTF_RenderUTF8_Blended_Wrapped(HeaderFont, HeaderText.c_str(), TextColour, *Width);
 	SDL_Texture* HeaderTextTexture = SDL_CreateTextureFromSurface(renderer, HeaderTextSurface);
@@ -369,14 +419,14 @@ void AmiigoUI::ScanForAmiibos()
 	}
 }
 
-void AmiigoUI::PleaseWait()
+void AmiigoUI::PleaseWait(string mensage)
 {
 	//Draw the rect
 	SDL_SetRenderDrawColor(renderer, 0, 188, 212, 255);
 	SDL_Rect MessageRect = {0,0, *Width, *Height};
 	SDL_RenderFillRect(renderer, &MessageRect);
 	//Draw the please wait text
-	SDL_Surface* MessageTextSurface = TTF_RenderUTF8_Blended_Wrapped(HeaderFont, "Please wait while we get data from the Amiibo API...", TextColour, *Width);
+	SDL_Surface* MessageTextSurface = TTF_RenderUTF8_Blended_Wrapped(HeaderFont, mensage.c_str(), TextColour, *Width);
 	SDL_Texture* MessagerTextTexture = SDL_CreateTextureFromSurface(renderer, MessageTextSurface);
 	SDL_Rect HeaderTextRect = {(*Width - MessageTextSurface->w) / 2, (*Height - MessageTextSurface->h) / 2, MessageTextSurface->w, MessageTextSurface->h};
 	SDL_RenderCopy(renderer, MessagerTextTexture, NULL, &HeaderTextRect);
@@ -393,13 +443,17 @@ void AmiigoUI::SetAmiibo(int Index)
 	//Check if Amiibo or empty folder
 	string TagPath = PathToAmiibo;
 	TagPath += "/tag.json";
-	if(CheckFileExists(TagPath))
+	if(!CheckFileExists(TagPath))
 	{
 		ListDir = PathToAmiibo;
 		ListDir += "/";
 		ScanForAmiibos();
 	}
-	else nfpemuSetCustomAmiibo(PathToAmiibo);
+	else 
+	{
+		nfpemuSetCustomAmiibo(PathToAmiibo);
+		dctut = 1;//reload signal for the image
+	}
 }
 
 void AmiigoUI::InitList()

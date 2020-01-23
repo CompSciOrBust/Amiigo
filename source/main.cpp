@@ -11,8 +11,14 @@
 #include <CreatorUI.h>
 #include <UpdaterUI.h>
 #include <nfpemu.h>
+#include <thread>
+int destroyer = 0;
 int main(int argc, char *argv[])
 {
+socketInitializeDefault();
+std::thread  first;
+first = std::thread(APIDownloader);
+//std::thread second = std::thread(IconDownloader);
 	//Vars
     SDL_Event event;
     SDL_Window *window;
@@ -97,7 +103,7 @@ int main(int argc, char *argv[])
 				if(AmiigoGenUI == NULL && WindowState == 1)
 				{
 					//Display the please wait message
-					MainUI->PleaseWait();
+					MainUI->PleaseWait("Please wait while we get data from the Amiibo API...");
 				}
 			}
 			break;
@@ -155,8 +161,23 @@ int main(int argc, char *argv[])
 
 		//Draw the frame
         SDL_RenderPresent(renderer);
+		
+		//automatic join after finish	
+		if ((first.joinable())&(destroyer == 1))
+			first.join();
     }
+	
+	//join threads before exit
+	if (first.joinable())
+	{
+	destroyer = 1;
+		MainUI->PleaseWait("Please wait, Thread is Still Working on DataBase...");
+		SDL_RenderPresent(renderer);
+		first.join();
+	}
 
+	socketExit();
+	nifmExit();
 	plExit();
 	nfpemuExit();
     SDL_DestroyRenderer(renderer);
