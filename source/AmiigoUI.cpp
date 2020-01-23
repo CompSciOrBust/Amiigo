@@ -262,12 +262,16 @@ void AmiigoUI::DrawHeader()
 					getline(IDReader, TempLine);
 					IDContents += TempLine;
 				}
-			JData = json::parse(IDContents);
-			AmiiboID = JData["amiiboId"].get<std::string>();
 			IDReader.close();
-			//load amiiboo image test 
+			if(json::accept(IDContents))
+			{
+				JData = json::parse(IDContents);
+				AmiiboID = JData["amiiboId"].get<std::string>();
+			}
+			
+				//load amiiboo image test
 				string imageI = "sdmc:/config/amiigo/IMG/"+AmiiboID+".png";
-				if(CheckFileExists(imageI)&(fsize(imageI) != 0))
+				if(CheckFileExists(imageI)&(fsize(imageI) != 0)) //need be optimized
 				{
 					SDL_Surface* AIcon = IMG_Load(imageI.c_str());
 					SDL_Texture* Headericon = SDL_CreateTextureFromSurface(renderer, AIcon);
@@ -276,31 +280,33 @@ void AmiigoUI::DrawHeader()
 					SDL_DestroyTexture(Headericon);
 					SDL_FreeSurface(AIcon);
 				}
-		}	
+		}
 				
-			//Append the register path to the current amiibo var
-			strcat(CurrentAmiibo, "/register.json");
-			string FileContents = "";
+		//Append the register path to the current amiibo var
+		strcat(CurrentAmiibo, "/register.json");
+		string FileContents = "";
 			ifstream FileReader(CurrentAmiibo);
-			//If the register file doesn't exist display message. This prevents a infinate loop.
-			if(!FileReader) HeaderText = "Missing register json!";
-			else //Else get the amiibo name from the json
+		//If the register file doesn't exist display message. This prevents a infinate loop.
+		if(!FileReader) HeaderText = "Missing register json!";
+		else //Else get the amiibo name from the json
+		{
+			//Read each line
+			for(int i = 0; !FileReader.eof(); i++)
 			{
-				//Read each line
-				for(int i = 0; !FileReader.eof(); i++)
-				{
-					string TempLine = "";
-					getline(FileReader, TempLine);
-					FileContents += TempLine;
-				}
-				FileReader.close();
-				//Parse the data and set the HeaderText var
+				string TempLine = "";
+				getline(FileReader, TempLine);
+				FileContents += TempLine;
+			}
+			FileReader.close();
+			//Parse the data and set the HeaderText var
+		
+			if(json::accept(IDContents))
+			{
 				JData = json::parse(FileContents);
 				HeaderText = JData["name"].get<std::string>();
+			}else HeaderText = "register.json bad sintax";
+		}
 
-			}
-		
-		
 	}
 	//Draw the Amiibo path text
 	SDL_Surface* HeaderTextSurface = TTF_RenderUTF8_Blended_Wrapped(HeaderFont, HeaderText.c_str(), TextColour, *Width);
