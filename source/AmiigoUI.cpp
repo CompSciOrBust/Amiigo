@@ -11,6 +11,8 @@
 #include <fstream>
 using namespace std;
 using json = nlohmann::json;
+SDL_Surface* AIcon;//surface buffer to amiibo image
+int dctut = 1; //load image triger
 
 class AmiigoUI
 {
@@ -255,33 +257,33 @@ void AmiigoUI::DrawHeader()
 		if(!IDReader) HeaderText = "Missing model json!";
 		else //Else get the amiibo name from the json
 		{
-						//Read each line
+			if(dctut > 0)//load image triger
+			{
+				//Read each line
 				for(int i = 0; !IDReader.eof(); i++)
 				{
 					string TempLine = "";
 					getline(IDReader, TempLine);
 					IDContents += TempLine;
 				}
-			IDReader.close();
-			if(json::accept(IDContents))
-			{
-				JData = json::parse(IDContents);
-				AmiiboID = JData["amiiboId"].get<std::string>();
-			}
-			
+				IDReader.close();
+				if(json::accept(IDContents))
+				{
+					JData = json::parse(IDContents);
+					AmiiboID = JData["amiiboId"].get<std::string>();
+				}
+				
 				//load amiiboo image test
 				string imageI = "sdmc:/config/amiigo/IMG/"+AmiiboID+".png";
 				if(CheckFileExists(imageI)&(fsize(imageI) != 0)) //need be optimized
 				{
-					SDL_Surface* AIcon = IMG_Load(imageI.c_str());
-					SDL_Texture* Headericon = SDL_CreateTextureFromSurface(renderer, AIcon);
-					SDL_Rect ImagetRect = {5, 0 , 65, 80};
-					SDL_RenderCopy(renderer, Headericon , NULL, &ImagetRect);
-					SDL_DestroyTexture(Headericon);
-					SDL_FreeSurface(AIcon);
+						dctut = 0;//set image triger off
+						AIcon = IMG_Load(imageI.c_str());
+									
 				}
+			}
 		}
-				
+		
 		//Append the register path to the current amiibo var
 		strcat(CurrentAmiibo, "/register.json");
 		string FileContents = "";
@@ -300,14 +302,21 @@ void AmiigoUI::DrawHeader()
 			FileReader.close();
 			//Parse the data and set the HeaderText var
 		
-			if(json::accept(IDContents))
+			if(json::accept(FileContents))
 			{
 				JData = json::parse(FileContents);
 				HeaderText = JData["name"].get<std::string>();
 			}else HeaderText = "register.json bad sintax";
 		}
 
+
 	}
+	//draw amiibo image
+				SDL_Texture* Headericon = SDL_CreateTextureFromSurface(renderer, AIcon);
+				SDL_Rect ImagetRect = {5, 0 , 65, 80};
+				SDL_RenderCopy(renderer, Headericon , NULL, &ImagetRect);
+				SDL_DestroyTexture(Headericon);
+				
 	//Draw the Amiibo path text
 	SDL_Surface* HeaderTextSurface = TTF_RenderUTF8_Blended_Wrapped(HeaderFont, HeaderText.c_str(), TextColour, *Width);
 	SDL_Texture* HeaderTextTexture = SDL_CreateTextureFromSurface(renderer, HeaderTextSurface);
@@ -440,7 +449,11 @@ void AmiigoUI::SetAmiibo(int Index)
 		ListDir += "/";
 		ScanForAmiibos();
 	}
-	else nfpemuSetCustomAmiibo(PathToAmiibo);
+	else 
+	{
+		nfpemuSetCustomAmiibo(PathToAmiibo);
+		dctut = 1;//reload signal for the image
+	}
 }
 
 void AmiigoUI::InitList()
