@@ -280,7 +280,7 @@ void AmiigoUI::DrawHeader()
 						dctut = 0;//set image triger off
 						AIcon = IMG_Load(imageI.c_str());
 									
-				}
+				}else AIcon = NULL;//empty icon
 			}
 		}
 		
