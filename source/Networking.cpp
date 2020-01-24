@@ -117,6 +117,7 @@ void Scandownload(string folder)
 			{
 				JEData = json::parse(IDContents);
 				AmiiboID = JEData["amiiboId"].get<std::string>();
+				std::transform(AmiiboID.begin(),AmiiboID.end(),AmiiboID.begin(),::tolower);
 			}
 					
 			string imageI = "sdmc:/config/amiigo/IMG/"+AmiiboID+".png";
