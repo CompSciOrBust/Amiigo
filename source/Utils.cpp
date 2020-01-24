@@ -40,3 +40,21 @@ string GoUpDir(string Path)
 	}
 	return CurrentPath;
 }
+
+/*
+* copy function
+*/
+bool copy_me(string origen, string destino) {
+    if(CheckFileExists(origen))
+	{
+		ifstream source(origen, ios::binary);
+		ofstream dest(destino, ios::binary);
+		dest << source.rdbuf();
+		source.close();
+		dest.close();
+		return true;
+	}else{
+		return false;
+	}
+return 0;
+}

@@ -132,7 +132,7 @@ void AmiigoUI::GetInput()
 							nfpemuMoveToNextAmiibo();
 						}
 						//Up pressed
-						else if(Event->jbutton.button == 13)
+						else if(Event->jbutton.button == 13||Event->jbutton.button == 17)
 						{
 							if(AmiiboList->IsActive)
 							{
@@ -146,7 +146,7 @@ void AmiigoUI::GetInput()
 							}
 						}
 						//Down pressed
-						else if(Event->jbutton.button == 15)
+						else if(Event->jbutton.button == 15||Event->jbutton.button == 19)
 						{
 							if(AmiiboList->IsActive)
 							{
@@ -160,7 +160,7 @@ void AmiigoUI::GetInput()
 							}
 						}
 						//Left or right pressed
-						else if(Event->jbutton.button == 12 || Event->jbutton.button == 14)
+						else if(Event->jbutton.button == 12 || Event->jbutton.button == 14|| Event->jbutton.button == 16|| Event->jbutton.button == 18)
 						{
 							MenuList->IsActive = AmiiboList->IsActive;
 							AmiiboList->IsActive = !AmiiboList->IsActive;
@@ -183,8 +183,8 @@ void AmiigoUI::GetInput()
 							ListDir = GoUpDir(ListDir);
 							ScanForAmiibos();
 						}
-						//Left stick pressed
-						else if(Event->jbutton.button == 4)
+						//Left stick or minus pressed
+						else if(Event->jbutton.button == 4|| Event->jbutton.button == 11)
 						{
 							//Delete Amiibo. This is temporary until I have time to implement a proper menu for deleting and renaming
 							char PathToAmiibo[FS_MAX_PATH] = ""; //Without assigning we get a random char. Why?
