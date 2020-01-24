@@ -121,7 +121,7 @@ void CreatorUI::GetInput()
 	//Scan input
 	while (SDL_PollEvent(Event))
 		{
-			printf("-%d-\n",Event->jbutton.button);
+			printf("Button-ID-%d-\n",Event->jbutton.button);
             switch (Event->type)
 			{
 				//Touchscreen
@@ -331,8 +331,6 @@ void CreatorUI::DrawHeader()
 
 void CreatorUI::GetDataFromAPI(string FilterTerm)
 {
-	//Make the Amiigo config dir
-
 		while(true)//wait for the download of the api
 		{
 		ifstream DataFileReader("sdmc:/config/amiigo/API.json");

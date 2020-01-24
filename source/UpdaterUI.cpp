@@ -42,8 +42,13 @@ void UpdaterUI::DrawUI()
 {
 	//Handle input
 	bool BPressed = false;
+	SDL_Rect BackFooterRect = {10,10, 960, 520};
+	int TouchX = -1;
+	int TouchY = -1;
 	while (SDL_PollEvent(Event))
 	{
+				TouchX = Event->tfinger.x * *Width;
+				TouchY = Event->tfinger.y * *Height;
 		switch (Event->type)
 		{
 			case SDL_JOYBUTTONDOWN:
@@ -97,7 +102,7 @@ void UpdaterUI::DrawUI()
 			else
 			{
 				UpdateText = "Already on the latest version.";
-				if(BPressed)
+				if(BPressed||CheckButtonPressed(&BackFooterRect, TouchX, TouchY))
 				{
 					*WindowState = 0;
 				}

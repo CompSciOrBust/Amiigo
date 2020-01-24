@@ -100,7 +100,6 @@ void Scandownload(string folder)
 		if(CheckFileExists(folder+"/"+route+"/model.json"))
 		{
 			//get amiibo id
-			printf("Found amiibo in %s/%s\n",folder.c_str(),route.c_str());
 			string AmiiboID;
 			string IDContents;
 			json JEData;
@@ -125,11 +124,11 @@ void Scandownload(string folder)
 			if(!CheckFileExists(imageI))
 			{//download icon	
 				string url = "https://raw.githubusercontent.com/N3evin/AmiiboAPI/master/images/icon_"+ AmiiboID.substr(0,8)+"-"+AmiiboID.substr(8,8) +".png";
-				printf("Downloading %s\nTo %s\n",url.c_str(),imageI.c_str());
+				printf("%s - Downloading %s\nTo %s\n",route.c_str(),url.c_str(),imageI.c_str());
 				RetrieveToFile(url, imageF);
 				rename(imageF.c_str(), imageI.c_str());
 				printf("Downloaded \n");
-			}else printf("The icon exist %s \nOK\n",imageI.c_str());
+			}else printf("The icon exist %s.png %s OK\n",AmiiboID.c_str(),route.c_str());
 		}
 		else 
 		{

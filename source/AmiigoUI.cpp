@@ -130,6 +130,7 @@ void AmiigoUI::GetInput()
 						else if(Event->jbutton.button == 3)
 						{
 							nfpemuMoveToNextAmiibo();
+							dctut = 1;//reload signal for the image
 						}
 						//Up pressed
 						else if(Event->jbutton.button == 13||Event->jbutton.button == 17)
@@ -279,6 +280,7 @@ void AmiigoUI::DrawHeader()
 				{
 						dctut = 0;//set image triger off
 						AIcon = IMG_Load(imageI.c_str());
+						printf("Image %s.png loaded OK\n",AmiiboID.c_str());
 									
 				}else AIcon = NULL;//empty icon
 			}
@@ -329,6 +331,7 @@ void AmiigoUI::DrawHeader()
 	if(CheckButtonPressed(&HeaderRect, TouchX, TouchY))
 	{
 		nfpemuMoveToNextAmiibo();
+		dctut = 1;//reload signal for the image
 	}
 }
 
