@@ -16,6 +16,9 @@ int destroyer = 0;
 int main(int argc, char *argv[])
 {
 socketInitializeDefault();
+//debug nxlink
+nxlinkStdio(); 
+printf("printf output now goes to nxlink server\n");
 std::thread  first;
 first = std::thread(APIDownloader);
 //std::thread second = std::thread(IconDownloader);

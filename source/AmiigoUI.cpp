@@ -275,7 +275,7 @@ void AmiigoUI::DrawHeader()
 				
 				//load amiiboo image test
 				string imageI = "sdmc:/config/amiigo/IMG/"+AmiiboID+".png";
-				if(CheckFileExists(imageI)&(fsize(imageI) != 0)) //need be optimized
+				if(CheckFileExists(imageI)&(fsize(imageI) != 0))
 				{
 						dctut = 0;//set image triger off
 						AIcon = IMG_Load(imageI.c_str());
