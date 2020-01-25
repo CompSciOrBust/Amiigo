@@ -3,6 +3,18 @@
 #include <sys/stat.h>
 #include <cstring>
 #include <fstream>
+#include <SDL.h>
+#include <SDL2/SDL_ttf.h>
+#include <stdlib.h>
+#include "nlohmann/json.hpp"
+#include <switch.h>
+#include <vector>
+#include <stdio.h>
+#include <chrono>
+#include "Utils.h"
+using json = nlohmann::json;
+string IDContents;
+
 using namespace std;
 
 int fsize(string fil) {
@@ -57,4 +69,63 @@ bool copy_me(string origen, string destino) {
 		return false;
 	}
 return 0;
+}
+
+void DrawJsonColorConfig(SDL_Renderer* renderer, string Head)
+{
+	if(CheckFileExists("sdmc:/config/amiigo/config.json"))
+	{
+		json JEData;
+		if (IDContents.size() == 0)
+		{
+			ifstream IDReader("sdmc:/config/amiigo/config.json");
+				//Read each line
+				printf("Read Json\n");
+				for(int i = 0; !IDReader.eof(); i++)
+				{
+					string TempLine = "";
+					getline(IDReader, TempLine);
+					IDContents += TempLine;
+					printf("%s\n", TempLine.c_str());
+				}
+			IDReader.close();
+		}
+			
+		if(json::accept(IDContents))
+		{
+			JEData = json::parse(IDContents);
+			int CR = std::stoi(JEData[Head+"_R"].get<std::string>());
+			int CG = std::stoi(JEData[Head+"_G"].get<std::string>());
+			int CB = std::stoi(JEData[Head+"_B"].get<std::string>());
+			int CA = std::stoi(JEData[Head+"_A"].get<std::string>());
+			SDL_SetRenderDrawColor(renderer,CR,CG,CB,CA);
+		}else{
+			//remove bad config
+			IDContents = "";
+			remove("sdmc:/config/amiigo/bad_config.json");
+			rename("sdmc:/config/amiigo/config.json","sdmc:/config/amiigo/bad_config.json");
+		}
+	}else{
+		//Default values
+		if(Head == "UI_borders") SDL_SetRenderDrawColor(renderer,0 ,0 ,0 ,255);
+		if(Head == "UI_borders_list") SDL_SetRenderDrawColor(renderer,0 ,0 ,0 ,255);
+		if(Head == "UI_background") SDL_SetRenderDrawColor(renderer,136 ,254 ,254 ,255);
+		if(Head == "UI_background_alt") SDL_SetRenderDrawColor(renderer,0 ,178 ,212 ,255);
+		if(Head == "UI_cursor") SDL_SetRenderDrawColor(renderer,255 ,255 ,255 ,255);
+		if(Head == "AmiigoUI_DrawUI") SDL_SetRenderDrawColor(renderer,94 ,94 ,94 ,255);
+		if(Head == "AmiigoUI_DrawHeader") SDL_SetRenderDrawColor(renderer,0 ,188 ,212 ,255);
+		if(Head == "AmiigoUI_PleaseWait") SDL_SetRenderDrawColor(renderer,0 ,188 ,212 ,255);
+		if(Head == "AmiigoUI_DrawFooter_0") SDL_SetRenderDrawColor(renderer,0 ,255 ,0 ,255);
+		if(Head == "AmiigoUI_DrawFooter_1") SDL_SetRenderDrawColor(renderer,255 ,255 ,0 ,255);
+		if(Head == "AmiigoUI_DrawFooter_2") SDL_SetRenderDrawColor(renderer,255 ,0 ,0 ,255);
+		if(Head == "AmiigoUI_DrawFooter_3") SDL_SetRenderDrawColor(renderer,255 ,255 ,0 ,255);
+		if(Head == "AmiigoUI_DrawFooter_D") SDL_SetRenderDrawColor(renderer,255 ,0 ,0 ,255);
+		if(Head == "CreatorUI_DrawHeader") SDL_SetRenderDrawColor(renderer, 0, 188, 212, 255);
+		if(Head == "CreatorUI_DrawFooter_Select") SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+		if(Head == "CreatorUI_DrawFooter_Back") SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+		if(Head == "CreatorUI_PleaseWait") SDL_SetRenderDrawColor(renderer, 0, 188, 212, 255);
+		if(Head == "CreatorUI_DrawUI") SDL_SetRenderDrawColor(renderer, 94, 94, 94, 255);
+		if(Head == "UpdaterUI_DrawText") SDL_SetRenderDrawColor(renderer, 0, 188, 212, 255);
+		if (IDContents.size() != 0) IDContents = "";//reset json var
+	}
 }

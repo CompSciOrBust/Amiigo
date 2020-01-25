@@ -217,7 +217,7 @@ void AmiigoUI::GetInput()
 void AmiigoUI::DrawUI()
 {		
 	//Draw the BG
-	SDL_SetRenderDrawColor(renderer, 94, 94, 94, 255);
+	DrawJsonColorConfig(renderer, "AmiigoUI_DrawUI");
 	SDL_Rect BGRect = {0,0, *Width, *Height};
 	SDL_RenderFillRect(renderer, &BGRect);
 	
@@ -236,7 +236,7 @@ void AmiigoUI::DrawUI()
 void AmiigoUI::DrawHeader()
 {
 	//Draw the header
-	SDL_SetRenderDrawColor(renderer, 0, 188, 212, 255);
+	DrawJsonColorConfig(renderer, "AmiigoUI_DrawHeader");
 	SDL_Rect HeaderRect = {0,0, *Width, HeaderHeight};
 	SDL_RenderFillRect(renderer, &HeaderRect);
 	//Get the Amiibo path
@@ -348,22 +348,22 @@ void AmiigoUI::DrawFooter()
 	{
 		case 0:
 		StatusText = "On";
-		SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+		DrawJsonColorConfig(renderer, "AmiigoUI_DrawFooter_0");
 		break;
 		case 1:
-		SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+		DrawJsonColorConfig(renderer, "AmiigoUI_DrawFooter_1");
 		StatusText = "Temporary on";
 		break;
 		case 2:
-		SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+		DrawJsonColorConfig(renderer, "AmiigoUI_DrawFooter_2");
 		StatusText = "Off";
 		break;
 		case 3:
-		SDL_SetRenderDrawColor(renderer, 255, 0, 255, 255);
+		DrawJsonColorConfig(renderer, "AmiigoUI_DrawFooter_3");
 		StatusText = "Emuiibo not loaded";
 		break;
 		default:
-		SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+		DrawJsonColorConfig(renderer, "AmiigoUI_DrawFooter_D");
 		StatusText = "Internal error";
 		break;
 	}
@@ -425,7 +425,7 @@ void AmiigoUI::ScanForAmiibos()
 void AmiigoUI::PleaseWait(string mensage)
 {
 	//Draw the rect
-	SDL_SetRenderDrawColor(renderer, 0, 188, 212, 255);
+	DrawJsonColorConfig(renderer, "AmiigoUI_PleaseWait");
 	SDL_Rect MessageRect = {0,0, *Width, *Height};
 	SDL_RenderFillRect(renderer, &MessageRect);
 	//Draw the please wait text

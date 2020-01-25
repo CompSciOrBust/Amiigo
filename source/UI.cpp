@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <switch.h>
+#include "Utils.h"
 using namespace std;
 
 //Global vars
@@ -83,12 +84,12 @@ void ScrollList::DrawList()
 	for(int i = 0; i < ListLength; i++)
 	{
 		//Set the background color
-		if(IsActive) SDL_SetRenderDrawColor(renderer, 136, 254, 254, 255);
-		else SDL_SetRenderDrawColor(renderer, 0, 178, 212, 255);
+		if(IsActive) DrawJsonColorConfig(renderer, "UI_background");
+		else DrawJsonColorConfig(renderer, "UI_background_alt");
 		//Check if this is the highlighted file
 		if(i == CursorIndex && IsActive)
 		{
-			SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+			DrawJsonColorConfig(renderer, "UI_cursor");
 			//Cyan 50
 			//if(IsActive) SDL_SetRenderDrawColor(renderer, 224, 247, 250, 255);
 			//else SDL_SetRenderDrawColor(renderer, 232, 234, 246, 255); //Indigo
@@ -116,7 +117,7 @@ void ScrollList::DrawList()
 		SDL_RenderCopy(renderer, FileNameTexture, NULL, &AmiiboNameRect);
 		
 		//Draw borders
-		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+		DrawJsonColorConfig(renderer, "UI_borders_list");
 		SDL_Rect BorderRect = {ListXOffset, ListYOffset + (i * ListingHeight) - 1, ListWidth, BorderSize};
 		SDL_RenderFillRect(renderer, &BorderRect);
 		//Check if we need to draw one more border
@@ -151,7 +152,7 @@ TTF_Font *GetSharedFont(int FontSize)
 
 void DrawButtonBorders(SDL_Renderer* renderer, ScrollList *LeftList, ScrollList *MenuList, int HeaderHeight, int FooterHeight, int Width, int Height, bool SplitFooter)
 {
-	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+	DrawJsonColorConfig(renderer, "UI_borders");
 	//Draw border for the two lists
 	SDL_Rect BorderRect = {MenuList->ListXOffset, MenuList->ListYOffset, BorderSize, MenuList->ListHeight};
 	SDL_RenderFillRect(renderer, &BorderRect);

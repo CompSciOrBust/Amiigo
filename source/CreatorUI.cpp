@@ -213,7 +213,7 @@ void CreatorUI::DrawUI()
 	SeriesList->ListYOffset = HeaderHeight;
 		
 	//Draw the BG
-	SDL_SetRenderDrawColor(renderer, 94, 94, 94, 255);
+	DrawJsonColorConfig(renderer, "CreatorUI_DrawUI");
 	SDL_Rect BGRect = {0,0, *Width, *Height};
 	SDL_RenderFillRect(renderer, &BGRect);
 	
@@ -316,7 +316,7 @@ void CreatorUI::ListSelect()
 void CreatorUI::DrawHeader()
 {
 	//Draw the header
-	SDL_SetRenderDrawColor(renderer, 0, 188, 212, 255);
+	DrawJsonColorConfig(renderer, "CreatorUI_DrawHeader");
 	SDL_Rect HeaderRect = {0,0, *Width, HeaderHeight};
 	SDL_RenderFillRect(renderer, &HeaderRect);
 	//Draw the Amiibo path text
@@ -354,7 +354,7 @@ void CreatorUI::DrawFooter()
 	int FooterYOffset = *Height - FooterHeight;
 	SDL_Rect SelectFooterRect = {0,FooterYOffset, *Width/2, FooterHeight};
 	string FooterText = "Select";
-	SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+	DrawJsonColorConfig(renderer, "CreatorUI_DrawFooter_Select");
 	
 	//Select was pressed
 	if(CheckButtonPressed(&SelectFooterRect, TouchX, TouchY))
@@ -383,7 +383,7 @@ void CreatorUI::DrawFooter()
 	//Draw the back footer button
 	SDL_Rect BackFooterRect = {*Width/2,FooterYOffset, *Width/2, FooterHeight};
 	FooterText = "Back";
-	SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+	DrawJsonColorConfig(renderer, "CreatorUI_DrawFooter_Back");
 	
 	//Back was pressed
 	if(CheckButtonPressed(&BackFooterRect, TouchX, TouchY))
@@ -411,7 +411,7 @@ void CreatorUI::DrawFooter()
 void CreatorUI::PleaseWait(string mensage)
 {
 	//Draw the rect
-	SDL_SetRenderDrawColor(renderer, 0, 188, 212, 255);
+	DrawJsonColorConfig(renderer, "CreatorUI_PleaseWait");
 	SDL_Rect MessageRect = {0,0, *Width, *Height};
 	SDL_RenderFillRect(renderer, &MessageRect);
 	//Draw the please wait text
