@@ -5,6 +5,7 @@
 #include "Networking.h"
 #include "nlohmann/json.hpp"
 #include <fstream>
+#include "Utils.h"
 using namespace std;
 using json = nlohmann::json;
 
@@ -42,8 +43,13 @@ void UpdaterUI::DrawUI()
 {
 	//Handle input
 	bool BPressed = false;
+	SDL_Rect BackFooterRect = {10,10, 960, 520};
+	int TouchX = -1;
+	int TouchY = -1;
 	while (SDL_PollEvent(Event))
 	{
+				TouchX = Event->tfinger.x * *Width;
+				TouchY = Event->tfinger.y * *Height;
 		switch (Event->type)
 		{
 			case SDL_JOYBUTTONDOWN:
@@ -97,7 +103,7 @@ void UpdaterUI::DrawUI()
 			else
 			{
 				UpdateText = "Already on the latest version.";
-				if(BPressed)
+				if(BPressed||CheckButtonPressed(&BackFooterRect, TouchX, TouchY))
 				{
 					*WindowState = 0;
 				}
@@ -149,7 +155,7 @@ bool UpdaterUI::CheckForNewVersion()
 void UpdaterUI::DrawText(std::string Message)
 {
 	//Draw the rect
-	SDL_SetRenderDrawColor(renderer, 0, 188, 212, 255);
+	DrawJsonColorConfig(renderer, "UpdaterUI_DrawText");
 	SDL_Rect MessageRect = {0,0, *Width, *Height};
 	SDL_RenderFillRect(renderer, &MessageRect);
 	//Draw the text

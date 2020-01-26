@@ -130,9 +130,10 @@ void AmiigoUI::GetInput()
 						else if(Event->jbutton.button == 3)
 						{
 							nfpemuMoveToNextAmiibo();
+							dctut = 1;//reload signal for the image
 						}
 						//Up pressed
-						else if(Event->jbutton.button == 13)
+						else if(Event->jbutton.button == 13||Event->jbutton.button == 17)
 						{
 							if(AmiiboList->IsActive)
 							{
@@ -146,7 +147,7 @@ void AmiigoUI::GetInput()
 							}
 						}
 						//Down pressed
-						else if(Event->jbutton.button == 15)
+						else if(Event->jbutton.button == 15||Event->jbutton.button == 19)
 						{
 							if(AmiiboList->IsActive)
 							{
@@ -160,7 +161,7 @@ void AmiigoUI::GetInput()
 							}
 						}
 						//Left or right pressed
-						else if(Event->jbutton.button == 12 || Event->jbutton.button == 14)
+						else if(Event->jbutton.button == 12 || Event->jbutton.button == 14|| Event->jbutton.button == 16|| Event->jbutton.button == 18)
 						{
 							MenuList->IsActive = AmiiboList->IsActive;
 							AmiiboList->IsActive = !AmiiboList->IsActive;
@@ -183,8 +184,8 @@ void AmiigoUI::GetInput()
 							ListDir = GoUpDir(ListDir);
 							ScanForAmiibos();
 						}
-						//Left stick pressed
-						else if(Event->jbutton.button == 4)
+						//Left stick or minus pressed
+						else if(Event->jbutton.button == 4|| Event->jbutton.button == 11)
 						{
 							//Delete Amiibo. This is temporary until I have time to implement a proper menu for deleting and renaming
 							char PathToAmiibo[FS_MAX_PATH] = ""; //Without assigning we get a random char. Why?
@@ -216,7 +217,7 @@ void AmiigoUI::GetInput()
 void AmiigoUI::DrawUI()
 {		
 	//Draw the BG
-	SDL_SetRenderDrawColor(renderer, 94, 94, 94, 255);
+	DrawJsonColorConfig(renderer, "AmiigoUI_DrawUI");
 	SDL_Rect BGRect = {0,0, *Width, *Height};
 	SDL_RenderFillRect(renderer, &BGRect);
 	
@@ -235,7 +236,7 @@ void AmiigoUI::DrawUI()
 void AmiigoUI::DrawHeader()
 {
 	//Draw the header
-	SDL_SetRenderDrawColor(renderer, 0, 188, 212, 255);
+	DrawJsonColorConfig(renderer, "AmiigoUI_DrawHeader");
 	SDL_Rect HeaderRect = {0,0, *Width, HeaderHeight};
 	SDL_RenderFillRect(renderer, &HeaderRect);
 	//Get the Amiibo path
@@ -275,10 +276,11 @@ void AmiigoUI::DrawHeader()
 				
 				//load amiiboo image test
 				string imageI = "sdmc:/config/amiigo/IMG/"+AmiiboID+".png";
-				if(CheckFileExists(imageI)&(fsize(imageI) != 0)) //need be optimized
+				if(CheckFileExists(imageI)&(fsize(imageI) != 0))
 				{
 						dctut = 0;//set image triger off
 						AIcon = IMG_Load(imageI.c_str());
+						printf("Image %s.png loaded OK\n",AmiiboID.c_str());
 									
 				}else AIcon = NULL;//empty icon
 			}
@@ -329,6 +331,7 @@ void AmiigoUI::DrawHeader()
 	if(CheckButtonPressed(&HeaderRect, TouchX, TouchY))
 	{
 		nfpemuMoveToNextAmiibo();
+		dctut = 1;//reload signal for the image
 	}
 }
 
@@ -345,22 +348,22 @@ void AmiigoUI::DrawFooter()
 	{
 		case 0:
 		StatusText = "On";
-		SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+		DrawJsonColorConfig(renderer, "AmiigoUI_DrawFooter_0");
 		break;
 		case 1:
-		SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+		DrawJsonColorConfig(renderer, "AmiigoUI_DrawFooter_1");
 		StatusText = "Temporary on";
 		break;
 		case 2:
-		SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+		DrawJsonColorConfig(renderer, "AmiigoUI_DrawFooter_2");
 		StatusText = "Off";
 		break;
 		case 3:
-		SDL_SetRenderDrawColor(renderer, 255, 0, 255, 255);
+		DrawJsonColorConfig(renderer, "AmiigoUI_DrawFooter_3");
 		StatusText = "Emuiibo not loaded";
 		break;
 		default:
-		SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+		DrawJsonColorConfig(renderer, "AmiigoUI_DrawFooter_D");
 		StatusText = "Internal error";
 		break;
 	}
@@ -422,7 +425,7 @@ void AmiigoUI::ScanForAmiibos()
 void AmiigoUI::PleaseWait(string mensage)
 {
 	//Draw the rect
-	SDL_SetRenderDrawColor(renderer, 0, 188, 212, 255);
+	DrawJsonColorConfig(renderer, "AmiigoUI_PleaseWait");
 	SDL_Rect MessageRect = {0,0, *Width, *Height};
 	SDL_RenderFillRect(renderer, &MessageRect);
 	//Draw the please wait text

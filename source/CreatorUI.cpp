@@ -13,7 +13,6 @@
 #include "Utils.h"
 using namespace std;
 using json = nlohmann::json;
-
 class AmiiboVars
 {
 	public:
@@ -89,7 +88,7 @@ CreatorUI::CreatorUI()
 		AmiiboVarsVec.push_back(TempAmiiboVars);
 		
 		//Loop through every element in the vector
-		for(int j = 0; j < SeriesVec.size(); j++)
+		for(u32 j = 0; j < SeriesVec.size(); j++)
 		{
 			//If the vector has the name we break the loop
 			if(SeriesVec.at(j) == SeriesName)
@@ -122,6 +121,7 @@ void CreatorUI::GetInput()
 	//Scan input
 	while (SDL_PollEvent(Event))
 		{
+			printf("Button-ID-%d-\n",Event->jbutton.button);
             switch (Event->type)
 			{
 				//Touchscreen
@@ -142,7 +142,7 @@ void CreatorUI::GetInput()
                             *IsDone = 1;
                         }
 						//Up pressed
-						else if(Event->jbutton.button == 13)
+						else if(Event->jbutton.button == 13||Event->jbutton.button == 17)
 						{
 							if(SeriesList->IsActive)
 							{
@@ -156,7 +156,7 @@ void CreatorUI::GetInput()
 							}
 						}
 						//Down pressed
-						else if(Event->jbutton.button == 15)
+						else if(Event->jbutton.button == 15||Event->jbutton.button == 19)
 						{
 							if(SeriesList->IsActive)
 							{
@@ -170,7 +170,7 @@ void CreatorUI::GetInput()
 							}
 						}
 						//Left or right pressed
-						else if(Event->jbutton.button == 12 || Event->jbutton.button == 14)
+						else if(Event->jbutton.button == 12 || Event->jbutton.button == 14|| Event->jbutton.button == 16|| Event->jbutton.button == 18)
 						{
 							MenuList->IsActive = SeriesList->IsActive;
 							SeriesList->IsActive = !SeriesList->IsActive;
@@ -213,7 +213,7 @@ void CreatorUI::DrawUI()
 	SeriesList->ListYOffset = HeaderHeight;
 		
 	//Draw the BG
-	SDL_SetRenderDrawColor(renderer, 94, 94, 94, 255);
+	DrawJsonColorConfig(renderer, "CreatorUI_DrawUI");
 	SDL_Rect BGRect = {0,0, *Width, *Height};
 	SDL_RenderFillRect(renderer, &BGRect);
 	
@@ -246,10 +246,10 @@ void CreatorUI::ListSelect()
 	//Create the virtual amiibo on the SD card
 	if(HasSelectedSeries)
 	{
-		PleaseWait("Please wait, building amiibo...");
 		int IndexInJdata = SortedAmiiboVarsVec.at(SeriesList->SelectedIndex).ListIndex;
         string AmiiboPath = *CurrentPath + JData["amiibo"][IndexInJdata]["name"].get<std::string>();
-        mkdir(AmiiboPath.c_str(), 0);
+ 		PleaseWait("Please wait, building "+JData["amiibo"][IndexInJdata]["name"].get<std::string>()+"...");
+		mkdir(AmiiboPath.c_str(), 0);
         //Write common.json
         string FilePath = AmiiboPath + "/common.json";
         ofstream CommonFileWriter(FilePath.c_str());
@@ -276,6 +276,9 @@ void CreatorUI::ListSelect()
 		string iconname = "sdmc:/config/amiigo/IMG/"+JData["amiibo"][IndexInJdata]["head"].get<std::string>()+JData["amiibo"][IndexInJdata]["tail"].get<std::string>()+".png";
 		if(!CheckFileExists(iconname))
 		RetrieveToFile(JData["amiibo"][IndexInJdata]["image"].get<std::string>(), iconname);
+
+		if(!CheckFileExists(AmiiboPath+"/Aicon.png"))
+		copy_me(iconname, AmiiboPath+"/Aicon.png");
 	}
 	//Add the Amiibos from the selected series to the list
 	else
@@ -286,7 +289,7 @@ void CreatorUI::ListSelect()
 		string SelectedSeries = SeriesVec.at(SeriesList->SelectedIndex);
 		SeriesList->ListingTextVec.clear();
 		SortedAmiiboVarsVec.clear();
-		for(int i = 0; i < AmiiboVarsVec.size(); i++)
+		for(u32 i = 0; i < AmiiboVarsVec.size(); i++)
 		{
 			//There's something happening here
 			//What it is ain't exactly clear
@@ -296,7 +299,7 @@ void CreatorUI::ListSelect()
 			{
 				SortedAmiiboVarsVec.push_back(AmiiboVarsVec.at(i));
 				if(CheckFileExists(*CurrentPath + AmiiboVarsVec.at(i).AmiiboName +"/tag.json"))
-					SeriesList->ListingTextVec.push_back(AmiiboVarsVec.at(i).AmiiboName+" *");
+					SeriesList->ListingTextVec.push_back("* "+AmiiboVarsVec.at(i).AmiiboName);
 					else
 					SeriesList->ListingTextVec.push_back(AmiiboVarsVec.at(i).AmiiboName);
 
@@ -313,7 +316,7 @@ void CreatorUI::ListSelect()
 void CreatorUI::DrawHeader()
 {
 	//Draw the header
-	SDL_SetRenderDrawColor(renderer, 0, 188, 212, 255);
+	DrawJsonColorConfig(renderer, "CreatorUI_DrawHeader");
 	SDL_Rect HeaderRect = {0,0, *Width, HeaderHeight};
 	SDL_RenderFillRect(renderer, &HeaderRect);
 	//Draw the Amiibo path text
@@ -328,8 +331,6 @@ void CreatorUI::DrawHeader()
 
 void CreatorUI::GetDataFromAPI(string FilterTerm)
 {
-	//Make the Amiigo config dir
-
 		while(true)//wait for the download of the api
 		{
 		ifstream DataFileReader("sdmc:/config/amiigo/API.json");
@@ -353,7 +354,7 @@ void CreatorUI::DrawFooter()
 	int FooterYOffset = *Height - FooterHeight;
 	SDL_Rect SelectFooterRect = {0,FooterYOffset, *Width/2, FooterHeight};
 	string FooterText = "Select";
-	SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+	DrawJsonColorConfig(renderer, "CreatorUI_DrawFooter_Select");
 	
 	//Select was pressed
 	if(CheckButtonPressed(&SelectFooterRect, TouchX, TouchY))
@@ -382,7 +383,7 @@ void CreatorUI::DrawFooter()
 	//Draw the back footer button
 	SDL_Rect BackFooterRect = {*Width/2,FooterYOffset, *Width/2, FooterHeight};
 	FooterText = "Back";
-	SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+	DrawJsonColorConfig(renderer, "CreatorUI_DrawFooter_Back");
 	
 	//Back was pressed
 	if(CheckButtonPressed(&BackFooterRect, TouchX, TouchY))
@@ -410,7 +411,7 @@ void CreatorUI::DrawFooter()
 void CreatorUI::PleaseWait(string mensage)
 {
 	//Draw the rect
-	SDL_SetRenderDrawColor(renderer, 0, 188, 212, 255);
+	DrawJsonColorConfig(renderer, "CreatorUI_PleaseWait");
 	SDL_Rect MessageRect = {0,0, *Width, *Height};
 	SDL_RenderFillRect(renderer, &MessageRect);
 	//Draw the please wait text

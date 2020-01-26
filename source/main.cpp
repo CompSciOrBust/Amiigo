@@ -12,10 +12,14 @@
 #include <UpdaterUI.h>
 #include <nfpemu.h>
 #include <thread>
+#include <Utils.h>
 int destroyer = 0;
 int main(int argc, char *argv[])
 {
 socketInitializeDefault();
+//debug nxlink
+nxlinkStdio(); 
+printf("printf output now goes to nxlink server\n");
 std::thread  first;
 first = std::thread(APIDownloader);
 //std::thread second = std::thread(IconDownloader);
@@ -100,7 +104,7 @@ first = std::thread(APIDownloader);
 				MainUI->GetInput();
 				MainUI->DrawUI();
 				//If the user has switched to the maker UI and the data isn't read show the please wait message
-				if(AmiigoGenUI == NULL && WindowState == 1)
+				if((AmiigoGenUI == NULL) & (WindowState == 1) & (!CheckFileExists("sdmc:/config/amiigo/API.json")))
 				{
 					//Display the please wait message
 					MainUI->PleaseWait("Please wait while we get data from the Amiibo API...");
