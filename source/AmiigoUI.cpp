@@ -414,7 +414,20 @@ void AmiigoUI::ScanForAmiibos()
 		Files.push_back(*ent);
 	}
 	closedir(dir);
-	
+	//Sort the dirs by name
+	std::sort(Files.begin(), Files.end(), [](dirent A, dirent B) -> bool{
+		int MaxLength = 0;
+		if(sizeof(A.d_name) > sizeof(B.d_name)) MaxLength = sizeof(A.d_name);
+		else MaxLength = sizeof(B.d_name);
+		int Itterate = 0;
+		while(Itterate < MaxLength)
+		{
+			if(tolower(A.d_name[Itterate]) != tolower(B.d_name[Itterate])) break;
+			else Itterate++;
+		}
+		return tolower(A.d_name[Itterate]) < tolower(B.d_name[Itterate]);
+	});
+	//Add the dirs to the list
 	AmiiboList->ListingTextVec.clear();
 	for(int i = 0; i < Files.size(); i++)
 	{
