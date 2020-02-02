@@ -1,5 +1,5 @@
 ![Logo](icon.jpg)
-# Amiigo ![Downloads](https://img.shields.io/github/downloads/CompSciOrBust/Amiigo/total?style=for-the-badge)
+# Amiigo ![Downloads](https://img.shields.io/github/downloads/CompSciOrBust/Amiigo/total?style=for-the-badge) <a href="https://discord.gg/ZhRn3nn"><img src="https://img.shields.io/discord/673622282790502402?color=green&label=Discord&logo=discord&style=for-the-badge" alt="Discord Server" /></a>
 A GUI for Emuiibo. The Emuiibo sysmodule is required in order to use Amiigo.
 
 ## Building
