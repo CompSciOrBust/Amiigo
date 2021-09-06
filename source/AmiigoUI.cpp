@@ -1,511 +1,464 @@
-#include <SDL.h>
-#include <SDL2/SDL_ttf.h>
-#include <SDL_image.h>
-#include <string>
-#include <nfpemu.h>
-#include <vector>
-#include <dirent.h>
-#include <UI.h>
-#include <Utils.h>
-#include "nlohmann/json.hpp"
+#include <AmiigoUI.h>
+#include <arriba.h>
+#include <arribaElements.h>
+#include <arribaPrimitives.h>
+#include <utils.h>
+#include <emuiibo.hpp>
+#include <math.h>
+#include <thread>
+#include <Networking.h>
+#include <AmiigoSettings.h>
 #include <fstream>
-using namespace std;
-using json = nlohmann::json;
-SDL_Surface* AIcon;//surface buffer to amiibo image
-int dctut = 1; //load image triger
 
-class AmiigoUI
+namespace Amiigo::UI
 {
-	private:
-	TTF_Font *HeaderFont;
-	TTF_Font *ListFont;
-	SDL_Color TextColour = {0, 0, 0};
-	void DrawHeader();
-	void DrawFooter();
-	int HeaderHeight;
-	int FooterHeight;
-	vector <dirent> Files{vector <dirent>(0)};
-	int TouchX = -1;
-	int TouchY = -1;
-	ScrollList *AmiiboList;
-	json JData;
-	public:
-	AmiigoUI();
-	void GetInput();
-	void DrawUI();
-	void ScanForAmiibos();
-	void PleaseWait(string mensage);
-	void InitList();
-	void SetAmiibo(int);
-	SDL_Event *Event;
-	int *WindowState;
-	SDL_Renderer *renderer;
-	int *Width;
-	int *Height;
-	int *IsDone;
-	ScrollList *MenuList;
-	int AmiiboListWidth;
-	string ListDir = "sdmc:/emuiibo/amiibo/";
-};
-
-AmiigoUI::AmiigoUI()
-{
-	//Load the header font
-	//HeaderFont = TTF_OpenFont("romfs:/font.ttf", 48);
-	HeaderFont = GetSharedFont(48);
-	
-	//Create the lists
-	AmiiboList = new ScrollList();
-	MenuList = new ScrollList();
-	//Add items to the menu list
-	MenuList->ListingTextVec.push_back("Amiibo list");
-	MenuList->ListingTextVec.push_back("Amiigo Maker");
-	MenuList->ListingTextVec.push_back("Check for updates");
-	MenuList->ListingTextVec.push_back("Exit");
-	//Scan the Amiibo folder for Amiibos
-	ScanForAmiibos();
-}
-
-void AmiigoUI::GetInput()
-{
-	//Scan input
-	while (SDL_PollEvent(Event))
+	void initUI()
+	{
+		Arriba::Colour::neutral = {0.22,0.47,0.93,0.97};
+		Arriba::Colour::highlightA = {0.1,0.95,0.98,0.97};
+		Arriba::Colour::highlightB = {0.5,0.85,1,0.97};
+	    if(!checkIfFileExists("sdmc:/config/amiigo/API.json") || !checkIfFileExists("sdmc:/atmosphere/contents/0100000000000352/exefs.nsp")) initSplash();
+		Amiigo::Settings::loadSettings();
+		initSceneSwitcher();
+		initSelector();
+	    initMaker();
+		initSettings();
+		Arriba::highlightedObject = selectorButton;
+		//Cache these now for performance gains later
+		lists = Arriba::findObjectsByTag("List");
+		buttons = Arriba::findObjectsByTag("SwitcherButton");
+		//Check if a new Amiigo version is available
+		if(checkForUpdates())
 		{
-            switch (Event->type)
+			settingsButton->setText("Update");
+			Arriba::findObjectByName("UpdaterButton")->enabled = true;
+		}
+	}
+
+	void initSplash()
+	{
+		splashScene = new Arriba::Primitives::Quad(0, 0, Arriba::Graphics::windowWidth, Arriba::Graphics::windowHeight, Arriba::Graphics::Pivot::topLeft);
+		splashScene->setColour({0.25,0.25,0.25,0.95});
+		//Title text
+		Arriba::Primitives::Text* titleText = new Arriba::Primitives::Text("Amiigo", 128);
+		titleText->transform.position = {Arriba::Graphics::windowWidth/2, Arriba::Graphics::windowHeight/2 - 140, 0};
+		titleText->setColour({1,1,1,1});
+		titleText->setParent(splashScene);
+		//By text
+		Arriba::Primitives::Text* byText = new Arriba::Primitives::Text("by CompSciOrBust", 64);
+		byText->transform.position = {Arriba::Graphics::windowWidth/2, Arriba::Graphics::windowHeight/2 - 15, 0};
+		byText->setColour({1,1,1,1});
+		byText->setParent(splashScene);
+		//Doing text
+		Arriba::Primitives::Text* doingText = new Arriba::Primitives::Text("", 48);
+		doingText->transform.position = {Arriba::Graphics::windowWidth/2, Arriba::Graphics::windowHeight/2 + 160, 0};
+		doingText->setColour({1,1,1,1});
+		doingText->setParent(splashScene);
+		std::thread initThread(firstTimeSetup);
+		//Hide other elements
+		if(settingsScene) settingsScene->enabled = false;
+		if(sceneSwitcher) sceneSwitcher->enabled = false;
+		while (!checkIfFileExists("sdmc:/config/amiigo/API.json") || !checkIfFileExists("sdmc:/atmosphere/contents/0100000000000352/exefs.nsp") || checkIfFileExists("sdmc:/config/amiigo/update.flag"))
+		{
+			splashScene->setColour({(sin(Arriba::time)+1)/4,(cos(Arriba::time)+1)/4,0.5,0.95});
+			Arriba::findObjectByName("AmiigoBG")->renderer->thisShader.setFloat1("iTime", Arriba::time);
+			if(!hasNetworkConnection()) doingText->setText("Waiting for internet connection...");
+			else if(!checkIfFileExists("sdmc:/config/amiigo/API.json")) doingText->setText("Caching API data...");
+			else if(!checkIfFileExists("sdmc:/atmosphere/contents/0100000000000352/exefs.nsp")) doingText->setText("Installing Emuiibo...");
+			else if(checkIfFileExists("sdmc:/config/amiigo/update.flag")) doingText->setText("Updating Amiigo...");
+			Arriba::drawFrame();
+		}
+		initThread.join();
+		splashScene->destroy();
+		if(settingsScene) settingsScene->enabled = true;
+		if(sceneSwitcher) sceneSwitcher->enabled = true;
+	}
+
+	void initSceneSwitcher()
+	{
+		//Set up divider quads
+		Arriba::Primitives::Quad* div1 = new Arriba::Primitives::Quad(Arriba::Graphics::windowWidth - switcherWidth - 1, statusHeight, 5, switcherHeight, Arriba::Graphics::Pivot::topLeft);
+		div1->setColour({0,0,0,1});
+		Arriba::Primitives::Quad* div2 = new Arriba::Primitives::Quad(0, statusHeight - 1, Arriba::Graphics::windowWidth, 5, Arriba::Graphics::Pivot::topLeft);
+		div2->setColour({0,0,0,1});
+		int buttomDivX = Arriba::Graphics::windowWidth - switcherWidth;
+		Arriba::Primitives::Quad* div3 = new Arriba::Primitives::Quad(buttomDivX, statusHeight + (switcherHeight/4) - 1, switcherWidth, 5, Arriba::Graphics::Pivot::topLeft);
+		div3->setColour({0,0,0,1});
+		Arriba::Primitives::Quad* div4 = new Arriba::Primitives::Quad(buttomDivX, statusHeight + (switcherHeight/4)*2 - 1, switcherWidth, 5, Arriba::Graphics::Pivot::topLeft);
+		div4->setColour({0,0,0,1});
+		Arriba::Primitives::Quad* div5 = new Arriba::Primitives::Quad(buttomDivX, statusHeight + (switcherHeight/4)*3 - 1, switcherWidth, 5, Arriba::Graphics::Pivot::topLeft);
+		div5->setColour({0,0,0,1});
+		//Set up status bar
+		Arriba::Primitives::Quad* statusBar = new Arriba::Primitives::Quad(0, 0, Arriba::Graphics::windowWidth, statusHeight - 1, Arriba::Graphics::Pivot::topLeft);
+		statusBar->setColour({0.5,0.7,0.7,0.9});
+		Arriba::Primitives::Text* statusText = new Arriba::Primitives::Text("Amiigo + Arriba", 34);
+		statusText->name = "StatusBarText";
+		statusText->setDimensions(statusText->width, statusText->height, Arriba::Graphics::centre);
+		statusText->transform.position = {statusBar->width/2, statusBar->height/2, 0};
+		statusText->setParent(statusBar);
+		//Set up switcher quad
+		sceneSwitcher = new Arriba::Primitives::Quad(Arriba::Graphics::windowWidth, statusHeight, switcherWidth, switcherHeight, Arriba::Graphics::Pivot::topRight);
+		sceneSwitcher->setColour({0,0,0,0});
+		//Set up Amiibo list button
+		selectorButton = new Arriba::Elements::Button();
+		selectorButton->setText("Amiibo List");
+		selectorButton->setDimensions(switcherWidth, switcherHeight/4 - 1, Arriba::Graphics::Pivot::topRight);
+		selectorButton->setParent(sceneSwitcher);
+		selectorButton->name = "SelectorButton";
+		selectorButton->tag = "SwitcherButton";
+		selectorButton->registerCallback(switcherPressed);
+		//Set up Amiigo maker button
+		makerButton = new Arriba::Elements::Button();
+		makerButton->setText("Amiigo Maker");
+		makerButton->transform.position.y = selectorButton->height + 1;
+		makerButton->setDimensions(switcherWidth, switcherHeight/4 - 1, Arriba::Graphics::Pivot::topRight);
+		makerButton->setParent(sceneSwitcher);
+		makerButton->name = "MakerButton";
+		makerButton->tag = "SwitcherButton";
+		makerButton->registerCallback(switcherPressed);
+		//Set up settings button
+		settingsButton = new Arriba::Elements::Button();
+		settingsButton->setText("Settings");
+		settingsButton->transform.position.y = makerButton->height + makerButton->transform.position.y + 1;
+		settingsButton->setDimensions(switcherWidth, switcherHeight/4 - 1, Arriba::Graphics::Pivot::topRight);
+		settingsButton->setParent(sceneSwitcher);
+		settingsButton->name = "SettingsButton";
+		settingsButton->tag = "SwitcherButton";
+		settingsButton->registerCallback(switcherPressed);
+		//Set up exit button
+		exitButton = new Arriba::Elements::Button();
+		exitButton->setText("Exit");
+		exitButton->transform.position.y = settingsButton->height + settingsButton->transform.position.y + 1;
+		exitButton->setDimensions(switcherWidth, switcherHeight/4, Arriba::Graphics::Pivot::topRight);
+		exitButton->setParent(sceneSwitcher);
+		exitButton->name = "ExitButton";
+		exitButton->tag = "SwitcherButton";
+		exitButton->registerCallback([](){isRunning = 0;});
+	}
+
+	void initSelector()
+	{
+	    //Set up the list
+	    selectorList = new Arriba::Elements::InertialList(0, statusHeight, Arriba::Graphics::windowWidth - switcherWidth - 1, Arriba::Graphics::windowHeight - statusHeight, {});
+		updateSelectorStrings();
+		selectorList->name = "SelectorList";
+		selectorList->tag = "List";
+		selectorList->registerCallback(selectorInput);
+	}
+
+	void initMaker()
+	{
+		seriesList = getListOfSeries();
+	    makerList = new Arriba::Elements::InertialList(0, statusHeight, Arriba::Graphics::windowWidth - switcherWidth - 1, Arriba::Graphics::windowHeight - statusHeight, seriesList);
+		makerList->registerCallback(makerInput);
+		makerList->name = "MakerList";
+		makerList->tag = "List";
+		makerList->enabled = false;
+	}
+
+	void initSettings()
+	{
+		settingsScene = new Arriba::Primitives::Quad(0, statusHeight, Arriba::Graphics::windowWidth - switcherWidth - 1, Arriba::Graphics::windowHeight - statusHeight, Arriba::Graphics::Pivot::topLeft);
+		//Not a list but pretending makes scene switching easier
+		settingsScene->name = "SettingsScene";
+		settingsScene->tag = "List";
+		settingsScene->enabled = false;
+		settingsScene->setColour({0,0,0,0});
+		//Toggle category save button
+		Arriba::Elements::Button* categoryButton = new Arriba::Elements::Button();
+		categoryButton->setParent(settingsScene);
+		categoryButton->setDimensions(550, 125, Arriba::Graphics::Pivot::centre);
+		categoryButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 1/4,0};
+		if(Amiigo::Settings::saveAmiibosToCategory) categoryButton->setText("Save to root");
+		else categoryButton->setText("Save to category");
+		categoryButton->name = "CategorySettingsButton";
+		//Callback to save setting
+		categoryButton->registerCallback([](){
+			Amiigo::Settings::saveAmiibosToCategory = !Amiigo::Settings::saveAmiibosToCategory;
+			Amiigo::Settings::saveSettings();
+			if(Amiigo::Settings::saveAmiibosToCategory)
 			{
-				//Touchscreen
-				case SDL_FINGERDOWN:
-				TouchX = Event->tfinger.x * *Width;
-				TouchY = Event->tfinger.y * *Height;
-				//Set the touch list pointers because we need them to work in both menus
-				MenuList->TouchListX = &TouchX;
-				MenuList->TouchListY = &TouchY;
+				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("CategorySettingsButton"))->setText("Save to root");
+				static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Amiibos will save to sdmc:/emuiibo/amiibo/game name");
+			}
+			else
+			{
+				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("CategorySettingsButton"))->setText("Save to category");
+				static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Amiibos will save to sdmc:/emuiibo/amiibo");
+			}
+		});
+		//Update API cache button
+		Arriba::Elements::Button* apiUpdateButton = new Arriba::Elements::Button();
+		apiUpdateButton->setParent(settingsScene);
+		apiUpdateButton->setDimensions(550, 125, Arriba::Graphics::Pivot::centre);
+		apiUpdateButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 2/4,0};
+		apiUpdateButton->setText("Update API cache");
+		apiUpdateButton->name = "UpdateAPIButton";
+		//Callback for updating API cache
+		apiUpdateButton->registerCallback([](){
+			if(!hasNetworkConnection()) static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("No network connection!");
+			else
+			{
+				if(checkIfFileExists("sdmc:/config/amiigo/API.json")) remove("sdmc:/config/amiigo/API.json");
+				//This is kinda jank but I'm lazy and this won't be used often
+				initSplash();
+				seriesList = getListOfSeries();
+			}
+		});
+		//Check for updates button
+		Arriba::Elements::Button* updaterButton = new Arriba::Elements::Button();
+		updaterButton->setParent(settingsScene);
+		updaterButton->setDimensions(550, 125, Arriba::Graphics::Pivot::centre);
+		updaterButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 3/4,0};
+		updaterButton->setText("Update Amiigo");
+		updaterButton->name = "UpdaterButton";
+		updaterButton->enabled = false;
+		//Callback for updating Amiigo
+		updaterButton->registerCallback([](){
+			if(!hasNetworkConnection()) static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("No network connection!");
+			else
+			{
+				std::ofstream fileStream("sdmc:/config/amiigo/update.flag");
+				fileStream.close();
+				initSplash();
+			}
+		});
+
+		//Credits Quad
+		Arriba::Primitives::Quad* creditsQuad = new Arriba::Primitives::Quad(0,0,330, Arriba::Graphics::windowHeight - statusHeight, Arriba::Graphics::Pivot::topLeft);
+		creditsQuad->setParent(settingsScene);
+		creditsQuad->setColour({0,0,0,0.8});
+		int yOffset = 30;
+		//Credits text
+		Arriba::Primitives::Text* creditsTitleText = new Arriba::Primitives::Text("Credits", 64);
+		creditsTitleText->setColour({0,0.7,1,1});
+		creditsTitleText->setParent(creditsQuad);
+		creditsTitleText->transform.position = {creditsQuad->width/2, yOffset += creditsTitleText->height,0};
+		for (int i = 0; i < 5; i++)
+		{
+			std::string titleText = "Place holder";
+			std::string nameText = "Place holder";
+			switch (i)
+			{
+				case 0:
+				titleText = "Developer";
+				nameText = "CompSciOrBust";
 				break;
-				//TODO: Fix swiping
-				/*case SDL_FINGERMOTION:
-				//swipe down
-				if(Event->tfinger.dy * *Height > 0.25)
+				case 1:
+				titleText = "Emuiibo dev";
+				nameText = "XorTroll";
+				break;
+				case 2:
+				titleText = "Contribuyente";
+				nameText = "Kronos2308";
+				break;
+				case 3:
+				titleText = "The Pizza Guy";
+				nameText = "Za";
+				break;
+				case 4:
+				titleText = "Beta testers";
+				nameText = "Too many to name <3";
+				break;
+			}
+			Arriba::Primitives::Text* titleTextObject = new Arriba::Primitives::Text(titleText.c_str(),38);
+			titleTextObject->setParent(creditsQuad);
+			titleTextObject->transform.position = {creditsQuad->width/2, yOffset += titleTextObject->height,0};
+			Arriba::Primitives::Text* nameTextObject = new Arriba::Primitives::Text(nameText.c_str(), 28);
+			nameTextObject->setParent(creditsQuad);
+			nameTextObject->transform.position = {creditsQuad->width/2, yOffset += nameTextObject->height,0};
+			titleTextObject->setColour({0,0.7,1,1});
+			nameTextObject->setColour({0,0.7,1,1});
+		}
+	}
+
+	void handleInput()
+	{
+		//If no object is selected
+		if(Arriba::highlightedObject == nullptr)
+		{
+			if(Arriba::Input::buttonDown(HidNpadButton(HidNpadButton_Right | HidNpadButton_Left | HidNpadButton_Up | HidNpadButton_Down))) Arriba::highlightedObject = selectorButton;
+		}
+		//If one of the lists are selected
+		for (size_t i = 0; i < lists.size(); i++)
+		{
+			//Right pressed
+			if(Arriba::highlightedObject == lists[i] && Arriba::Input::buttonDown(HidNpadButton_Right))
+			{
+				Arriba::highlightedObject = selectorButton;
+				return;
+			}
+			//Selector list is selected
+			if(lists[i]->name == "SelectorList" && lists[i]->enabled)
+			{
+				if(Arriba::Input::buttonDown(HidNpadButton_B) && selectorIsInCategory)
 				{
-					CursorIndex++;
-					SelectedIndex++;
+					selectorPath = "sdmc:/emuiibo/amiibo";
+					updateSelectorStrings();
+					selectorIsInCategory = false;
 				}
-				//swipe up
-				else if(Event->tfinger.dy * *Height > 0.25)
+				if(Arriba::Input::buttonDown(HidNpadButton_X))
 				{
-					CursorIndex++;
-					SelectedIndex++;
-				}
-				break;*/
-				//Joycon button pressed
-                case SDL_JOYBUTTONDOWN:
-                    if (Event->jbutton.which == 0)
+					switch (emu::GetEmulationStatus())
 					{
-						//Plus pressed
-						if (Event->jbutton.button == 10)
-						{
-                            *IsDone = 1;
-                        }
-						//X pressed
-						else if (Event->jbutton.button == 2)
-						{
-                            //Get info about the current status
-							NfpEmuEmulationStatus CurrentStatus;
-							nfpemuGetStatus(&CurrentStatus);
-							//Change Emuiibo status
-							switch(CurrentStatus)
-							{
-								case 0:
-								nfpemuSetEmulationOff();
-								break;
-								case 1:
-								nfpemuSetEmulationOnForever();
-								break;
-								case 2:
-								nfpemuSetEmulationOnOnce();
-								break;
-							}
-
-                        }
-						//Y pressed
-						else if(Event->jbutton.button == 3)
-						{
-							nfpemuMoveToNextAmiibo();
-							dctut = 1;//reload signal for the image
-						}
-						//Up pressed
-						else if(Event->jbutton.button == 13||Event->jbutton.button == 17)
-						{
-							if(AmiiboList->IsActive)
-							{
-								AmiiboList->CursorIndex--;
-								AmiiboList->SelectedIndex--;
-							}
-							else
-							{
-								MenuList->CursorIndex--;
-								MenuList->SelectedIndex--;
-							}
-						}
-						//Down pressed
-						else if(Event->jbutton.button == 15||Event->jbutton.button == 19)
-						{
-							if(AmiiboList->IsActive)
-							{
-								AmiiboList->CursorIndex++;
-								AmiiboList->SelectedIndex++;
-							}
-							else
-							{
-								MenuList->CursorIndex++;
-								MenuList->SelectedIndex++;
-							}
-						}
-						//Left or right pressed
-						else if(Event->jbutton.button == 12 || Event->jbutton.button == 14|| Event->jbutton.button == 16|| Event->jbutton.button == 18)
-						{
-							MenuList->IsActive = AmiiboList->IsActive;
-							AmiiboList->IsActive = !AmiiboList->IsActive;
-						}
-						//A pressed
-						else if(Event->jbutton.button == 0)
-						{
-							if(AmiiboList->IsActive)
-							{
-								SetAmiibo(AmiiboList->SelectedIndex);
-							}
-							else
-							{
-								*WindowState = MenuList->SelectedIndex;
-							}
-						}
-						//B pressed
-						else if(Event->jbutton.button == 1)
-						{
-							ListDir = GoUpDir(ListDir);
-							ScanForAmiibos();
-						}
-						//Left stick or minus pressed
-						else if(Event->jbutton.button == 4|| Event->jbutton.button == 11)
-						{
-							//Delete Amiibo. This is temporary until I have time to implement a proper menu for deleting and renaming
-							char PathToAmiibo[FS_MAX_PATH] = ""; //Without assigning we get a random char. Why?
-							strcat(PathToAmiibo, ListDir.c_str());
-							strcat(PathToAmiibo, Files.at(AmiiboList->SelectedIndex).d_name);
-							fsdevDeleteDirectoryRecursively(PathToAmiibo);
-							ScanForAmiibos();
-						}
-                    }
-                    break;
-            }
-        }
-		
-	//Check if list item selected via touch screen
-	if(AmiiboList->ItemSelected)
-	{
-		SetAmiibo(AmiiboList->SelectedIndex);
-		MenuList->IsActive = false;
-		AmiiboList->IsActive = true;
-	}
-	else if(MenuList->ItemSelected)
-	{
-		*WindowState = MenuList->SelectedIndex;
-		MenuList->IsActive = true;
-		AmiiboList->IsActive = false;
-	}
-}
-
-void AmiigoUI::DrawUI()
-{		
-	//Draw the BG
-	DrawJsonColorConfig(renderer, "AmiigoUI_DrawUI");
-	SDL_Rect BGRect = {0,0, *Width, *Height};
-	SDL_RenderFillRect(renderer, &BGRect);
-	
-	//Draw the UI
-	DrawHeader();
-	DrawFooter();
-	AmiiboList->DrawList();
-	MenuList->DrawList();
-	DrawButtonBorders(renderer, AmiiboList, MenuList, HeaderHeight, FooterHeight, *Width, *Height, false);
-	
-	//Reset touch coords
-	TouchX = -1;
-	TouchY = -1;
-}
-
-void AmiigoUI::DrawHeader()
-{
-	//Draw the header
-	DrawJsonColorConfig(renderer, "AmiigoUI_DrawHeader");
-	SDL_Rect HeaderRect = {0,0, *Width, HeaderHeight};
-	SDL_RenderFillRect(renderer, &HeaderRect);
-	//Get the Amiibo path
-	char CurrentAmiibo[FS_MAX_PATH] = {0};
-	string HeaderText = "";
-	nfpemuGetCurrentAmiibo(CurrentAmiibo);
-	//String is empty so we need to set it to something so SDL doesn't crash
-	if(CurrentAmiibo[0] == NULL)
-	{
-		HeaderText = "No Amiibo Selected";
-	}
-	//Get the Amiibo name from the json
-	else
-	{
-		//get amiibo id
-		string AmiiboID;
-		string IDContents;
-		ifstream IDReader(std::string(CurrentAmiibo) +"/model.json");
-		if(!IDReader) HeaderText = "Missing model json!";
-		else //Else get the amiibo name from the json
-		{
-			if(dctut > 0)//load image triger
+						case emu::EmulationStatus::On:
+							emu::SetEmulationStatus(emu::EmulationStatus::Off);
+							static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Emuiibo disabled");
+						break;
+						case emu::EmulationStatus::Off:
+							emu::SetEmulationStatus(emu::EmulationStatus::On);
+							static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Emuiibo enabled");
+						break;
+						default:
+							static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Error: Unkown emulation status!");
+						break;
+					}
+				}
+			}
+			//Maker list is selected
+			else if(lists[i]->name == "MakerList" && lists[i]->enabled)
 			{
-				//Read each line
-				for(int i = 0; !IDReader.eof(); i++)
+				if(Arriba::Input::buttonDown(HidNpadButton_B) && makerIsInCategory)
 				{
-					string TempLine = "";
-					getline(IDReader, TempLine);
-					IDContents += TempLine;
+					static_cast<Arriba::Elements::InertialList*>(lists[i])->updateStrings(seriesList);
+					makerIsInCategory = false;
 				}
-				IDReader.close();
-				if(json::accept(IDContents))
+			}
+			//Settings is selected
+			else if(lists[i]->name == "SettingsScene" && lists[i]->enabled)
+			{
+				//Left / right pressed
+				if(Arriba::Input::buttonDown(HidNpadButton_Right) && Arriba::highlightedObject->tag != "SwitcherButton") Arriba::highlightedObject = selectorButton;
+				if(Arriba::Input::buttonDown(HidNpadButton_Left) && Arriba::highlightedObject->tag == "SwitcherButton") Arriba::highlightedObject = Arriba::findObjectByName("CategorySettingsButton");
+				//Up pressed
+				if(Arriba::Input::buttonDown(HidNpadButton_Up))
 				{
-					JData = json::parse(IDContents);
-					AmiiboID = JData["amiiboId"].get<std::string>();
+					if(Arriba::highlightedObject == Arriba::findObjectByName("UpdateAPIButton")) Arriba::highlightedObject = Arriba::findObjectByName("CategorySettingsButton");
+					else if(Arriba::highlightedObject == Arriba::findObjectByName("UpdaterButton")) Arriba::highlightedObject = Arriba::findObjectByName("UpdateAPIButton");
 				}
-				
-				//load amiiboo image test
-				string imageI = "sdmc:/config/amiigo/IMG/"+AmiiboID+".png";
-				if(CheckFileExists(imageI)&(fsize(imageI) != 0))
+				//Down pressed
+				if(Arriba::Input::buttonDown(HidNpadButton_Down))
 				{
-						dctut = 0;//set image triger off
-						AIcon = IMG_Load(imageI.c_str());
-						printf("Image %s.png loaded OK\n",AmiiboID.c_str());
-									
-				}else AIcon = NULL;//empty icon
+					if(Arriba::highlightedObject == Arriba::findObjectByName("CategorySettingsButton")) Arriba::highlightedObject = Arriba::findObjectByName("UpdateAPIButton");
+					else if(Arriba::highlightedObject == Arriba::findObjectByName("UpdateAPIButton") && Arriba::findObjectByName("UpdaterButton")->enabled) Arriba::highlightedObject = Arriba::findObjectByName("UpdaterButton");
+				}
 			}
 		}
-		
-		//Append the register path to the current amiibo var
-		strcat(CurrentAmiibo, "/register.json");
-		string FileContents = "";
-			ifstream FileReader(CurrentAmiibo);
-		//If the register file doesn't exist display message. This prevents a infinate loop.
-		if(!FileReader) HeaderText = "Missing register json!";
-		else //Else get the amiibo name from the json
+		//If one of the switcher buttons are selected
+		for (size_t i = 0; i < buttons.size(); i++)
 		{
-			//Read each line
-			for(int i = 0; !FileReader.eof(); i++)
+			if(Arriba::highlightedObject == buttons[i])
 			{
-				string TempLine = "";
-				getline(FileReader, TempLine);
-				FileContents += TempLine;
+				//If left is pressed switch to whichever list is enabled
+				if(Arriba::Input::buttonDown(HidNpadButton_Left))
+				{
+					for (size_t j = 0; j < lists.size(); j++) if(lists[j]->enabled) Arriba::highlightedObject = lists[j];
+				}
+				//If up is pressed go to whichever button is above in the switcher
+				else if(Arriba::Input::buttonDown(HidNpadButton_Up))
+				{
+					if(buttons[i]->name == "MakerButton") Arriba::highlightedObject = selectorButton;
+					else if(buttons[i]->name == "SettingsButton") Arriba::highlightedObject = makerButton;
+					else if(buttons[i]->name == "ExitButton") Arriba::highlightedObject = settingsButton;
+				}
+				//If down button is pressed go to whichever button is below in the switcher
+				else if(Arriba::Input::buttonDown(HidNpadButton_Down))
+				{
+					if(buttons[i]->name == "SelectorButton") Arriba::highlightedObject = makerButton;
+					else if(buttons[i]->name == "MakerButton") Arriba::highlightedObject = settingsButton;
+					else if(buttons[i]->name == "SettingsButton") Arriba::highlightedObject = exitButton;
+				}
+				break;
 			}
-			FileReader.close();
-			//Parse the data and set the HeaderText var
-		
-			if(json::accept(FileContents))
+		}
+	}
+
+	void switcherPressed()
+	{
+		//Disable all the lists
+		for (size_t i = 0; i < lists.size(); i++) lists[i]->enabled = false;
+		//Enable a list depending on which button was pressed
+		if(Arriba::highlightedObject == selectorButton)
+		{
+			selectorList->enabled = true;
+			selectorPath = "sdmc:/emuiibo/amiibo";
+			updateSelectorStrings();
+			selectorIsInCategory = false;
+			Arriba::Colour::neutral = {0.22,0.47,0.93,0.97};
+	    	Arriba::Colour::highlightA = {0.1,0.95,0.98,0.97};
+	    	Arriba::Colour::highlightB = {0.5,0.85,1,0.97};
+			static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Amiigo + Arriba");
+		}
+		else if(Arriba::highlightedObject == makerButton)
+		{
+			makerList->enabled = true;
+			if(makerIsInCategory)
 			{
-				JData = json::parse(FileContents);
-				HeaderText = JData["name"].get<std::string>();
-			}else HeaderText = "register.json bad sintax";
+				makerIsInCategory = false;
+			}
+			makerList->updateStrings(seriesList);
+			Arriba::Colour::neutral = {0.22,0.8,0.47,0.97};
+	    	Arriba::Colour::highlightA = {0.6,0.95,0.98,0.97};
+	    	Arriba::Colour::highlightB = {0.1,0.98,0.55,0.97};
+			static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Amiigo Maker");
 		}
-
-
-	}
-	//draw amiibo image
-				SDL_Texture* Headericon = SDL_CreateTextureFromSurface(renderer, AIcon);
-				SDL_Rect ImagetRect = {5, 0 , 65, 80};
-				SDL_RenderCopy(renderer, Headericon , NULL, &ImagetRect);
-				SDL_DestroyTexture(Headericon);
-				
-	//Draw the Amiibo path text
-	SDL_Surface* HeaderTextSurface = TTF_RenderUTF8_Blended_Wrapped(HeaderFont, HeaderText.c_str(), TextColour, *Width);
-	SDL_Texture* HeaderTextTexture = SDL_CreateTextureFromSurface(renderer, HeaderTextSurface);
-	SDL_Rect HeaderTextRect = {(*Width - HeaderTextSurface->w) / 2, (HeaderHeight - HeaderTextSurface->h) / 2, HeaderTextSurface->w, HeaderTextSurface->h};
-	SDL_RenderCopy(renderer, HeaderTextTexture, NULL, &HeaderTextRect);
-	//Clean up
-	SDL_DestroyTexture(HeaderTextTexture);
-	SDL_FreeSurface(HeaderTextSurface);
-	//Switch to next Amiibo
-	if(CheckButtonPressed(&HeaderRect, TouchX, TouchY))
-	{
-		nfpemuMoveToNextAmiibo();
-		dctut = 1;//reload signal for the image
-	}
-}
-
-void AmiigoUI::DrawFooter()
-{
-	//Get info about the current status
-	NfpEmuEmulationStatus CurrentStatus = (NfpEmuEmulationStatus)3;
-	nfpemuGetStatus(&CurrentStatus);
-	//Draw the footer
-	int FooterYOffset = *Height - FooterHeight;
-	SDL_Rect FooterRect = {0,FooterYOffset, *Width, FooterHeight};
-	string StatusText = "";
-	switch(CurrentStatus)
-	{
-		case 0:
-		StatusText = "On";
-		DrawJsonColorConfig(renderer, "AmiigoUI_DrawFooter_0");
-		break;
-		case 1:
-		DrawJsonColorConfig(renderer, "AmiigoUI_DrawFooter_1");
-		StatusText = "Temporary on";
-		break;
-		case 2:
-		DrawJsonColorConfig(renderer, "AmiigoUI_DrawFooter_2");
-		StatusText = "Off";
-		break;
-		case 3:
-		DrawJsonColorConfig(renderer, "AmiigoUI_DrawFooter_3");
-		StatusText = "Emuiibo not loaded";
-		break;
-		default:
-		DrawJsonColorConfig(renderer, "AmiigoUI_DrawFooter_D");
-		StatusText = "Internal error";
-		break;
-	}
-	
-	//Footer was pressed so we should change the status
-	if(CheckButtonPressed(&FooterRect, TouchX, TouchY))
-	{
-		switch(CurrentStatus)
+		else if(Arriba::highlightedObject == settingsButton)
 		{
-			case 0:
-			nfpemuSetEmulationOff();
-			break;
-			case 1:
-			nfpemuSetEmulationOnForever();
-			break;
-			case 2:
-			nfpemuSetEmulationOnOnce();
-			break;
+			settingsScene->enabled = true;
+			Arriba::Colour::neutral = {0.57,0.21,0.93,0.97};
+	    	Arriba::Colour::highlightA = {0.9,0.95,0.94,0.97};
+	    	Arriba::Colour::highlightB = {1,0.85,1,0.97};
+			static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Settings");
 		}
 	}
-	
-	SDL_RenderFillRect(renderer, &FooterRect);
-	
-	//Draw the status text
-	SDL_Surface* FooterTextSurface = TTF_RenderUTF8_Blended_Wrapped(HeaderFont, StatusText.c_str(), TextColour, *Width);
-	SDL_Texture* FooterTextTexture = SDL_CreateTextureFromSurface(renderer, FooterTextSurface);
-	SDL_Rect FooterTextRect = {(*Width - FooterTextSurface->w) / 2, FooterYOffset + ((FooterHeight - FooterTextSurface->h) / 2), FooterTextSurface->w, FooterTextSurface->h};
-	SDL_RenderCopy(renderer, FooterTextTexture, NULL, &FooterTextRect);
-	//Clean up
-	SDL_DestroyTexture(FooterTextTexture);
-	SDL_FreeSurface(FooterTextSurface);
-}
 
-void AmiigoUI::ScanForAmiibos()
-{
-	//clear the Amiibo list
-	Files.clear();
-	//Reset some vars so we don't crash when a new Amiibo is added
-	AmiiboList->SelectedIndex = 0;
-	AmiiboList->CursorIndex = 0;
-	AmiiboList->ListRenderOffset = 0;
-	//Do the actual scanning
-	DIR* dir;
-	struct dirent* ent;
-	dir = opendir(ListDir.c_str());
-	while ((ent = readdir(dir)))
+	void selectorInput(int index)
 	{
-		Files.push_back(*ent);
-	}
-	closedir(dir);
-	//Sort the dirs by name
-	std::sort(Files.begin(), Files.end(), [](dirent A, dirent B) -> bool{
-		int MaxLength = 0;
-		if(sizeof(A.d_name) > sizeof(B.d_name)) MaxLength = sizeof(A.d_name);
-		else MaxLength = sizeof(B.d_name);
-		int Itterate = 0;
-		while(Itterate < MaxLength)
+		if(selectorAmiibos[index].isCategory)
 		{
-			if(tolower(A.d_name[Itterate]) != tolower(B.d_name[Itterate])) break;
-			else Itterate++;
+			selectorPath += "/" + selectorAmiibos[index].name;
+			updateSelectorStrings();
+			selectorIsInCategory = true;
 		}
-		return tolower(A.d_name[Itterate]) < tolower(B.d_name[Itterate]);
-	});
-	//Add the dirs to the list
-	AmiiboList->ListingTextVec.clear();
-	for(int i = 0; i < Files.size(); i++)
-	{
-		AmiiboList->ListingTextVec.push_back(Files.at(i).d_name);
+		else
+		{
+			std::string amiiboPath = selectorPath + "/" + selectorAmiibos[index].name;
+			char path[FS_MAX_PATH];
+			strcpy(path, amiiboPath.c_str());
+			emu::SetEmulationStatus(emu::EmulationStatus::On);
+			emu::SetActiveVirtualAmiibo(path, FS_MAX_PATH);
+			static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText(path);
+		}
 	}
-}
 
-void AmiigoUI::PleaseWait(string mensage)
-{
-	//Draw the rect
-	DrawJsonColorConfig(renderer, "AmiigoUI_PleaseWait");
-	SDL_Rect MessageRect = {0,0, *Width, *Height};
-	SDL_RenderFillRect(renderer, &MessageRect);
-	//Draw the please wait text
-	SDL_Surface* MessageTextSurface = TTF_RenderUTF8_Blended_Wrapped(HeaderFont, mensage.c_str(), TextColour, *Width);
-	SDL_Texture* MessagerTextTexture = SDL_CreateTextureFromSurface(renderer, MessageTextSurface);
-	SDL_Rect HeaderTextRect = {(*Width - MessageTextSurface->w) / 2, (*Height - MessageTextSurface->h) / 2, MessageTextSurface->w, MessageTextSurface->h};
-	SDL_RenderCopy(renderer, MessagerTextTexture, NULL, &HeaderTextRect);
-	//Clean up
-	SDL_DestroyTexture(MessagerTextTexture);
-	SDL_FreeSurface(MessageTextSurface);
-}
-
-void AmiigoUI::SetAmiibo(int Index)
-{
-	char PathToAmiibo[FS_MAX_PATH] = "";
-	strcat(PathToAmiibo, ListDir.c_str());
-	strcat(PathToAmiibo, Files.at(Index).d_name);
-	//Check if Amiibo or empty folder
-	string TagPath = PathToAmiibo;
-	TagPath += "/tag.json";
-	if(!CheckFileExists(TagPath))
+	void makerInput(int index)
 	{
-		ListDir = PathToAmiibo;
-		ListDir += "/";
-		ScanForAmiibos();
+		if(makerIsInCategory)
+		{
+			createVirtualAmiibo(creatorData[index]);
+		}
+		else
+		{
+			creatorData = getAmiibosFromSeries(seriesList[index]);
+			std::vector<std::string> amiiboNames;
+			for (size_t i = 0; i < creatorData.size(); i++)
+			{
+				amiiboNames.push_back(creatorData[i].name);
+			}
+			makerList->updateStrings(amiiboNames);
+			selectedSeries = seriesList[index];
+			makerIsInCategory = true;
+		}
 	}
-	else 
-	{
-		nfpemuSetCustomAmiibo(PathToAmiibo);
-		dctut = 1;//reload signal for the image
-	}
-}
 
-void AmiigoUI::InitList()
-{
-	//This crashes when in the constructor because these values aren't set yet
-	HeaderHeight = (*Height / 100) * 10;
-	FooterHeight = (*Height / 100) * 10;
-	AmiiboListWidth = (*Width / 100) * 80;
-	//for shared font
-	PlFontData standardFontData;
-	plGetSharedFontByType(&standardFontData, PlSharedFontType_Standard);
-	
-	//Assign vars
-	AmiiboList->TouchListX = &TouchX;
-	AmiiboList->TouchListY = &TouchY;
-	AmiiboList->ListFont = GetSharedFont(32); //Load the list font
-	AmiiboList->ListingsOnScreen = 10;
-	AmiiboList->ListHeight = *Height - HeaderHeight - FooterHeight;
-	AmiiboList->ListWidth = AmiiboListWidth;
-	AmiiboList->ListYOffset = HeaderHeight;
-	AmiiboList->renderer = renderer;
-	AmiiboList->IsActive = true;
-	/*
-	for(int i = 0; i < Files.size(); i++)
+	void updateSelectorStrings()
 	{
-		AmiiboList->ListingTextVec.push_back(Files.at(i).d_name);
-	}*/
-	//Menu list
-	MenuList->TouchListX = &TouchX;
-	MenuList->TouchListY = &TouchY;
-	MenuList->ListFont = GetSharedFont(32); //Load the list font
-	MenuList->ListingsOnScreen = MenuList->ListingTextVec.size();
-	MenuList->ListHeight = *Height - HeaderHeight - FooterHeight;
-	MenuList->ListWidth = *Width - AmiiboListWidth;
-	MenuList->ListYOffset = HeaderHeight;
-	MenuList->ListXOffset = AmiiboListWidth;
-	MenuList->renderer = renderer;
-	MenuList->CenterText = true;
+		selectorAmiibos = scanForAmiibo(selectorPath.c_str());
+		std::vector<std::string> amiiboNames;
+		for (size_t i = 0; i < selectorAmiibos.size(); i++)
+		{
+			amiiboNames.push_back(selectorAmiibos[i].name);
+		}
+		selectorList->updateStrings(amiiboNames);
+	}
 }

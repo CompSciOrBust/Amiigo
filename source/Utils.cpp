@@ -1,131 +1,320 @@
-#include <iostream>
-#include <string>
-#include <sys/stat.h>
+#include <utils.h>
+#include <dirent.h>
 #include <cstring>
+#include <unistd.h>
+#include <nlohmann/json.hpp>
 #include <fstream>
-#include <SDL.h>
-#include <SDL2/SDL_ttf.h>
-#include <stdlib.h>
-#include "nlohmann/json.hpp"
-#include <switch.h>
-#include <vector>
-#include <stdio.h>
-#include <chrono>
-#include "Utils.h"
-using json = nlohmann::json;
-string IDContents;
+#include <iomanip>
+#include <Networking.h>
+#include <minizip/unzip.h>
+#include <emuiibo.hpp>
+#include <AmiigoSettings.h>
+#include <AmiigoUI.h>
 
-using namespace std;
-
-int fsize(string fil) {
- std::streampos fsize = 0;
-
-    std::ifstream myfile (fil, ios::in);  // File is of type const char*
-
-    fsize = myfile.tellg();         // The file pointer is currently at the beginning
-    myfile.seekg(0, ios::end);      // Place the file pointer at the end of file
-
-    fsize = myfile.tellg() - fsize;
-    myfile.close();
-
-    static_assert(sizeof(fsize) >= sizeof(long long), "Oops.");
-    return fsize;
-}
-
-bool CheckFileExists(string Path)
+bool checkIfFileExists(char* path)
 {
-	struct stat Buffer;   
-	return (stat (Path.c_str(), &Buffer) == 0); 
+    return !access(path, F_OK);
 }
 
-string GoUpDir(string Path)
+std::vector<AmiiboEntry> scanForAmiibo(const char* path)
 {
-	char CurrentPath[Path.length()] = "";
-	strcat(CurrentPath, Path.c_str());
-	CurrentPath[Path.length()-1] = 0x00;
-	Path = CurrentPath;
-	int LastSlash = Path.find_last_of('/');
-	CurrentPath[LastSlash] = 0x00;
-	if(strlen(CurrentPath) < 21)
-	{
-		return "sdmc:/emuiibo/amiibo/";
-	}
-	return CurrentPath;
+    //Open path
+    DIR* folder = opendir(path);
+    if(folder)
+    {
+        //List folder entries
+        dirent* entry;
+        std::vector<AmiiboEntry> amiibos;
+        while(entry = readdir(folder))
+        {
+            char flagPath[512] = "";
+            strcat(flagPath, path);
+            strcat(flagPath, "/");
+            strcat(flagPath, entry->d_name);
+            strcat(flagPath, "/amiibo.flag");
+            AmiiboEntry amiibo = {entry->d_name, !checkIfFileExists(flagPath)};
+            amiibos.push_back(amiibo);
+        }
+        closedir(folder);
+        //Sort alphabetically
+        //Sort alphabetically
+        std::sort(amiibos.begin(), amiibos.end(), [](AmiiboEntry amiiboA, AmiiboEntry amiiboB)->bool{
+            int maxLength = (amiiboA.name.length() < amiiboB.name.length()) ? amiiboA.name.length() : amiiboB.name.length();
+            int iterations = 0;
+            while (iterations < maxLength)
+            {
+                if(std::tolower(amiiboA.name[iterations]) != std::tolower(amiiboB.name[iterations])) return std::tolower(amiiboA.name[iterations]) < std::tolower(amiiboB.name[iterations]);
+                else iterations++;
+            }
+            return false;
+        });
+        return amiibos;
+    }
 }
 
-/*
-* copy function
-*/
-bool copy_me(string origen, string destino) {
-    if(CheckFileExists(origen))
-	{
-		ifstream source(origen, ios::binary);
-		ofstream dest(destino, ios::binary);
-		dest << source.rdbuf();
-		source.close();
-		dest.close();
-		return true;
-	}else{
-		return false;
-	}
-return 0;
-}
-
-void DrawJsonColorConfig(SDL_Renderer* renderer, string Head)
+std::vector<std::string> getListOfSeries()
 {
-	if(CheckFileExists("sdmc:/config/amiigo/config.json"))
-	{
-		json JEData;
-		if (IDContents.size() == 0)
-		{
-			ifstream IDReader("sdmc:/config/amiigo/config.json");
-				//Read each line
-				printf("Read Json\n");
-				for(int i = 0; !IDReader.eof(); i++)
-				{
-					string TempLine = "";
-					getline(IDReader, TempLine);
-					IDContents += TempLine;
-					printf("%s\n", TempLine.c_str());
-				}
-			IDReader.close();
-		}
-			
-		if(json::accept(IDContents))
-		{
-			JEData = json::parse(IDContents);
-			int CR = std::stoi(JEData[Head+"_R"].get<std::string>());
-			int CG = std::stoi(JEData[Head+"_G"].get<std::string>());
-			int CB = std::stoi(JEData[Head+"_B"].get<std::string>());
-			int CA = std::stoi(JEData[Head+"_A"].get<std::string>());
-			SDL_SetRenderDrawColor(renderer,CR,CG,CB,CA);
-		}else{
-			//remove bad config
-			IDContents = "";
-			remove("sdmc:/config/amiigo/bad_config.json");
-			rename("sdmc:/config/amiigo/config.json","sdmc:/config/amiigo/bad_config.json");
-		}
-	}else{
-		//Default values
-		if(Head == "UI_borders") SDL_SetRenderDrawColor(renderer,0 ,0 ,0 ,255);
-		if(Head == "UI_borders_list") SDL_SetRenderDrawColor(renderer,0 ,0 ,0 ,255);
-		if(Head == "UI_background") SDL_SetRenderDrawColor(renderer,136 ,254 ,254 ,255);
-		if(Head == "UI_background_alt") SDL_SetRenderDrawColor(renderer,0 ,178 ,212 ,255);
-		if(Head == "UI_cursor") SDL_SetRenderDrawColor(renderer,255 ,255 ,255 ,255);
-		if(Head == "AmiigoUI_DrawUI") SDL_SetRenderDrawColor(renderer,94 ,94 ,94 ,255);
-		if(Head == "AmiigoUI_DrawHeader") SDL_SetRenderDrawColor(renderer,0 ,188 ,212 ,255);
-		if(Head == "AmiigoUI_PleaseWait") SDL_SetRenderDrawColor(renderer,0 ,188 ,212 ,255);
-		if(Head == "AmiigoUI_DrawFooter_0") SDL_SetRenderDrawColor(renderer,0 ,255 ,0 ,255);
-		if(Head == "AmiigoUI_DrawFooter_1") SDL_SetRenderDrawColor(renderer,255 ,255 ,0 ,255);
-		if(Head == "AmiigoUI_DrawFooter_2") SDL_SetRenderDrawColor(renderer,255 ,0 ,0 ,255);
-		if(Head == "AmiigoUI_DrawFooter_3") SDL_SetRenderDrawColor(renderer,255 ,255 ,0 ,255);
-		if(Head == "AmiigoUI_DrawFooter_D") SDL_SetRenderDrawColor(renderer,255 ,0 ,0 ,255);
-		if(Head == "CreatorUI_DrawHeader") SDL_SetRenderDrawColor(renderer, 0, 188, 212, 255);
-		if(Head == "CreatorUI_DrawFooter_Select") SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-		if(Head == "CreatorUI_DrawFooter_Back") SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-		if(Head == "CreatorUI_PleaseWait") SDL_SetRenderDrawColor(renderer, 0, 188, 212, 255);
-		if(Head == "CreatorUI_DrawUI") SDL_SetRenderDrawColor(renderer, 94, 94, 94, 255);
-		if(Head == "UpdaterUI_DrawText") SDL_SetRenderDrawColor(renderer, 0, 188, 212, 255);
-		if (IDContents.size() != 0) IDContents = "";//reset json var
-	}
+    std::vector<std::string> series;
+    if(checkIfFileExists("sdmc:/config/amiigo/API.json"))
+    {
+        std::string APIData;
+        std::string tempLine;
+        std::ifstream fileStream("sdmc:/config/amiigo/API.json");
+        //Read the file from disk
+        while(getline(fileStream, tempLine))
+        {
+            APIData += tempLine;
+        }
+        nlohmann::json APIJson = nlohmann::json::parse(APIData);
+        fileStream.close();
+        //Loop over every entry under the Amiibo object
+        for (int i = 0; i < APIJson["amiibo"].size(); i++)
+        {
+            bool isKnown = false;
+            std::string seriesName = APIJson["amiibo"][i]["gameSeries"].get<std::string>();
+            //Check if series is in list
+            for (size_t i = 0; i < series.size(); i++)
+            {
+                if(series[i] == seriesName) isKnown = true;
+            }
+            //If not add it to the list
+            if(!isKnown) series.push_back(seriesName);
+        }
+    }
+    else return {"Error, no API cache!"};
+    //Sort alphabetically
+    std::sort(series.begin(), series.end(), [](std::string seriesA, std::string seriesB)->bool{
+        int maxLength = (seriesA.length() < seriesB.length()) ? seriesA.length() : seriesB.length();
+        int iterations = 0;
+        while (iterations < maxLength)
+        {
+            if(std::tolower(seriesA[iterations]) != std::tolower(seriesB[iterations])) return std::tolower(seriesA[iterations]) < std::tolower(seriesB[iterations]);
+            else iterations++;
+        }
+        return false;
+    });
+    return series;
+}
+
+//Written on 27/01/2021 for Kronos, can't remember how it works but does magic bit shifting
+unsigned short shiftAndDec(std::string input)
+{
+    unsigned short value = std::stoi(input, nullptr, 16);
+    unsigned short a = value & 0xFF00;
+    a = 0x00FF & (a >> 8);
+    value = value << 8;
+    value = 0xffff & value;
+    value = value | a;
+    return value;
+}
+
+std::vector<AmiiboCreatorData> getAmiibosFromSeries(std::string series)
+{
+    std::vector<AmiiboCreatorData> amiibos;
+    if(checkIfFileExists("sdmc:/config/amiigo/API.json"))
+    {
+        std::string APIData;
+        std::string tempLine;
+        std::ifstream fileStream("sdmc:/config/amiigo/API.json");
+        //Read the file from disk
+        while(getline(fileStream, tempLine))
+        {
+            APIData += tempLine;
+        }
+        nlohmann::json APIJson = nlohmann::json::parse(APIData);
+        fileStream.close();
+        //Loop over every entry under the AMiibo object
+        for (int i = 0; i < APIJson["amiibo"].size(); i++)
+        {
+            //If series matches add it to the list
+            if(APIJson["amiibo"][i]["gameSeries"].get<std::string>() == series)
+            {
+                //Process the API data the same way Emutool does
+                //https://github.com/XorTroll/emuiibo/blob/90cbc54a95c0aa4a9ceb6dd55b633de206763094/emutool/emutool/AmiiboUtils.cs#L144
+                AmiiboCreatorData newAmiibo;
+                newAmiibo.name = APIJson["amiibo"][i]["name"].get<std::string>();
+                std::string fullID = APIJson["amiibo"][i]["head"].get<std::string>() + APIJson["amiibo"][i]["tail"].get<std::string>();
+                //Get strings needed to derive IDs
+                //Var names taken from emutool
+                std::string character_game_id_str = fullID.substr(0, 4);
+                std::string character_variant_str = fullID.substr(4, 2);
+                std::string figure_type_str = fullID.substr(6, 2);
+                std::string model_no_str = fullID.substr(8, 4);
+                std::string series_str = fullID.substr(12, 2);
+                //Swap endianess for game ID
+                newAmiibo.game_character_id = shiftAndDec(character_game_id_str);
+                //Get character variant
+                newAmiibo.character_variant = (char)stoi(character_variant_str, nullptr, 16);
+                //Get figure type
+                newAmiibo.figure_type = (char)stoi(figure_type_str, nullptr, 16);
+                //Get model number
+                newAmiibo.model_number = (unsigned short)stoi(model_no_str, nullptr, 16);
+                //Get series ID
+                newAmiibo.series = (char)stoi(series_str, nullptr, 16);
+                //Get the series name (only used for categorization)
+                newAmiibo.gameName = APIJson["amiibo"][i]["gameSeries"].get<std::string>();
+                //Add new amiibo to list
+                amiibos.push_back(newAmiibo);
+            }
+        }
+    }
+    else return {{"Error, API cache vanished?",0,0,0,0,0}};
+    //Sort alphabetically
+    std::sort(amiibos.begin(), amiibos.end(), [](AmiiboCreatorData amiiboA, AmiiboCreatorData amiiboB)->bool{
+        int maxLength = (amiiboA.name.length() < amiiboB.name.length()) ? amiiboA.name.length() : amiiboB.name.length();
+        int iterations = 0;
+        while (iterations < maxLength)
+        {
+            if(std::tolower(amiiboA.name[iterations]) != std::tolower(amiiboB.name[iterations])) return std::tolower(amiiboA.name[iterations]) < std::tolower(amiiboB.name[iterations]);
+            else iterations++;
+        }
+        return false;
+    });
+    return amiibos;
+}
+
+void createVirtualAmiibo(AmiiboCreatorData amiibo)
+{
+    std::string pathBase = "sdmc:/emuiibo/amiibo/";
+    if(Amiigo::Settings::saveAmiibosToCategory)
+    {
+        pathBase += amiibo.gameName + "/";
+        mkdir(pathBase.c_str(), 0);
+    }
+    pathBase += amiibo.name;
+    mkdir(pathBase.c_str(), 0);
+    std::ofstream fileStream(pathBase + "/amiibo.flag");
+    fileStream.close();
+    fileStream.open(pathBase + "/amiibo.json");
+    nlohmann::json amiiboJson;
+    amiiboJson["name"] = amiibo.name;
+    amiiboJson["write_counter"] = 0;
+    amiiboJson["version"] = 0;
+    amiiboJson["mii_charinfo_file"] = "mii-charinfo.bin";
+    amiiboJson["first_write_date"]["y"] = 2019;
+    amiiboJson["first_write_date"]["m"] = 1;
+    amiiboJson["first_write_date"]["d"] = 1;
+    amiiboJson["last_write_date"]["y"] = 2019;
+    amiiboJson["last_write_date"]["m"] = 1;
+    amiiboJson["last_write_date"]["d"] = 1;
+    amiiboJson["id"]["game_character_id"] = amiibo.game_character_id;
+    amiiboJson["id"]["character_variant"] = amiibo.character_variant;
+    amiiboJson["id"]["figure_type"] = amiibo.figure_type;
+    amiiboJson["id"]["series"] = amiibo.series;
+    amiiboJson["id"]["model_number"] = amiibo.model_number;
+    amiiboJson["uuid"] = {rand() % 256, rand() % 256, rand() % 256, rand() % 256, rand() % 256, rand() % 256, rand() % 256, 0, 0, 0};
+    fileStream << std::setw(4) << amiiboJson << std::endl;
+    fileStream.close();
+}
+
+void firstTimeSetup()
+{
+    //Cache API data
+    if(!checkIfFileExists("sdmc:/config/amiigo/API.json"))
+    {
+        if(checkIfFileExists("sdmc:/config/amiigo/API.tmp")) remove("sdmc:/config/amiigo/API.tmp");
+        while(!retrieveToFile("https://www.amiiboapi.com/api/amiibo", "sdmc:/config/amiigo/API.tmp"));
+        rename("sdmc:/config/amiigo/API.tmp", "sdmc:/config/amiigo/API.json");
+    }
+    //Install emuiibo
+    if(!checkIfFileExists("sdmc:/atmosphere/contents/0100000000000352/exefs.nsp"))
+    {
+        while(!hasNetworkConnection());
+        if(checkIfFileExists("sdmc:/config/amiigo/emuiibo.tmp")) remove("sdmc:/config/amiigo/emuiibo.tmp");
+        std::string emuiiboReleaseInfo = retrieveToString("https://api.github.com/repos/XorTroll/Emuiibo/releases", "application/json");
+        nlohmann::json emuiiboInfo = nlohmann::json::parse(emuiiboReleaseInfo);
+        while(!retrieveToFile(emuiiboInfo[0]["assets"][0]["browser_download_url"].get<std::string>().c_str(), "sdmc:/config/amiigo/emuiibo.tmp"));
+        printf("Unzipping\n");
+        //Extract the files from the emuiibo zip
+        mkdir("sdmc:/atmosphere/contents/0100000000000352/", 0);
+        mkdir("sdmc:/atmosphere/contents/0100000000000352/flags/", 0);
+        std::ofstream fileStream("sdmc:/atmosphere/contents/0100000000000352/flags/boot2.flag");
+        fileStream.close();
+        unzFile zipFile = unzOpen("sdmc:/config/amiigo/emuiibo.tmp");
+        unz_global_info zipInfo;
+        unzGetGlobalInfo(zipFile, &zipInfo);
+        for(int i = 0; i < zipInfo.number_entry; i++)
+        {
+            char fileName[256];
+            unz_file_info fileInfo;
+            unzOpenCurrentFile(zipFile);
+            unzGetCurrentFileInfo(zipFile, &fileInfo, fileName, sizeof(fileName), nullptr, 0, nullptr, 0);
+            if(strcmp("SdOut/atmosphere/contents/0100000000000352/exefs.nsp", fileName) == 0)
+            {
+                void* buffer = malloc(500000);
+                FILE* outfile = fopen("sdmc:/atmosphere/contents/0100000000000352/exefs.nsp", "wb");
+                for(int j = unzReadCurrentFile(zipFile, buffer, 500000); j > 0; j = unzReadCurrentFile(zipFile, buffer, 500000))
+                {
+                    fwrite(buffer, 1, j, outfile);
+                }
+                fclose(outfile);
+                free(buffer);
+                break;
+            }
+            unzCloseCurrentFile(zipFile);
+            unzGoToNextFile(zipFile);
+        }
+        unzClose(zipFile);
+        remove("sdmc:/config/amiigo/emuiibo.tmp");
+        //Launch the sysmodule
+        pmshellInitialize();
+        NcmProgramLocation emuiiboLoc = {0x0100000000000352, NcmStorageId_None};
+        pmshellLaunchProgram(0, &emuiiboLoc, nullptr);
+        pmshellExit();
+    }
+    //If flag exists download update
+    if(checkIfFileExists("sdmc:/config/amiigo/update.flag"))
+    {
+        while(!hasNetworkConnection());
+        retrieveToFile(Amiigo::Settings::updateURL, "sdmc:/switch/Failed_Amiigo_Update.nro");
+        if(checkIfFileExists("sdmc:/switch/Failed_Amiigo_Update.nro"))
+        {
+            romfsExit();
+            if(checkIfFileExists(Amiigo::Settings::amiigoPath)) remove(Amiigo::Settings::amiigoPath);
+            rename("sdmc:/switch/Failed_Amiigo_Update.nro", Amiigo::Settings::amiigoPath);
+        }
+        if(Amiigo::Settings::amiigoPath) envSetNextLoad(Amiigo::Settings::amiigoPath, "");
+        Amiigo::UI::isRunning = 0;
+        remove("sdmc:/config/amiigo/update.flag");
+    }
+}
+
+bool checkForUpdates()
+{
+    printf("Checking for updates\n");
+    //Return false if no internet
+    if(!hasNetworkConnection())
+    {
+        printf("No connection\b");
+        return false;
+    }
+    printf("Getting network time\n");
+    timeInitialize();
+    long unsigned int time = Amiigo::Settings::updateTime;
+    timeGetCurrentTime(TimeType_NetworkSystemClock, &time);
+    timeExit();
+    //Only check for updates once every 24 hours, unless an update is found.
+    if(Amiigo::Settings::updateTime > time)
+    {
+        printf("Last check less than 24 hours ago\n");
+        return false;
+    }
+    printf("Getting API data\n");
+    std::string amiigoReleaseInfo = retrieveToString("https://api.github.com/repos/CompSciOrBust/Amiigo/releases", "application/json");
+    if(amiigoReleaseInfo.size() < 300) //User is probably being rate limited
+    {
+        printf("%s\n", amiigoReleaseInfo.c_str());
+        printf("Error, sub 300\n");
+        return false;
+    }
+    nlohmann::json amiigoInfoParsed = nlohmann::json::parse(amiigoReleaseInfo);
+    //If on the latest update wait another 24 hours before checking again
+    if(amiigoInfoParsed[0]["tag_name"].get<std::string>() == VERSION)
+    {
+        Amiigo::Settings::updateTime = time + 86400;
+        Amiigo::Settings::saveSettings();
+        return false;
+    }
+    else Amiigo::Settings::updateURL = amiigoInfoParsed[0]["assets"][0]["browser_download_url"].get<std::string>().c_str();
+    return true;
 }

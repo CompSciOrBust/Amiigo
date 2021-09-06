@@ -1,43 +1,53 @@
-#include <SDL.h>
-#include <SDL2/SDL_ttf.h>
-#include <string>
+#pragma once
+#include <arriba.h>
+#include <arribaElements.h>
+#include <arribaPrimitives.h>
 #include <vector>
-#include <dirent.h>
-#include <UI.h>
-#include "nlohmann/json.hpp"
-using namespace std;
-using json = nlohmann::json;
+#include <utils.h>
 
-class AmiigoUI
+namespace Amiigo::UI
 {
-	private:
-	TTF_Font *HeaderFont;
-	TTF_Font *ListFont;
-	SDL_Color TextColour = {0, 0, 0};
-	void DrawHeader();
-	void DrawFooter();
-	int HeaderHeight;
-	int FooterHeight;
-	vector <dirent> Files{vector <dirent>(0)};
-	int TouchX = -1;
-	int TouchY = -1;
-	ScrollList *AmiiboList;
-	json JData;
-	public:
-	AmiigoUI();
-	void GetInput();
-	void DrawUI();
-	void ScanForAmiibos();
-	void PleaseWait(string mensage);
-	void InitList();
-	void SetAmiibo(int);
-	SDL_Event *Event;
-	int *WindowState;
-	SDL_Renderer *renderer;
-	int *Width;
-	int *Height;
-	int *IsDone;
-	ScrollList *MenuList;
-	int AmiiboListWidth;
-	string ListDir = "sdmc:/emuiibo/amiibo/";
-};
+    //Variables
+    inline int isRunning = 1;
+    inline int statusHeight = Arriba::Graphics::windowHeight * 0.1;
+    inline int switcherWidth = Arriba::Graphics::windowWidth * 0.3;
+    inline int switcherHeight = Arriba::Graphics::windowHeight - statusHeight;
+    inline std::vector<std::string> seriesList;
+    inline std::vector<AmiiboCreatorData> creatorData;
+    inline bool makerIsInCategory = false;
+    inline bool selectorIsInCategory = false;
+    inline std::string selectedSeries;
+    inline std::vector<AmiiboEntry> selectorAmiibos;
+    inline std::string selectorPath = "sdmc:/emuiibo/amiibo";
+    //UI Object pointers
+    //Scene bases
+    inline Arriba::Primitives::Quad* splashScene = nullptr;
+    inline Arriba::Primitives::Quad* selectorScene = nullptr;
+    inline Arriba::Primitives::Quad* sceneSwitcher = nullptr;
+    inline Arriba::Primitives::Quad* makerSwitcher = nullptr;
+    //Lists
+    inline std::vector<Arriba::UIObject*> lists;
+    inline Arriba::Elements::InertialList* selectorList = nullptr;
+    inline Arriba::Elements::InertialList* makerList = nullptr;
+    //Switcher buttons
+    inline std::vector<Arriba::UIObject*> buttons;
+    inline Arriba::Elements::Button* selectorButton = nullptr;
+    inline Arriba::Elements::Button* makerButton = nullptr;
+    inline Arriba::Elements::Button* settingsButton = nullptr;
+    inline Arriba::Elements::Button* exitButton = nullptr;
+    //Settings objects
+    inline Arriba::Primitives::Quad* settingsScene = nullptr;
+
+
+    void initUI();
+    void initSplash();
+    void initSceneSwitcher();
+    void initSelector();
+    void initMaker();
+    void initSettings();
+    void handleInput();
+    void switcherPressed();
+    void selectorInput(int index);
+    void makerInput(int index);
+    void updateSelectorStrings();
+}

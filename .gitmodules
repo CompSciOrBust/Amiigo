@@ -1,0 +1,6 @@
+[submodule "Arriba"]
+	path = Arriba
+	url = https://github.com/CompSciOrBust/Arriba
+[submodule "json"]
+	path = json
+	url = https://github.com/nlohmann/json
