@@ -1,4 +1,4 @@
-[Logo](icon.jpg)
+![Logo](icon.jpg)
 
 # Amiigo
 
