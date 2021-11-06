@@ -227,13 +227,13 @@ namespace Amiigo::UI
 		//Credits Quad
 		Arriba::Primitives::Quad* creditsQuad = new Arriba::Primitives::Quad(0,0,330, Arriba::Graphics::windowHeight - statusHeight, Arriba::Graphics::Pivot::topLeft);
 		creditsQuad->setParent(settingsScene);
-		creditsQuad->setColour({0,0,0,0.8});
-		int yOffset = 30;
+		creditsQuad->setColour({0,0,0,0.9});
+		int yOffset = 0;
 		//Credits text
 		Arriba::Primitives::Text* creditsTitleText = new Arriba::Primitives::Text("Credits", 64);
 		creditsTitleText->setColour({0,0.7,1,1});
 		creditsTitleText->setParent(creditsQuad);
-		creditsTitleText->transform.position = {creditsQuad->width/2, yOffset += creditsTitleText->height,0};
+		creditsTitleText->transform.position = {creditsQuad->width/2, yOffset += creditsTitleText->height + 30,0};
 		for (int i = 0; i < 5; i++)
 		{
 			std::string titleText = "Place holder";
@@ -263,10 +263,10 @@ namespace Amiigo::UI
 			}
 			Arriba::Primitives::Text* titleTextObject = new Arriba::Primitives::Text(titleText.c_str(),38);
 			titleTextObject->setParent(creditsQuad);
-			titleTextObject->transform.position = {creditsQuad->width/2, yOffset += titleTextObject->height,0};
+			titleTextObject->transform.position = {creditsQuad->width/2, yOffset += titleTextObject->height + 20,0};
 			Arriba::Primitives::Text* nameTextObject = new Arriba::Primitives::Text(nameText.c_str(), 28);
 			nameTextObject->setParent(creditsQuad);
-			nameTextObject->transform.position = {creditsQuad->width/2, yOffset += nameTextObject->height,0};
+			nameTextObject->transform.position = {creditsQuad->width/2, yOffset += nameTextObject->height + 10,0};
 			titleTextObject->setColour({0,0.7,1,1});
 			nameTextObject->setColour({0,0.7,1,1});
 		}

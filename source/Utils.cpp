@@ -210,11 +210,30 @@ void createVirtualAmiibo(AmiiboCreatorData amiibo)
 void firstTimeSetup()
 {
     //Cache API data
-    if(!checkIfFileExists("sdmc:/config/amiigo/API.json"))
+    while(!checkIfFileExists("sdmc:/config/amiigo/API.json"))
     {
         if(checkIfFileExists("sdmc:/config/amiigo/API.tmp")) remove("sdmc:/config/amiigo/API.tmp");
-        while(!retrieveToFile("https://www.amiiboapi.com/api/amiibo", "sdmc:/config/amiigo/API.tmp"));
+        //After 5 seconds of no connection unpack stored cache
+        if(Arriba::time > 5)
+        {
+            unzFile zipFile = unzOpen("romfs:/API.cache");
+            unz_file_info fileInfo;
+            unzOpenCurrentFile(zipFile);
+            unzGetCurrentFileInfo(zipFile, &fileInfo, nullptr, 0, nullptr, 0, nullptr, 0);
+            void* buffer = malloc(398163);
+            FILE* outFile = fopen("sdmc:/config/amiigo/API.tmp", "wb");
+            for(int i = unzReadCurrentFile(zipFile, buffer, 398163); i > 0; i = unzReadCurrentFile(zipFile, buffer, 398163)) fwrite(buffer, 1, i, outFile);
+            fclose(outFile);
+            free(buffer);
+        }
+        else if(!retrieveToFile("https://www.amiiboapi.com/api/amiibo", "sdmc:/config/amiigo/API.tmp")) continue;
         rename("sdmc:/config/amiigo/API.tmp", "sdmc:/config/amiigo/API.json");
+        //Check file isn't empty
+        std::string apiLine = "";
+        std::ifstream apiStream("sdmc:/config/amiigo/API.json");
+        getline(apiStream, apiLine);
+        apiStream.close();
+        if(apiLine.size() == 0) remove("sdmc:/config/amiigo/API.json");
     }
     //Install emuiibo
     if(!checkIfFileExists("sdmc:/atmosphere/contents/0100000000000352/exefs.nsp"))
@@ -273,7 +292,7 @@ void firstTimeSetup()
             if(checkIfFileExists(Amiigo::Settings::amiigoPath)) remove(Amiigo::Settings::amiigoPath);
             rename("sdmc:/switch/Failed_Amiigo_Update.nro", Amiigo::Settings::amiigoPath);
         }
-        if(Amiigo::Settings::amiigoPath) envSetNextLoad(Amiigo::Settings::amiigoPath, "");
+        if(Amiigo::Settings::amiigoPath) envSetNextLoad(Amiigo::Settings::amiigoPath, Amiigo::Settings::amiigoPath);
         Amiigo::UI::isRunning = 0;
         remove("sdmc:/config/amiigo/update.flag");
     }
