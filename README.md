@@ -21,7 +21,7 @@ LibNX and DevkitPro for making the toolchain.
 
 [XorTroll](https://github.com/XorTroll/) for [Emuiibo](https://github.com/XorTroll/emuiibo) and general help.
 
-[N3evin](https://github.com/N3evin/) for [AmiiboAPI](https://github.com/N3evin/AmiiboAPI) which is used in Amiigo Maker.
+[N3evin](https://github.com/N3evin/) for [AmiiboAPI](https://github.com/N3evin/AmiiboAPI) which is used in Amiigo Store.
 
 nlohmann for his [JSON library](https://github.com/nlohmann/json) .
 

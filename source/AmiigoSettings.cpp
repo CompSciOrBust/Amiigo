@@ -19,6 +19,14 @@ namespace Amiigo::Settings
         fileStream.close();
         if(settingsJson.contains("saveAmiibosToCategory")) saveAmiibosToCategory = settingsJson["saveAmiibosToCategory"].get<bool>();
         if(settingsJson.contains("timeToCheckUpdate")) updateTime = settingsJson["timeToCheckUpdate"].get<long unsigned int>();
+        if(settingsJson.contains("categoryMode")) categoryMode = settingsJson["categoryMode"].get<unsigned char>() % Amiigo::Settings::categoryModes::categoryCount;
+        //Back compat with versions < 2.2.0
+        if(!settingsJson.contains("categoryMode") && settingsJson.contains("saveAmiibosToCategory"))
+        {
+            if(saveAmiibosToCategory) Amiigo::Settings::categoryMode = Amiigo::Settings::saveByGameName;
+            else Amiigo::Settings::categoryMode = Amiigo::Settings::saveToRoot;
+            saveSettings();
+        }
     }
 
     void saveSettings()
@@ -26,8 +34,8 @@ namespace Amiigo::Settings
         if(checkIfFileExists("sdmc:/config/amiigo/settings.json")) std::remove("sdmc:/config/amiigo/settings.json");
         std::ofstream fileStream("sdmc:/config/amiigo/settings.json");
         nlohmann::json settingsJson;
-        settingsJson["saveAmiibosToCategory"] = saveAmiibosToCategory;
         settingsJson["timeToCheckUpdate"] = updateTime;
+        settingsJson["categoryMode"] = categoryMode;
         fileStream << settingsJson << std::endl;
         fileStream.close();
     }

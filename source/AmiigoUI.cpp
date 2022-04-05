@@ -101,7 +101,7 @@ namespace Amiigo::UI
 		sceneSwitcher->setColour({0,0,0,0});
 		//Set up Amiibo list button
 		selectorButton = new Arriba::Elements::Button();
-		selectorButton->setText("Amiibo List");
+		selectorButton->setText("My Amiibo");
 		selectorButton->setDimensions(switcherWidth, switcherHeight/4 - 1, Arriba::Graphics::Pivot::topRight);
 		selectorButton->setParent(sceneSwitcher);
 		selectorButton->name = "SelectorButton";
@@ -109,7 +109,7 @@ namespace Amiigo::UI
 		selectorButton->registerCallback(switcherPressed);
 		//Set up Amiigo maker button
 		makerButton = new Arriba::Elements::Button();
-		makerButton->setText("Amiigo Maker");
+		makerButton->setText("Amiigo Store");
 		makerButton->transform.position.y = selectorButton->height + 1;
 		makerButton->setDimensions(switcherWidth, switcherHeight/4 - 1, Arriba::Graphics::Pivot::topRight);
 		makerButton->setParent(sceneSwitcher);
@@ -169,22 +169,51 @@ namespace Amiigo::UI
 		categoryButton->setParent(settingsScene);
 		categoryButton->setDimensions(550, 125, Arriba::Graphics::Pivot::centre);
 		categoryButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 1/4,0};
-		if(Amiigo::Settings::saveAmiibosToCategory) categoryButton->setText("Save to root");
-		else categoryButton->setText("Save to category");
+		switch (Amiigo::Settings::categoryMode)
+		{
+			case Amiigo::Settings::categoryModes::saveToRoot:
+			categoryButton->setText("Save to game name");
+			break;
+
+			case Amiigo::Settings::categoryModes::saveByGameName:
+			categoryButton->setText("Save to Amiibo series");
+			break;
+
+			case Amiigo::Settings::categoryModes::saveByAmiiboSeries:
+			categoryButton->setText("Save to root");
+			break;
+		
+			default:
+			categoryButton->setText("Error");
+			break;
+		}
 		categoryButton->name = "CategorySettingsButton";
 		//Callback to save setting
 		categoryButton->registerCallback([](){
-			Amiigo::Settings::saveAmiibosToCategory = !Amiigo::Settings::saveAmiibosToCategory;
+			Amiigo::Settings::categoryMode = (Amiigo::Settings::categoryMode+1) % Amiigo::Settings::categoryModes::categoryCount;
+			printf("%d", Amiigo::Settings::categoryMode);
 			Amiigo::Settings::saveSettings();
-			if(Amiigo::Settings::saveAmiibosToCategory)
+			switch (Amiigo::Settings::categoryMode)
 			{
-				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("CategorySettingsButton"))->setText("Save to root");
-				static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Amiibos will save to sdmc:/emuiibo/amiibo/game name");
-			}
-			else
-			{
-				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("CategorySettingsButton"))->setText("Save to category");
+				case Amiigo::Settings::categoryModes::saveToRoot:
+				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("CategorySettingsButton"))->setText("Save to game name");
 				static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Amiibos will save to sdmc:/emuiibo/amiibo");
+				break;
+			
+				case Amiigo::Settings::categoryModes::saveByGameName:
+				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("CategorySettingsButton"))->setText("Save to Amiibo series");
+				static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Amiibos will save to sdmc:/emuiibo/game name");
+				break;
+
+				case Amiigo::Settings::categoryModes::saveByAmiiboSeries:
+				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("CategorySettingsButton"))->setText("Save to root");
+				static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Amiibos will save to sdmc:/emuiibo/amiibo series");
+				break;
+
+				default:
+				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("CategorySettingsButton"))->setText("Error");
+				static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Error, uknown category mode");
+				break;
 			}
 		});
 		//Update API cache button
@@ -400,7 +429,7 @@ namespace Amiigo::UI
 			Arriba::Colour::neutral = {0.22,0.8,0.47,0.97};
 	    	Arriba::Colour::highlightA = {0.6,0.95,0.98,0.97};
 	    	Arriba::Colour::highlightB = {0.1,0.98,0.55,0.97};
-			static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Amiigo Maker");
+			static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Amiigo Store");
 		}
 		else if(Arriba::highlightedObject == settingsButton)
 		{

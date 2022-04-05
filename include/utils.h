@@ -12,6 +12,7 @@ struct AmiiboCreatorData
 {
     std::string name;
     std::string gameName;
+    std::string amiiboSeries;
     unsigned short game_character_id;
     char character_variant;
     char figure_type;

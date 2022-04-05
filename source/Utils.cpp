@@ -71,7 +71,7 @@ std::vector<std::string> getListOfSeries()
         for (int i = 0; i < APIJson["amiibo"].size(); i++)
         {
             bool isKnown = false;
-            std::string seriesName = APIJson["amiibo"][i]["gameSeries"].get<std::string>();
+            std::string seriesName = APIJson["amiibo"][i]["amiiboSeries"].get<std::string>();
             //Check if series is in list
             for (size_t i = 0; i < series.size(); i++)
             {
@@ -127,7 +127,7 @@ std::vector<AmiiboCreatorData> getAmiibosFromSeries(std::string series)
         for (int i = 0; i < APIJson["amiibo"].size(); i++)
         {
             //If series matches add it to the list
-            if(APIJson["amiibo"][i]["gameSeries"].get<std::string>() == series)
+            if(APIJson["amiibo"][i]["amiiboSeries"].get<std::string>() == series)
             {
                 //Process the API data the same way Emutool does
                 //https://github.com/XorTroll/emuiibo/blob/90cbc54a95c0aa4a9ceb6dd55b633de206763094/emutool/emutool/AmiiboUtils.cs#L144
@@ -151,8 +151,10 @@ std::vector<AmiiboCreatorData> getAmiibosFromSeries(std::string series)
                 newAmiibo.model_number = (unsigned short)stoi(model_no_str, nullptr, 16);
                 //Get series ID
                 newAmiibo.series = (char)stoi(series_str, nullptr, 16);
-                //Get the series name (only used for categorization)
+                //Get the Game series name (only used for categorization)
                 newAmiibo.gameName = APIJson["amiibo"][i]["gameSeries"].get<std::string>();
+                //Get the Amiibo series name (only used for categorization)
+                newAmiibo.amiiboSeries = APIJson["amiibo"][i]["amiiboSeries"].get<std::string>();
                 //Add new amiibo to list
                 amiibos.push_back(newAmiibo);
             }
@@ -176,10 +178,17 @@ std::vector<AmiiboCreatorData> getAmiibosFromSeries(std::string series)
 void createVirtualAmiibo(AmiiboCreatorData amiibo)
 {
     std::string pathBase = "sdmc:/emuiibo/amiibo/";
-    if(Amiigo::Settings::saveAmiibosToCategory)
+    switch (Amiigo::Settings::categoryMode)
     {
+        case Amiigo::Settings::saveByGameName:
         pathBase += amiibo.gameName + "/";
         mkdir(pathBase.c_str(), 0);
+        break;
+    
+        case Amiigo::Settings::saveByAmiiboSeries:
+        pathBase += amiibo.amiiboSeries + "/";
+        mkdir(pathBase.c_str(), 0);
+        break;
     }
     pathBase += amiibo.name;
     mkdir(pathBase.c_str(), 0);
@@ -214,7 +223,7 @@ void firstTimeSetup()
     {
         if(checkIfFileExists("sdmc:/config/amiigo/API.tmp")) remove("sdmc:/config/amiigo/API.tmp");
         //After 5 seconds of no connection unpack stored cache
-        if(Arriba::time > 5)
+        if(Arriba::time > 5 && !hasNetworkConnection())
         {
             unzFile zipFile = unzOpen("romfs:/API.cache");
             unz_file_info fileInfo;
@@ -245,6 +254,7 @@ void firstTimeSetup()
         while(!retrieveToFile(emuiiboInfo[0]["assets"][0]["browser_download_url"].get<std::string>().c_str(), "sdmc:/config/amiigo/emuiibo.tmp"));
         printf("Unzipping\n");
         //Extract the files from the emuiibo zip
+        mkdir("sdmc:/atmosphere/contents/", 0);
         mkdir("sdmc:/atmosphere/contents/0100000000000352/", 0);
         mkdir("sdmc:/atmosphere/contents/0100000000000352/flags/", 0);
         std::ofstream fileStream("sdmc:/atmosphere/contents/0100000000000352/flags/boot2.flag");
