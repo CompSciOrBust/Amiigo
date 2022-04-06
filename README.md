@@ -63,12 +63,22 @@ Install [LibNX](https://switchbrew.org/wiki/Setting_up_Development_Environment).
 
 Recursively clone this repo.
 
+Run (dkp-)pacman -S switch-glm
+
+Run (dkp-)pacman -S switch-glm
+
+Run (dkp-)pacman -S switch-glfw
+
+Run (dkp-)pacman -S switch-glad
+
+Run (dkp-)pacman -S switch-curl
+
 Run "Make".
 
 Optionally run "nxlink -s Amiigo.nro" after opening NetLoader to get debugging info.
 
 ## Donating
-Before donating to someone who makes bad homebrew consider donating to a charity instead. EFF do good work and cancer research charities might save the life of someone you care about someday. That said, I'm a student with no money so I won't turn down any donations if you have more money than sense.
+Before donating to someone who makes bad homebrew consider donating to a charity instead.
 |Method|Info|How it will be used|
 |--|--|--|
 |BTC|1GUYKgask9u81MspethuF826iT8VCSg6XP|This is the "buy me a beer" option. I'll just spend it on whatever I want.|
