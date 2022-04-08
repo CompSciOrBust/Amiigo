@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <nlohmann/json.hpp>
 
 struct AmiiboEntry
 {
@@ -21,6 +22,8 @@ struct AmiiboCreatorData
 };
 
 bool checkIfFileExists(char* path);
+bool read_DB(nlohmann::json& base,std::string path);
+bool write_DB(nlohmann::json base,std::string path);
 std::vector<AmiiboEntry> scanForAmiibo(const char* path);
 std::vector<std::string> getListOfSeries();
 std::vector<AmiiboCreatorData> getAmiibosFromSeries(std::string series);

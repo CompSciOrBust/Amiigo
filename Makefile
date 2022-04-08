@@ -57,7 +57,7 @@ CFLAGS	:=	-g -Wall -O3 -ffunction-sections \
 
 CFLAGS	+=	$(INCLUDE) -D__SWITCH__ -DVERSION='"$(APP_VERSION)"' `freetype-config --libs`
 
-CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions `freetype-config --cflags`
+CXXFLAGS	:= $(CFLAGS) -fno-rtti -fexceptions `freetype-config --cflags`
 
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)

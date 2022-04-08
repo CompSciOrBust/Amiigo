@@ -10,11 +10,57 @@
 #include <emuiibo.hpp>
 #include <AmiigoSettings.h>
 #include <AmiigoUI.h>
+#include <iostream>
 
 bool checkIfFileExists(char* path)
 {
     return !access(path, F_OK);
 }
+
+bool read_DB(nlohmann::json& base,std::string path){
+	std::ifstream inf(path);
+	if(!inf.fail()) {
+		std::string tempjson="";
+		for(int f = 0; !inf.eof(); f++)
+		{
+			std::string TempLine = "";
+			getline(inf, TempLine);
+			tempjson += TempLine;
+		}
+		inf.close();
+		if(nlohmann::json::accept(tempjson))
+		{
+			//Parse and use the JSON data
+			base = nlohmann::json::parse(tempjson);
+			std::cout << "Json Readed... "<< path << std::endl;
+			return true;
+		}
+	}
+	return false;
+}
+
+bool write_DB(nlohmann::json base,std::string path){
+	std::string pathtemp = path+".tmp";
+	std::stringstream strm;
+	try{
+		strm << std::setw(4) << base;
+//		strm << base;
+		std::string A = strm.str();
+
+		std::ofstream otf(pathtemp);
+		otf << A;
+		otf.close();
+		remove(path.c_str());
+		rename(pathtemp.c_str(),path.c_str());
+
+	} catch(...) {
+		std::cout << "Json: write Error... "<< path << std::endl; 
+		return false;
+	}
+	std::cout << "Json: writhen... "<< path << std::endl;
+	return true;
+}
+
 
 std::vector<AmiiboEntry> scanForAmiibo(const char* path)
 {
