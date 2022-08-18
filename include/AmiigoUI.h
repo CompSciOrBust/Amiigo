@@ -15,7 +15,6 @@ namespace Amiigo::UI
     inline std::vector<std::string> seriesList;
     inline std::vector<AmiiboCreatorData> creatorData;
     inline bool makerIsInCategory = false;
-    inline bool selectorIsInCategory = false;
     inline std::string selectedSeries;
     inline std::vector<AmiiboEntry> selectorAmiibos;
     inline std::string selectorPath = "sdmc:/emuiibo/amiibo";
@@ -50,4 +49,5 @@ namespace Amiigo::UI
     void selectorInput(int index);
     void makerInput(int index);
     void updateSelectorStrings();
+    void selectorContextMenuSpawner(int index, Arriba::Maths::vec2<float> pos);
 }

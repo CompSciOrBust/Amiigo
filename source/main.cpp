@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 	while (appletMainLoop())
 	{
 		Amiigo::UI::handleInput();
-		if(Arriba::Input::buttonUp(HidNpadButton_Plus) || !Amiigo::UI::isRunning) break;
+		if(Arriba::Input::buttonUp(Arriba::Input::PlusButtonSwitch) || !Amiigo::UI::isRunning) break;
 		Arriba::drawFrame();
 		bg->renderer->thisShader.setFloat1("iTime", Arriba::time);
 	}

@@ -11,7 +11,7 @@
 #include <AmiigoSettings.h>
 #include <AmiigoUI.h>
 
-bool checkIfFileExists(char* path)
+bool checkIfFileExists(const char* path)
 {
     return !access(path, F_OK);
 }
@@ -20,23 +20,25 @@ std::vector<AmiiboEntry> scanForAmiibo(const char* path)
 {
     //Open path
     DIR* folder = opendir(path);
+    std::vector<AmiiboEntry> amiibos;
     if(folder)
     {
         //List folder entries
         dirent* entry;
-        std::vector<AmiiboEntry> amiibos;
         while(entry = readdir(folder))
         {
+            AmiiboEntry amiibo;
+            amiibo.name = entry->d_name;
             char flagPath[512] = "";
             strcat(flagPath, path);
             strcat(flagPath, "/");
             strcat(flagPath, entry->d_name);
+            amiibo.path = flagPath;
             strcat(flagPath, "/amiibo.flag");
-            AmiiboEntry amiibo = {entry->d_name, !checkIfFileExists(flagPath)};
+            amiibo.isCategory = !checkIfFileExists(flagPath);
             amiibos.push_back(amiibo);
         }
         closedir(folder);
-        //Sort alphabetically
         //Sort alphabetically
         std::sort(amiibos.begin(), amiibos.end(), [](AmiiboEntry amiiboA, AmiiboEntry amiiboB)->bool{
             int maxLength = (amiiboA.name.length() < amiiboB.name.length()) ? amiiboA.name.length() : amiiboB.name.length();
@@ -48,6 +50,35 @@ std::vector<AmiiboEntry> scanForAmiibo(const char* path)
             }
             return false;
         });
+        //Prepend favorites if path is sdmc:/emuiibo/amiibo
+        if(!strcmp(path, "sdmc:/emuiibo/amiibo")) amiibos.insert(amiibos.begin(), {"¤ Favorites", true, "Favorites"});
+        //If not in "sdmc:/emuiibo/amiibo" then add back entry
+        else
+        {
+            std::string upDir = path;
+            upDir = upDir.substr(0, upDir.find_last_of("/"));
+            amiibos.insert(amiibos.begin(), {"¤ Back", true, upDir});
+        }
+        return amiibos;
+    }
+    //Check if path is supposed to be favorites
+    if(!strcmp(path, "Favorites"))
+    {
+        //Add in the back button
+        amiibos.insert(amiibos.begin(), {"¤ Back", true, "sdmc:/emuiibo/amiibo"});
+        //Read each line from the favorites file
+        std::string tempLine;
+        std::ifstream fileStream("sdmc:/emuiibo/overlay/favorites.txt");
+        while (getline(fileStream, tempLine))
+        {
+            //Check if Amiibo or dir
+            char flagPath[512] = "";
+            strcat(flagPath, tempLine.c_str());
+            strcat(flagPath, "/amiibo.flag");
+            //Add to amiibo list
+            amiibos.push_back({tempLine.substr(tempLine.find_last_of('/')+1, tempLine.length()+1 - tempLine.find_last_of('/')), !checkIfFileExists(flagPath), tempLine});
+        }
+        fileStream.close();
         return amiibos;
     }
 }

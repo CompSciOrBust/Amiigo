@@ -6,6 +6,7 @@ struct AmiiboEntry
 {
     std::string name;
     bool isCategory;
+    std::string path;
 };
 
 struct AmiiboCreatorData
@@ -20,7 +21,7 @@ struct AmiiboCreatorData
     char series;
 };
 
-bool checkIfFileExists(char* path);
+bool checkIfFileExists(const char* path);
 std::vector<AmiiboEntry> scanForAmiibo(const char* path);
 std::vector<std::string> getListOfSeries();
 std::vector<AmiiboCreatorData> getAmiibosFromSeries(std::string series);
