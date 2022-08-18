@@ -220,6 +220,10 @@ void createVirtualAmiibo(AmiiboCreatorData amiibo)
         pathBase += amiibo.amiiboSeries + "/";
         mkdir(pathBase.c_str(), 0);
         break;
+
+        case Amiigo::Settings::saveByCurrentFolder:
+        if (Amiigo::UI::selectorPath != "Favorites") pathBase = Amiigo::UI::selectorPath + "/";
+        break;;
     }
     pathBase += amiibo.name;
     mkdir(pathBase.c_str(), 0);

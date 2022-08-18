@@ -17,6 +17,7 @@ namespace Amiigo::Settings
         saveToRoot,
         saveByGameName,
         saveByAmiiboSeries,
-        categoryCount = saveByAmiiboSeries+1
+        saveByCurrentFolder,
+        categoryCount = saveByCurrentFolder+1
     };
 }

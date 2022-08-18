@@ -63,17 +63,13 @@ Install [LibNX](https://switchbrew.org/wiki/Setting_up_Development_Environment).
 
 Recursively clone this repo.
 
-Run (dkp-)pacman -S switch-glm
-
-Run (dkp-)pacman -S switch-glm
-
 Run (dkp-)pacman -S switch-glfw
 
 Run (dkp-)pacman -S switch-glad
 
 Run (dkp-)pacman -S switch-curl
 
-Run "Make".
+Run Make
 
 Optionally run "nxlink -s Amiigo.nro" after opening NetLoader to get debugging info.
 

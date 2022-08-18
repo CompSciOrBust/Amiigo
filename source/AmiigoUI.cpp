@@ -182,6 +182,10 @@ namespace Amiigo::UI
 			break;
 
 			case Amiigo::Settings::categoryModes::saveByAmiiboSeries:
+			categoryButton->setText("Save to current folder");
+			break;
+
+			case Amiigo::Settings::categoryModes::saveByCurrentFolder:
 			categoryButton->setText("Save to root");
 			break;
 		
@@ -208,8 +212,13 @@ namespace Amiigo::UI
 				break;
 
 				case Amiigo::Settings::categoryModes::saveByAmiiboSeries:
-				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("CategorySettingsButton"))->setText("Save to root");
+				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("CategorySettingsButton"))->setText("Save to current folder");
 				static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Amiibos will save to sdmc:/emuiibo/amiibo series");
+				break;
+
+				case Amiigo::Settings::categoryModes::saveByCurrentFolder:
+				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("CategorySettingsButton"))->setText("Save to root");
+				static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Amiibos will save to the current location");
 				break;
 
 				default:
@@ -335,6 +344,7 @@ namespace Amiigo::UI
 					switch (emu::GetEmulationStatus())
 					{
 						case emu::EmulationStatus::On:
+							emu::ResetActiveVirtualAmiibo();
 							emu::SetEmulationStatus(emu::EmulationStatus::Off);
 							static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Emuiibo disabled");
 						break;
@@ -429,7 +439,7 @@ namespace Amiigo::UI
 				makerIsInCategory = false;
 			}
 			makerList->updateStrings(seriesList);
-			Arriba::Colour::neutral = {0.22,0.8,0.47,0.97};
+			Arriba::Colour::neutral = {0.20,0.76,0.45,0.97};
 	    	Arriba::Colour::highlightA = {0.6,0.95,0.98,0.97};
 	    	Arriba::Colour::highlightB = {0.1,0.98,0.55,0.97};
 			static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Amiigo Store");
