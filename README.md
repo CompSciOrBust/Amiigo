@@ -2,8 +2,11 @@
 
 # Amiigo
 
-A GUI for Emuiibo. The [Emuiibo](https://github.com/XorTroll/emuiibo) sysmodule is required in order to use Amiigo.
-Amiigo's UI is built with the [Arriba](https://github.com/CompSciOrBust/Arriba) framework.
+Amiigo is a GUI for creating and switching virtual Amiibo for use with the [Emuiibo](https://github.com/XorTroll/emuiibo) system module. Amiigo runs entirely on the Nintendo Switch console and no PC is required for setup. A Nintendo Switch with custom firmware is required to use Amiigo. Simply run the NRO file and Amiigo will handle the rest.
+
+All Amiibo data is obtained from the [AmiiboAPI](https://www.amiiboapi.com/) and the [emutool](https://github.com/XorTroll/emuiibo/tree/master/emutool) source code was referenced extensively to understand how virtual Amiibo generation works. 
+
+Amiigo is built with the [Arriba](https://github.com/CompSciOrBust/Arriba) UI framework, which was designed with Amiigo in mind.
 
 <a  href="https://github.com/CompSciOrBust/Amiigo/releases"><img  src="https://img.shields.io/github/downloads/CompSciOrBust/Amiigo/total?style=for-the-badge"  alr = "Downloads "  /></a> <a  href="https://discord.gg/ZhRn3nn"><img  src="https://img.shields.io/discord/673622282790502402?color=green&label=Discord&logo=discord&style=for-the-badge"  alt="Discord Server"  /></a> <a  href="https://twitter.com/CompSciOrBust?ref_src=twsrc%5Etfw"><img  src="https://img.shields.io/twitter/follow/CompSciOrBust?color=blue&label=follow&logo=twitter&style=for-the-badge"  alt="Follow on twitter"  /></a>
 <!--ts-->
@@ -17,29 +20,25 @@ Amiigo's UI is built with the [Arriba](https://github.com/CompSciOrBust/Arriba) 
 
 ## Credits
 
-LibNX and DevkitPro for making the toolchain.
-
 [XorTroll](https://github.com/XorTroll/) for [Emuiibo](https://github.com/XorTroll/emuiibo) and general help.
 
 [N3evin](https://github.com/N3evin/) for [AmiiboAPI](https://github.com/N3evin/AmiiboAPI) which is used in Amiigo Store.
 
-nlohmann for his [JSON library](https://github.com/nlohmann/json) .
+nlohmann for his [JSON library](https://github.com/nlohmann/json).
 
 [Kronos2308](https://github.com/Kronos2308/) for maintaining Amiigo Mod.
 
 Victoria_Borodinova for the [sombrero](https://pixabay.com/illustrations/sombrero-hat-mexico-mexican-4280389/) used in the logo.
 
-Team-Xecuter for providing me with free hardware after my Switch broke. (Xecuter ❤️ open source)
-
 Za for bringing pizzas.
 
 All of the beta testers in the [CompSciOrBust Discord server](https://discord.gg/ZhRn3nn).
 
-Everyone in the Team AtlasNX dev chat for general help in this and other projects.  
+[Kim-Dewelski](https://github.com/Kim-Dewelski) for being a long time friend who has provided much useful programming advice.
 
 ## Controls
 
-D-pad to move between on screen buttons.
+D-Pad / analog sticks to move between on screen buttons.
 
 A to select an Amiibo from the list or click an on screen button.
 
@@ -47,7 +46,9 @@ X toggles emulation state.
 
 B backs out of a category if one is selected.
 
-Touchscreen can also be used to click onscreen buttons and scroll lists.
+Y opens the context menu for supported items.
+
+Everything that can be done with physical buttons can also be done via touchscreen.
 
 ## Support
 
