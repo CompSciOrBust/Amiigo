@@ -30,7 +30,6 @@ int main(int argc, char *argv[])
 	//Init UI
 	Amiigo::UI::initUI();
 	if(emu::IsAvailable()) emu::Initialize();
-	//if(!checkIfFileExists("sdmc:/config/amiigo/API.json"))retrieveToFile("https://www.amiiboapi.com/api/amiibo", "sdmc:/config/amiigo/API.json");
 
 	//Main loop
 	while (appletMainLoop())
@@ -45,6 +44,6 @@ int main(int argc, char *argv[])
 	romfsExit();
 	nifmExit();
 	Arriba::exit();
-	if(emu::IsAvailable) emu::Exit();
+	if(emu::IsAvailable()) emu::Exit();
 	return 0;
 }

@@ -38,6 +38,7 @@ namespace Amiigo::UI
 
 	void initSplash()
 	{
+		Arriba::activeLayer++;
 		splashScene = new Arriba::Primitives::Quad(0, 0, Arriba::Graphics::windowWidth, Arriba::Graphics::windowHeight, Arriba::Graphics::Pivot::topLeft);
 		splashScene->setColour({0.25,0.25,0.25,0.95});
 		//Title text
@@ -73,6 +74,7 @@ namespace Amiigo::UI
 		splashScene->destroy();
 		if(settingsScene) settingsScene->enabled = true;
 		if(sceneSwitcher) sceneSwitcher->enabled = true;
+		Arriba::activeLayer--;
 	}
 
 	void initSceneSwitcher()

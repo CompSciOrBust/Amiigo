@@ -96,8 +96,15 @@ std::vector<std::string> getListOfSeries()
         {
             APIData += tempLine;
         }
-        nlohmann::json APIJson = nlohmann::json::parse(APIData);
         fileStream.close();
+        nlohmann::json APIJson = nlohmann::json::parse(APIData, nullptr, false);
+        //Check API cache is valid
+        if(APIJson.is_discarded())
+        {
+            printf("API cache is corrupt\n");
+            remove("sdmc:/config/amiigo/API.json");
+            return {"Error, API cache corrupt!", "Try updating cache in settings!"};
+        }
         //Loop over every entry under the Amiibo object
         for (int i = 0; i < APIJson["amiibo"].size(); i++)
         {
@@ -272,20 +279,31 @@ void firstTimeSetup()
         }
         else if(!retrieveToFile("https://www.amiiboapi.com/api/amiibo", "sdmc:/config/amiigo/API.tmp")) continue;
         rename("sdmc:/config/amiigo/API.tmp", "sdmc:/config/amiigo/API.json");
-        //Check file isn't empty
+        //Check file is valid JSOB
         std::string apiLine = "";
+        std::string tempLine = "";
         std::ifstream apiStream("sdmc:/config/amiigo/API.json");
-        getline(apiStream, apiLine);
+        while(getline(apiStream, tempLine)) apiLine += tempLine;
         apiStream.close();
-        if(apiLine.size() == 0) remove("sdmc:/config/amiigo/API.json");
+        if(!nlohmann::json::accept(apiLine)) remove("sdmc:/config/amiigo/API.json");
     }
     //Install emuiibo
     if(!checkIfFileExists("sdmc:/atmosphere/contents/0100000000000352/exefs.nsp"))
     {
-        while(!hasNetworkConnection());
-        if(checkIfFileExists("sdmc:/config/amiigo/emuiibo.tmp")) remove("sdmc:/config/amiigo/emuiibo.tmp");
-        std::string emuiiboReleaseInfo = retrieveToString("https://api.github.com/repos/XorTroll/Emuiibo/releases", "application/json");
-        nlohmann::json emuiiboInfo = nlohmann::json::parse(emuiiboReleaseInfo);
+        bool hasValidEmuiiboJSON = false;
+        nlohmann::json emuiiboInfo;
+        while (!hasValidEmuiiboJSON)
+        {
+            printf("Downloading Emuiibo zip\n");
+            while(!hasNetworkConnection());
+            if(checkIfFileExists("sdmc:/config/amiigo/emuiibo.tmp")) remove("sdmc:/config/amiigo/emuiibo.tmp");
+            //We should probably do this in a more robust way
+            std::string emuiiboReleaseInfo;
+            while(!retrieveToString("https://api.github.com/repos/XorTroll/Emuiibo/releases", "application/json", &emuiiboReleaseInfo));
+            emuiiboInfo = nlohmann::json::parse(emuiiboReleaseInfo, nullptr, false);
+            hasValidEmuiiboJSON = !emuiiboInfo.is_discarded();
+        }
+        printf("hasValidEmuiiboJSON: %d\n", hasValidEmuiiboJSON);
         while(!retrieveToFile(emuiiboInfo[0]["assets"][0]["browser_download_url"].get<std::string>().c_str(), "sdmc:/config/amiigo/emuiibo.tmp"));
         printf("Unzipping\n");
         //Extract the files from the emuiibo zip
@@ -303,6 +321,7 @@ void firstTimeSetup()
             unz_file_info fileInfo;
             unzOpenCurrentFile(zipFile);
             unzGetCurrentFileInfo(zipFile, &fileInfo, fileName, sizeof(fileName), nullptr, 0, nullptr, 0);
+            printf("Zip index:%d is %s\n", i, fileName);
             if(strcmp("SdOut/atmosphere/contents/0100000000000352/exefs.nsp", fileName) == 0)
             {
                 void* buffer = malloc(500000);
@@ -318,6 +337,7 @@ void firstTimeSetup()
             unzCloseCurrentFile(zipFile);
             unzGoToNextFile(zipFile);
         }
+        printf("Unzip done\n");
         unzClose(zipFile);
         remove("sdmc:/config/amiigo/emuiibo.tmp");
         //Launch the sysmodule
@@ -330,8 +350,8 @@ void firstTimeSetup()
     if(checkIfFileExists("sdmc:/config/amiigo/update.flag"))
     {
         while(!hasNetworkConnection());
-        retrieveToFile(Amiigo::Settings::updateURL, "sdmc:/switch/Failed_Amiigo_Update.nro");
-        if(checkIfFileExists("sdmc:/switch/Failed_Amiigo_Update.nro"))
+        bool DLSuccess = retrieveToFile(Amiigo::Settings::updateURL, "sdmc:/switch/Failed_Amiigo_Update.nro");
+        if(checkIfFileExists("sdmc:/switch/Failed_Amiigo_Update.nro") && DLSuccess)
         {
             romfsExit();
             if(checkIfFileExists(Amiigo::Settings::amiigoPath)) remove(Amiigo::Settings::amiigoPath);
@@ -364,14 +384,22 @@ bool checkForUpdates()
         return false;
     }
     printf("Getting API data\n");
-    std::string amiigoReleaseInfo = retrieveToString("https://api.github.com/repos/CompSciOrBust/Amiigo/releases", "application/json");
-    if(amiigoReleaseInfo.size() < 300) //User is probably being rate limited
+    std::string amiigoReleaseInfo;
+    bool releaseInfoSuccess = retrieveToString("https://api.github.com/repos/CompSciOrBust/Amiigo/releases", "application/json", &amiigoReleaseInfo);
+    if(amiigoReleaseInfo.size() < 300 || !releaseInfoSuccess) //User is probably being rate limited
     {
         printf("%s\n", amiigoReleaseInfo.c_str());
-        printf("Error, sub 300\n");
+        printf("Error, getting Amiigo update info failed\n");
         return false;
     }
-    nlohmann::json amiigoInfoParsed = nlohmann::json::parse(amiigoReleaseInfo);
+    nlohmann::json amiigoInfoParsed = nlohmann::json::parse(amiigoReleaseInfo, nullptr, false);
+    //If data is corrupt do nothing
+    if(amiigoInfoParsed.is_discarded())
+    {
+        printf("%s\n", amiigoReleaseInfo.c_str());
+        printf("Error, Amiigo update info corrupt\n");
+        return false;
+    }
     //If on the latest update wait another 24 hours before checking again
     if(amiigoInfoParsed[0]["tag_name"].get<std::string>() == VERSION)
     {
