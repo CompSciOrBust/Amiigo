@@ -18,6 +18,7 @@ namespace Amiigo::Settings
         nlohmann::json settingsJson = nlohmann::json::parse(fileString);
         fileStream.close();
         if(settingsJson.contains("saveAmiibosToCategory")) saveAmiibosToCategory = settingsJson["saveAmiibosToCategory"].get<bool>();
+        if(settingsJson.contains("useRandomisedUUID")) useRandomisedUUID = settingsJson["useRandomisedUUID"].get<bool>();
         if(settingsJson.contains("timeToCheckUpdate")) updateTime = settingsJson["timeToCheckUpdate"].get<long unsigned int>();
         if(settingsJson.contains("categoryMode")) categoryMode = settingsJson["categoryMode"].get<unsigned char>() % Amiigo::Settings::categoryModes::categoryCount;
         //Back compat with versions < 2.2.0
@@ -27,6 +28,7 @@ namespace Amiigo::Settings
             else Amiigo::Settings::categoryMode = Amiigo::Settings::saveToRoot;
             saveSettings();
         }
+        if (!settingsJson.contains("useRandomisedUUID")) saveSettings();
     }
 
     void saveSettings()
@@ -36,6 +38,7 @@ namespace Amiigo::Settings
         nlohmann::json settingsJson;
         settingsJson["timeToCheckUpdate"] = updateTime;
         settingsJson["categoryMode"] = categoryMode;
+        settingsJson["useRandomisedUUID"] = useRandomisedUUID;
         fileStream << settingsJson << std::endl;
         fileStream.close();
     }

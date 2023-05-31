@@ -299,6 +299,10 @@ namespace Amiigo::UI
 				nameText = "Za";
 				break;
 				case 4:
+				titleText = "Amiibo API";
+				nameText = "N3evin";
+				break;
+				case 5:
 				titleText = "Beta testers";
 				nameText = "Too many to name <3";
 				break;

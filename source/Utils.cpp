@@ -253,7 +253,8 @@ void createVirtualAmiibo(AmiiboCreatorData amiibo)
     amiiboJson["id"]["figure_type"] = amiibo.figure_type;
     amiiboJson["id"]["series"] = amiibo.series;
     amiiboJson["id"]["model_number"] = amiibo.model_number;
-    amiiboJson["uuid"] = {rand() % 256, rand() % 256, rand() % 256, rand() % 256, rand() % 256, rand() % 256, rand() % 256, 0, 0, 0};
+    if(!Amiigo::Settings::useRandomisedUUID) amiiboJson["uuid"] = {rand() % 256, rand() % 256, rand() % 256, rand() % 256, rand() % 256, rand() % 256, rand() % 256, 0, 0, 0};
+    else amiiboJson["use_random_uuid"] = true;
     fileStream << std::setw(4) << amiiboJson << std::endl;
     fileStream.close();
 }

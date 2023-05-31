@@ -6,6 +6,7 @@ namespace Amiigo::Settings
 {
     //Vars
     inline bool saveAmiibosToCategory = false;
+    inline bool useRandomisedUUID = false;
     inline std::string updateURL = "";
     inline char amiigoPath[FS_MAX_PATH];
     inline long unsigned int updateTime = 0;
