@@ -162,6 +162,8 @@ namespace Amiigo::UI
 
 	void initSettings()
 	{
+		const int buttonHeight = 100;
+		const int buttonCount = 4 + 1;
 		settingsScene = new Arriba::Primitives::Quad(0, statusHeight, Arriba::Graphics::windowWidth - switcherWidth - 1, Arriba::Graphics::windowHeight - statusHeight, Arriba::Graphics::Pivot::topLeft);
 		//Not a list but pretending makes scene switching easier
 		settingsScene->name = "SettingsScene";
@@ -171,8 +173,8 @@ namespace Amiigo::UI
 		//Toggle category save button
 		Arriba::Elements::Button* categoryButton = new Arriba::Elements::Button();
 		categoryButton->setParent(settingsScene);
-		categoryButton->setDimensions(550, 125, Arriba::Graphics::Pivot::centre);
-		categoryButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 1/4,0};
+		categoryButton->setDimensions(550, buttonHeight, Arriba::Graphics::Pivot::centre);
+		categoryButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 1/buttonCount,0};
 		switch (Amiigo::Settings::categoryMode)
 		{
 			case Amiigo::Settings::categoryModes::saveToRoot:
@@ -232,8 +234,8 @@ namespace Amiigo::UI
 		//Update API cache button
 		Arriba::Elements::Button* apiUpdateButton = new Arriba::Elements::Button();
 		apiUpdateButton->setParent(settingsScene);
-		apiUpdateButton->setDimensions(550, 125, Arriba::Graphics::Pivot::centre);
-		apiUpdateButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 2/4,0};
+		apiUpdateButton->setDimensions(550, buttonHeight, Arriba::Graphics::Pivot::centre);
+		apiUpdateButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 2/buttonCount,0};
 		apiUpdateButton->setText("Update API cache");
 		apiUpdateButton->name = "UpdateAPIButton";
 		//Callback for updating API cache
@@ -247,11 +249,51 @@ namespace Amiigo::UI
 				seriesList = getListOfSeries();
 			}
 		});
+		//Toggle random UUIDs button
+		Arriba::Elements::Button* randomUUIDButton = new Arriba::Elements::Button();
+		randomUUIDButton->setParent(settingsScene);
+		randomUUIDButton->setDimensions(550, buttonHeight, Arriba::Graphics::Pivot::centre);
+		randomUUIDButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 3/buttonCount,0};
+		switch (Amiigo::Settings::useRandomisedUUID)
+		{
+			case true:
+			randomUUIDButton->setText("Disable random UUID");
+			break;
+
+			case false:
+			randomUUIDButton->setText("Enable random UUID");
+			break;
+		
+			default:
+			randomUUIDButton->setText("UUID Status error");
+			break;
+		}
+		randomUUIDButton->name = "ToggleRandomUUIDButton";
+		randomUUIDButton->registerCallback([](){
+			Amiigo::Settings::useRandomisedUUID = !Amiigo::Settings::useRandomisedUUID;
+			Amiigo::Settings::saveSettings();
+			switch (Amiigo::Settings::useRandomisedUUID)
+			{
+				case true:
+				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("ToggleRandomUUIDButton"))->setText("Disable random UUID");
+				static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Amiibos will now generate with random UUIDs");
+				break;
+
+				case false:
+				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("ToggleRandomUUIDButton"))->setText("Enable random UUID");
+				static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Amiibos will now generate with static UUIDs");
+				break;
+
+				default:
+				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("ToggleRandomUUIDButton"))->setText("UUID Status error");
+				break;
+			}
+		});
 		//Check for updates button
 		Arriba::Elements::Button* updaterButton = new Arriba::Elements::Button();
 		updaterButton->setParent(settingsScene);
-		updaterButton->setDimensions(550, 125, Arriba::Graphics::Pivot::centre);
-		updaterButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 3/4,0};
+		updaterButton->setDimensions(550, buttonHeight, Arriba::Graphics::Pivot::centre);
+		updaterButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 4/buttonCount,0};
 		updaterButton->setText("Update Amiigo");
 		updaterButton->name = "UpdaterButton";
 		updaterButton->enabled = false;
@@ -383,13 +425,15 @@ namespace Amiigo::UI
 				if(Arriba::Input::buttonDown(Arriba::Input::DPadUp))
 				{
 					if(Arriba::highlightedObject == Arriba::findObjectByName("UpdateAPIButton")) Arriba::highlightedObject = Arriba::findObjectByName("CategorySettingsButton");
-					else if(Arriba::highlightedObject == Arriba::findObjectByName("UpdaterButton")) Arriba::highlightedObject = Arriba::findObjectByName("UpdateAPIButton");
+					else if(Arriba::highlightedObject == Arriba::findObjectByName("ToggleRandomUUIDButton")) Arriba::highlightedObject = Arriba::findObjectByName("UpdateAPIButton");
+					else if(Arriba::highlightedObject == Arriba::findObjectByName("UpdaterButton")) Arriba::highlightedObject = Arriba::findObjectByName("ToggleRandomUUIDButton");
 				}
 				//Down pressed
 				if(Arriba::Input::buttonDown(Arriba::Input::DPadDown))
 				{
 					if(Arriba::highlightedObject == Arriba::findObjectByName("CategorySettingsButton")) Arriba::highlightedObject = Arriba::findObjectByName("UpdateAPIButton");
-					else if(Arriba::highlightedObject == Arriba::findObjectByName("UpdateAPIButton") && Arriba::findObjectByName("UpdaterButton")->enabled) Arriba::highlightedObject = Arriba::findObjectByName("UpdaterButton");
+					else if (Arriba::highlightedObject == Arriba::findObjectByName("UpdateAPIButton")) Arriba::highlightedObject = Arriba::findObjectByName("ToggleRandomUUIDButton");
+					else if(Arriba::highlightedObject == Arriba::findObjectByName("ToggleRandomUUIDButton") && Arriba::findObjectByName("UpdaterButton")->enabled) Arriba::highlightedObject = Arriba::findObjectByName("UpdaterButton");
 				}
 			}
 		}
