@@ -8,10 +8,10 @@ All Amiibo data is obtained from the [AmiiboAPI](https://www.amiiboapi.com/) and
 
 Amiigo is built with the [Arriba](https://github.com/CompSciOrBust/Arriba) UI framework, which was designed with Amiigo in mind.
 
-<a  href="https://github.com/CompSciOrBust/Amiigo/releases"><img  src="https://img.shields.io/github/downloads/CompSciOrBust/Amiigo/total?style=for-the-badge"  alr = "Downloads "  /></a> <a  href="https://discord.gg/ZhRn3nn"><img  src="https://img.shields.io/discord/673622282790502402?color=green&label=Discord&logo=discord&style=for-the-badge"  alt="Discord Server"  /></a> <a  href="https://twitter.com/CompSciOrBust?ref_src=twsrc%5Etfw"><img  src="https://img.shields.io/twitter/follow/CompSciOrBust?color=blue&label=follow&logo=twitter&style=for-the-badge"  alt="Follow on twitter"  /></a>
+<a  href="https://github.com/CompSciOrBust/Amiigo/releases"><img  src="https://img.shields.io/github/downloads/CompSciOrBust/Amiigo/total?style=for-the-badge"  alr = "Downloads "  /></a> <a  href="https://discord.gg/ZhRn3nn"><img  src="https://img.shields.io/discord/673622282790502402?color=green&label=Discord&logo=discord&style=for-the-badge"  alt="Discord Server"  /></a>
 <!--ts-->
    * [Credits](#Credits)
-   * [Controls](#Controls)
+   * [Usage](#Usage)
    * [Support](#Support)
    * [Building](#Building)
    * [Donating](#Donating)
@@ -36,23 +36,27 @@ All of the beta testers in the [CompSciOrBust Discord server](https://discord.gg
 
 [Kim-Dewelski](https://github.com/Kim-Dewelski) for being a long time friend who has provided much useful programming advice.
 
-## Controls
+## Usage
 
-D-Pad / analog sticks to move between on screen buttons.
+Use the "Amiigo Store" to generate new virtual Amiibos.
 
-A to select an Amiibo from the list or click an on screen button.
+Use the "My Amiibo" list to emulate any of your existing virtual Amiibos.
+
+D-Pad / analog sticks move between on screen buttons.
+
+A selects an Amiibo from the list or click an on screen button.
 
 X toggles emulation state.
 
 B backs out of a category if one is selected.
 
-Y opens the context menu for supported items.
+Y / Long touchscreen tap opens the context menu for supported items.
 
 Everything that can be done with physical buttons can also be done via touchscreen.
 
 ## Support
 
-For support please use [the offical GBATemp thread](https://gbatemp.net/threads/amiigo-emuiibo-gui.549964/) unless you are reporting a bug in which case open a issue here on GitHub. Alternatively join [my Discord server](https://discord.gg/ZhRn3nn) or @ me on [twitter](https://twitter.com/CompSciOrBust).
+For support please use [the offical GBATemp thread](https://gbatemp.net/threads/amiigo-emuiibo-gui.549964/) unless you are reporting a bug in which case open a issue here on GitHub. Alternatively join [my Discord server](https://discord.gg/ZhRn3nn).
 
 ## Screenshots
 
