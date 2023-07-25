@@ -15,11 +15,11 @@ namespace Amiigo::UI
 {
 	void initUI()
 	{
-		Arriba::Colour::neutral = {0.22,0.47,0.93,0.97};
-		Arriba::Colour::highlightA = {0.1,0.95,0.98,0.97};
-		Arriba::Colour::highlightB = {0.5,0.85,1,0.97};
-	    if(!checkIfFileExists("sdmc:/config/amiigo/API.json") || !checkIfFileExists("sdmc:/atmosphere/contents/0100000000000352/exefs.nsp")) initSplash();
 		Amiigo::Settings::loadSettings();
+		Arriba::Colour::neutral = Amiigo::Settings::Colour::listNeutral;
+		Arriba::Colour::highlightA = Amiigo::Settings::Colour::listHighlightA;
+		Arriba::Colour::highlightB = Amiigo::Settings::Colour::listHighlightB;
+	    if(!checkIfFileExists("sdmc:/config/amiigo/API.json") || !checkIfFileExists("sdmc:/atmosphere/contents/0100000000000352/exefs.nsp")) initSplash();
 		initSceneSwitcher();
 		initSelector();
 	    initMaker();
@@ -93,7 +93,7 @@ namespace Amiigo::UI
 		div5->setColour({0,0,0,1});
 		//Set up status bar
 		Arriba::Primitives::Quad* statusBar = new Arriba::Primitives::Quad(0, 0, Arriba::Graphics::windowWidth, statusHeight - 1, Arriba::Graphics::Pivot::topLeft);
-		statusBar->setColour({0.5,0.7,0.7,0.9});
+		statusBar->setColour(Amiigo::Settings::Colour::statusBar);
 		Arriba::Primitives::Text* statusText = new Arriba::Primitives::Text("Amiigo + Arriba", 34);
 		statusText->name = "StatusBarText";
 		statusText->setDimensions(statusText->width, statusText->height, Arriba::Graphics::centre);
@@ -476,9 +476,9 @@ namespace Amiigo::UI
 			selectorList->enabled = true;
 			selectorPath = "sdmc:/emuiibo/amiibo";
 			updateSelectorStrings();
-			Arriba::Colour::neutral = {0.22,0.47,0.93,0.97};
-	    	Arriba::Colour::highlightA = {0.1,0.95,0.98,0.97};
-	    	Arriba::Colour::highlightB = {0.5,0.85,1,0.97};
+			Arriba::Colour::neutral = Amiigo::Settings::Colour::listNeutral;
+			Arriba::Colour::highlightA = Amiigo::Settings::Colour::listHighlightA;
+			Arriba::Colour::highlightB = Amiigo::Settings::Colour::listHighlightB;
 			static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Amiigo + Arriba");
 		}
 		else if(Arriba::highlightedObject == makerButton)
@@ -489,17 +489,17 @@ namespace Amiigo::UI
 				makerIsInCategory = false;
 			}
 			makerList->updateStrings(seriesList);
-			Arriba::Colour::neutral = {0.20,0.76,0.45,0.97};
-	    	Arriba::Colour::highlightA = {0.6,0.95,0.98,0.97};
-	    	Arriba::Colour::highlightB = {0.1,0.98,0.55,0.97};
+			Arriba::Colour::neutral = Amiigo::Settings::Colour::makerNeutral;
+	    	Arriba::Colour::highlightA = Amiigo::Settings::Colour::makerHighlightA;
+	    	Arriba::Colour::highlightB = Amiigo::Settings::Colour::makerHighlightB;
 			static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Amiigo Store");
 		}
 		else if(Arriba::highlightedObject == settingsButton)
 		{
 			settingsScene->enabled = true;
-			Arriba::Colour::neutral = {0.57,0.21,0.93,0.97};
-	    	Arriba::Colour::highlightA = {0.9,0.95,0.94,0.97};
-	    	Arriba::Colour::highlightB = {1,0.85,1,0.97};
+			Arriba::Colour::neutral = Amiigo::Settings::Colour::settingsNeutral;
+	    	Arriba::Colour::highlightA = Amiigo::Settings::Colour::settingsHighlightA;
+	    	Arriba::Colour::highlightB = Amiigo::Settings::Colour::settingsHighlightB;
 			static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Settings");
 		}
 	}

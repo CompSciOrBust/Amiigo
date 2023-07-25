@@ -1,0 +1,51 @@
+{
+    "StatusBar_Neutral_R": 0.5,
+    "StatusBar_Neutral_G": 0.7,
+    "StatusBar_Neutral_B": 0.7,
+    "StatusBar_Neutral_A": 1.0,
+    
+    "SelectorList_Neutral_R": 0.22,
+    "SelectorList_Neutral_G": 0.47,
+    "SelectorList_Neutral_B": 0.97,
+    "SelectorList_Neutral_A": 1.0,
+
+    "SelectorList_HighlightA_R": 0.1,
+    "SelectorList_HighlightA_G": 0.95,
+    "SelectorList_HighlightA_B": 0.98,
+    "SelectorList_HighlightA_A": 1.0,
+
+    "SelectorList_HighlightB_R": 0.5,
+    "SelectorList_HighlightB_G": 0.85,
+    "SelectorList_HighlightB_B": 1.0,
+    "SelectorList_HighlightB_A": 1.0,
+
+    "AmiigoStore_Neutral_R": 0.2,
+    "AmiigoStore_Neutral_G": 0.76,
+    "AmiigoStore_Neutral_B": 0.45,
+    "AmiigoStore_Neutral_A": 1.0,
+
+    "AmiigoStore_HighlightA_R": 0.6,
+    "AmiigoStore_HighlightA_G": 0.95,
+    "AmiigoStore_HighlightA_B": 0.98,
+    "AmiigoStore_HighlightA_A": 1.0,
+
+    "AmiigoStore_HighlightB_R": 0.1,
+    "AmiigoStore_HighlightB_G": 0.98,
+    "AmiigoStore_HighlightB_B": 0.55,
+    "AmiigoStore_HighlightB_A": 1.0,
+
+    "Settings_Neutral_R": 0.57,
+    "Settings_Neutral_G": 0.21,
+    "Settings_Neutral_B": 0.93,
+    "Settings_Neutral_A": 1.0,
+
+    "Settings_HighlightA_R": 0.9,
+    "Settings_HighlightA_G": 0.95,
+    "Settings_HighlightA_B": 0.94,
+    "Settings_HighlightA_A": 1.0,
+
+    "Settings_HighlightB_R": 1.0,
+    "Settings_HighlightB_G": 0.85,
+    "Settings_HighlightB_B": 1.0,
+    "Settings_HighlightB_A": 1.0
+}
