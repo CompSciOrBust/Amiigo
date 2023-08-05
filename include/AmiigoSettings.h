@@ -12,6 +12,7 @@ namespace Amiigo::Settings
     inline char amiigoPath[FS_MAX_PATH];
     inline long unsigned int updateTime = 0;
     inline unsigned char categoryMode = 0;
+    inline std::string emuiiboVersionText = "";
     void loadSettings();
     void saveSettings();
 

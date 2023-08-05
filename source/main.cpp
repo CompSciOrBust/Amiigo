@@ -29,7 +29,6 @@ int main(int argc, char *argv[])
 	bg->name = "AmiigoBG";
 	//Init UI
 	Amiigo::UI::initUI();
-	if(emu::IsAvailable()) emu::Initialize();
 
 	//Main loop
 	while (appletMainLoop())

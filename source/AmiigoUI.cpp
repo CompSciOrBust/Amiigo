@@ -20,6 +20,7 @@ namespace Amiigo::UI
 		Arriba::Colour::highlightA = Amiigo::Settings::Colour::listHighlightA;
 		Arriba::Colour::highlightB = Amiigo::Settings::Colour::listHighlightB;
 	    if(!checkIfFileExists("sdmc:/config/amiigo/API.json") || !checkIfFileExists("sdmc:/atmosphere/contents/0100000000000352/exefs.nsp")) initSplash();
+		if(emu::IsAvailable()) emu::Initialize();
 		initSceneSwitcher();
 		initSelector();
 	    initMaker();
@@ -313,6 +314,11 @@ namespace Amiigo::UI
 		creditsQuad->setParent(settingsScene);
 		creditsQuad->setColour({0,0,0,0.9});
 		int yOffset = 0;
+		//Get Emuiibo version
+		char emuVer[12];
+		emu::Version emuiiboVersion = emu::GetVersion();
+		sprintf(emuVer, "%u.%u.%u", emuiiboVersion.major, emuiiboVersion.minor, emuiiboVersion.micro);
+		Amiigo::Settings::emuiiboVersionText = emuVer;
 		//Credits text
 		Arriba::Primitives::Text* creditsTitleText = new Arriba::Primitives::Text("Credits", 64);
 		creditsTitleText->setColour({0,0.7,1,1});
@@ -329,7 +335,7 @@ namespace Amiigo::UI
 				nameText = "CompSciOrBust";
 				break;
 				case 1:
-				titleText = "Emuiibo dev";
+				titleText = "Emuiibo " + Amiigo::Settings::emuiiboVersionText;
 				nameText = "XorTroll";
 				break;
 				case 2:
