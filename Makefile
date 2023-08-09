@@ -45,7 +45,7 @@ INCLUDES	:=	include Arriba/include json/single_include zipper/zipper
 ROMFS	:=	romfs
 APP_TITLE := Amiigo
 APP_AUTHOR := CompSciOrBust
-APP_VERSION := 2.3.2
+APP_VERSION := 2.4.0
 
 #---------------------------------------------------------------------------------
 # options for code generation

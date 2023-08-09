@@ -5,6 +5,7 @@
 #include <utils.h>
 #include <emuiibo.hpp>
 #include <AmiigoSettings.h>
+#include <NFCDumper.h>
 
 int main(int argc, char *argv[])
 {
@@ -27,21 +28,32 @@ int main(int argc, char *argv[])
 	if(checkIfFileExists("sdmc:/config/amiigo/bgFragment.glsl")) bg->renderer->thisShader.updateFragments("romfs:/VertexDefault.glsl", "sdmc:/config/amiigo/bgFragment.glsl");
 	else bg->renderer->thisShader.updateFragments("romfs:/VertexDefault.glsl", "romfs:/bgFragment.glsl");
 	bg->name = "AmiigoBG";
+	//Init NFC dumper
+	Amiigo::NFC::Dumper::init();
 	//Init UI
 	Amiigo::UI::initUI();
 
 	//Main loop
 	while (appletMainLoop())
 	{
+		// Handle UI input and rendering
 		Amiigo::UI::handleInput();
 		if(Arriba::Input::buttonUp(Arriba::Input::PlusButtonSwitch) || !Amiigo::UI::isRunning) break;
 		Arriba::drawFrame();
 		bg->renderer->thisShader.setFloat1("iTime", Arriba::time);
+		
+		// Scan for Physical amiibos to dump
+		NfpDeviceState nfpState;
+		bool hasDumped = false;
+		nfpGetDeviceState(&Amiigo::NFC::Dumper::readerHandle, &nfpState);
+		if (nfpState == NfpDeviceState_TagFound) hasDumped = Amiigo::NFC::Dumper::dumpNFC();
+		if (hasDumped) Amiigo::UI::updateSelectorStrings();
 	}
 	//Deinit
 	socketExit();
 	romfsExit();
 	nifmExit();
+	Amiigo::NFC::Dumper::exit();
 	Arriba::exit();
 	if(emu::IsAvailable()) emu::Exit();
 	return 0;
