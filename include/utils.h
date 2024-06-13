@@ -2,15 +2,13 @@
 #include <string>
 #include <vector>
 
-struct AmiiboEntry
-{
+struct AmiiboEntry {
     std::string name;
     bool isCategory;
     std::string path;
 };
 
-struct AmiiboCreatorData
-{
+struct AmiiboCreatorData {
     std::string name;
     std::string gameName;
     std::string amiiboSeries;

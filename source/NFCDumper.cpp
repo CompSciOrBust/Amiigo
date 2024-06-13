@@ -64,17 +64,17 @@ namespace Amiigo::NFC::Dumper {
 
         // Get Amiibo name from user
         SwkbdConfig kbinput;
-        swkbdCreate(&kbinput,0);
+        swkbdCreate(&kbinput, 0);
         swkbdConfigMakePresetDefault(&kbinput);
         swkbdConfigSetGuideText(&kbinput, "Enter Amiibo name");
         swkbdConfigSetInitialText(&kbinput, amiiboRegInfo.amiibo_name);
-        char *amiiboName = (char*)malloc(256);
+        char *amiiboName = reinterpret_cast<char*>(malloc(256));
         swkbdShow(&kbinput, amiiboName, 255);
         swkbdClose(&kbinput);
         amiiboInfo.name = amiiboName;
         free(amiiboName);
 
-        if (amiiboInfo.name == ""){
+        if (amiiboInfo.name == "") {
             nfpUnmount(&readerHandle);
             nfpStartDetection(&readerHandle);
             static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Dump failed (No name provided)");
@@ -88,4 +88,4 @@ namespace Amiigo::NFC::Dumper {
         nfpStartDetection(&readerHandle);
         return true;
     }
-}
+}  // namespace Amiigo::NFC::Dumper

@@ -14,11 +14,11 @@ namespace Amiigo::NFC::Dumper {
         unsigned short modelNumber;
         char figureType;
         char unused;
-    } PACKED;
+    } NX_PACKED;
     static_assert(sizeof(ModelFormat) == 8);
 
     // Functions
     void init();
     void exit();
     bool dumpNFC();
-}
+}  // namespace Amiigo::NFC::Dumper
