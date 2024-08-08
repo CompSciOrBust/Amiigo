@@ -14,8 +14,9 @@ namespace Amiigo::NFC::Dumper {
     }
 
     void exit() {
-        nfpExit();
         nfpStopDetection(&readerHandle);
+        nfpExit();
+        
     }
 
     bool dumpNFC() {
