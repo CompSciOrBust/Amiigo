@@ -3,3 +3,4 @@ build/*
 *.nacp
 *.elf
 *.nso
+*.DS_Store
