@@ -11,7 +11,7 @@ namespace Amiigo::Elements {
         setColour({0, 0, 0, 1});
         amiiboEntryGlobal = entry;
         // Spawn favorite button
-        if (entry.name != "¤ Favorites" && entry.name != "¤ Back") {
+        if (entry.name != U"★Favorites" && entry.name != U"← Back") {
             Arriba::Elements::Button* favoriteButton = new Arriba::Elements::Button();
             favoriteButton->setParent(this);
             // Check if the amiibo is currently favorited
@@ -87,7 +87,7 @@ namespace Amiigo::Elements {
             });
         }
         // Spawn delete button
-        if (entry.name != "¤ Favorites" && Amiigo::UI::selectorPath != "Favorites" && entry.name != "¤ Back") {
+        if (entry.name != U"★Favorites" && Amiigo::UI::selectorPath != "Favorites" && entry.name != U"← Back") {
             Arriba::Elements::Button* deleteButton = new Arriba::Elements::Button();
             deleteButton->setParent(this);
             deleteButton->setText("Delete");

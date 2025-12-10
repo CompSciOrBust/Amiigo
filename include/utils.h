@@ -3,15 +3,15 @@
 #include <vector>
 
 struct AmiiboEntry {
-    std::string name;
+    std::u32string name;
     bool isCategory;
     std::string path;
 };
 
 struct AmiiboCreatorData {
-    std::string name;
-    std::string gameName;
-    std::string amiiboSeries;
+    std::u32string name;
+    std::u32string gameName;
+    std::u32string amiiboSeries;
     unsigned short game_character_id;
     char character_variant;
     char figure_type;

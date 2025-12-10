@@ -2,6 +2,7 @@
 #include <utils.h>
 #include <arriba.h>
 #include <arribaPrimitives.h>
+#include <arribaText.h>
 
 // Goldleaf code used as implementation reference
 // https://github.com/XorTroll/Goldleaf/blob/master/Goldleaf/source/nfp/nfp_Amiibo.cpp
@@ -20,9 +21,9 @@ namespace Amiigo::NFC::Dumper {
 
     bool dumpNFC() {
         AmiiboCreatorData amiiboInfo;
-        amiiboInfo.name = "Default";
-        amiiboInfo.gameName = "Dump";
-        amiiboInfo.amiiboSeries = "Dump";
+        amiiboInfo.name = U"Default";
+        amiiboInfo.gameName = U"Dump";
+        amiiboInfo.amiiboSeries = U"Dump";
 
         // Mount the tag
         Result res = nfpMount(&readerHandle, NfpDeviceType_Amiibo, NfpMountTarget_All);
@@ -71,10 +72,10 @@ namespace Amiigo::NFC::Dumper {
         char *amiiboName = reinterpret_cast<char*>(malloc(256));
         swkbdShow(&kbinput, amiiboName, 255);
         swkbdClose(&kbinput);
-        amiiboInfo.name = amiiboName;
+        amiiboInfo.name = std::u32string(Arriba::Text::ASCIIToUnicode(amiiboName));
         free(amiiboName);
 
-        if (amiiboInfo.name == "") {
+        if (amiiboInfo.name == U"") {
             nfpUnmount(&readerHandle);
             nfpStartDetection(&readerHandle);
             static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Dump failed (No name provided)");
