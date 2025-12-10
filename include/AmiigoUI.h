@@ -50,4 +50,7 @@ namespace Amiigo::UI {
     void makerInput(int index);
     void updateSelectorStrings();
     void selectorContextMenuSpawner(int index, Arriba::Maths::vec2<float> pos);
+    void updateStatusInfo(const char32_t* text);
+    void updateStatusError(const char32_t* text);
+    void updateStatusSilent(const char32_t* text);
 }  // namespace Amiigo::UI

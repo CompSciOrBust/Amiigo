@@ -15,6 +15,7 @@
 #include <Networking.h>
 #include <AmiigoSettings.h>
 #include <AmiigoElements.h>
+#include <AmiigoBehaviours.h>
 
 namespace Amiigo::UI {
 	void initUI() {
@@ -28,7 +29,7 @@ namespace Amiigo::UI {
 		initSelector();
 	    initMaker();
 		initSettings();
-		Arriba::highlightedObject = selectorButton;
+		Arriba::highlightedObject = Arriba::findObjectByName("SelectorList");
 		// Cache these now for performance gains later
 		lists = Arriba::findObjectsByTag("List");
 		buttons = Arriba::findObjectsByTag("SwitcherButton");
@@ -93,7 +94,10 @@ namespace Amiigo::UI {
 		div5->setColour({0, 0, 0, 1});
 		// Set up status bar
 		Arriba::Primitives::Quad* statusBar = new Arriba::Primitives::Quad(0, 0, Arriba::Graphics::windowWidth, statusHeight - 1, Arriba::Graphics::Pivot::topLeft);
+		Amiigo::AmiigoBehaviours::StatusBarColourBehaviour* statusBarColourBehaviour = new Amiigo::AmiigoBehaviours::StatusBarColourBehaviour();
 		statusBar->setColour(Amiigo::Settings::Colour::statusBar);
+		statusBar->addBehaviour(statusBarColourBehaviour);
+		statusBar->name = "StatusBar";
 		Arriba::Primitives::Text* statusText = new Arriba::Primitives::Text(U"Amiigo + Arriba", 34);
 		statusText->name = "StatusBarText";
 		statusText->setDimensions(statusText->width, statusText->height, Arriba::Graphics::centre);
@@ -202,27 +206,27 @@ namespace Amiigo::UI {
 			switch (Amiigo::Settings::categoryMode) {
 				case Amiigo::Settings::categoryModes::saveToRoot:
 				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("CategorySettingsButton"))->setText(U"Save to game name");
-				static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText(U"Amiibos will save to sdmc:/emuiibo/amiibo");
+				updateStatusInfo(U"Amiibos will save to sdmc:/emuiibo/amiibo");
 				break;
 			
 				case Amiigo::Settings::categoryModes::saveByGameName:
 				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("CategorySettingsButton"))->setText(U"Save to Amiibo series");
-				static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText(U"Amiibos will save to sdmc:/emuiibo/game name");
+				updateStatusInfo(U"Amiibos will save to sdmc:/emuiibo/game name");
 				break;
 
 				case Amiigo::Settings::categoryModes::saveByAmiiboSeries:
 				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("CategorySettingsButton"))->setText(U"Save to current folder");
-				static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText(U"Amiibos will save to sdmc:/emuiibo/amiibo series");
+				updateStatusInfo(U"Amiibos will save to sdmc:/emuiibo/amiibo series");
 				break;
 
 				case Amiigo::Settings::categoryModes::saveByCurrentFolder:
 				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("CategorySettingsButton"))->setText(U"Save to root");
-				static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText(U"Amiibos will save to the current location");
+				updateStatusInfo(U"Amiibos will save to the current location");
 				break;
 
 				default:
 				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("CategorySettingsButton"))->setText(U"Error");
-				static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText(U"Error, uknown category mode");
+				updateStatusError(U"Error, uknown category mode");
 				break;
 			}
 		});
@@ -251,12 +255,12 @@ namespace Amiigo::UI {
 			switch (Amiigo::Settings::useRandomisedUUID) {
 				case true:
 				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("ToggleRandomUUIDButton"))->setText(U"Disable random UUID");
-				static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText(U"Amiibos will now generate with random UUIDs");
+				updateStatusInfo(U"Amiibos will now generate with random UUIDs");
 				break;
 
 				case false:
 				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("ToggleRandomUUIDButton"))->setText(U"Enable random UUID");
-				static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText(U"Amiibos will now generate with static UUIDs");
+				updateStatusInfo(U"Amiibos will now generate with static UUIDs");
 				break;
 
 				default:
@@ -275,7 +279,7 @@ namespace Amiigo::UI {
 		// Callback for updating Amiigo
 		updaterButton->registerCallback([](){
 			if (!hasNetworkConnection()) {
-				static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText(U"No network connection!");
+				updateStatusError(U"No network connection!");
 			} else {
 				std::ofstream fileStream("sdmc:/config/amiigo/update.flag");
 				fileStream.close();
@@ -360,14 +364,14 @@ namespace Amiigo::UI {
 						case emu::EmulationStatus::On:
 							emu::ResetActiveVirtualAmiibo();
 							emu::SetEmulationStatus(emu::EmulationStatus::Off);
-							static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText(U"Emuiibo disabled");
+							updateStatusInfo(U"Emuiibo disabled");
 						break;
 						case emu::EmulationStatus::Off:
 							emu::SetEmulationStatus(emu::EmulationStatus::On);
-							static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText(U"Emuiibo enabled");
+							updateStatusInfo(U"Emuiibo enabled");
 						break;
 						default:
-							static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText(U"Error: Unkown emulation status!");
+							updateStatusInfo(U"Error: Unkown emulation status!");
 						break;
 					}
 				}
@@ -427,7 +431,7 @@ namespace Amiigo::UI {
 			Arriba::Colour::neutral = Amiigo::Settings::Colour::listNeutral;
 			Arriba::Colour::highlightA = Amiigo::Settings::Colour::listHighlightA;
 			Arriba::Colour::highlightB = Amiigo::Settings::Colour::listHighlightB;
-			static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText(U"Amiigo + Arriba");
+			updateStatusSilent(U"Amiigo + Arriba");
 		} else if (Arriba::highlightedObject == makerButton) {
 			makerList->enabled = true;
 			if (makerIsInCategory) {
@@ -437,13 +441,13 @@ namespace Amiigo::UI {
 			Arriba::Colour::neutral = Amiigo::Settings::Colour::makerNeutral;
 	    	Arriba::Colour::highlightA = Amiigo::Settings::Colour::makerHighlightA;
 	    	Arriba::Colour::highlightB = Amiigo::Settings::Colour::makerHighlightB;
-			static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText(U"Amiigo Store");
+			updateStatusSilent(U"Amiigo Store");
 		} else if (Arriba::highlightedObject == settingsButton) {
 			settingsScene->enabled = true;
 			Arriba::Colour::neutral = Amiigo::Settings::Colour::settingsNeutral;
 	    	Arriba::Colour::highlightA = Amiigo::Settings::Colour::settingsHighlightA;
 	    	Arriba::Colour::highlightB = Amiigo::Settings::Colour::settingsHighlightB;
-			static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText(U"Settings");
+			updateStatusSilent(U"Settings");
 		}
 	}
 
@@ -453,14 +457,14 @@ namespace Amiigo::UI {
 				selectorPath = selectorAmiibos[index].path;
 				updateSelectorStrings();
 			} else {
-				static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText(U"Folder does not exist");
+				updateStatusError(U"Folder does not exist");
 			}
 		} else {
 			char path[FS_MAX_PATH];
 			strcpy(path, selectorAmiibos[index].path.c_str());
 			emu::SetEmulationStatus(emu::EmulationStatus::On);
 			emu::SetActiveVirtualAmiibo(path, FS_MAX_PATH);
-			static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText(path);
+			updateStatusInfo(Arriba::Text::ASCIIToUnicode(path));
 		}
 	}
 
@@ -495,5 +499,20 @@ namespace Amiigo::UI {
 
 	void selectorContextMenuSpawner(int index, Arriba::Maths::vec2<float> pos) {
 		if (index != -1) Arriba::Primitives::Quad* contextMenu = new Amiigo::Elements::selectorContextMenu(static_cast<int>(pos.x), static_cast<int>(pos.y), selectorAmiibos[index]);
+	}
+
+	
+	void updateStatusInfo(const char32_t* text) {
+		static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText(text);
+		static_cast<Arriba::Primitives::Quad*>(Arriba::findObjectByName("StatusBar"))->setColour({1,1,1,1});
+	}
+
+	void updateStatusError(const char32_t* text) {
+		static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText(text);
+		static_cast<Arriba::Primitives::Quad*>(Arriba::findObjectByName("StatusBar"))->setColour({1,0,0,1});
+	}
+
+	void updateStatusSilent(const char32_t* text) {
+		static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText(text);
 	}
 }  // namespace Amiigo::UI

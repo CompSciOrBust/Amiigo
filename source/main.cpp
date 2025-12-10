@@ -49,6 +49,7 @@ int main(int argc, char *argv[]) {
 		if (nfpState == NfpDeviceState_TagFound) hasDumped = Amiigo::NFC::Dumper::dumpNFC();
 		if (hasDumped) Amiigo::UI::updateSelectorStrings();
 	}
+	
 	// Deinit
 	socketExit();
 	romfsExit();
