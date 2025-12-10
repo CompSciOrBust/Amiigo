@@ -62,7 +62,7 @@ CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions `freetype-config --cflags`
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= `freetype-config --libs` `curl-config --libs` -lglfw3 -lEGL -lglapi -ldrm_nouveau -lnx -lm -lglad -lcurl -lz -lminizip
+LIBS := `freetype-config --libs` -lharfbuzz -lpng -lbz2 `curl-config --libs` -lglfw3 -lEGL -lglapi -ldrm_nouveau -lnx -lm -lglad -lcurl -lz -lminizip
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing

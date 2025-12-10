@@ -49,19 +49,13 @@ namespace Amiigo::NFC::Dumper {
         // TODO: Get last write / version
 
         // Get model info
-        NfpModelInfo _amiiboModelInfo = {};
-        nfpGetModelInfo(&readerHandle, &_amiiboModelInfo);
-        // Convert from offcial NFP format to Emuiibo format
-        _amiiboModelInfo.amiibo_id[5] = _amiiboModelInfo.amiibo_id[4];
-        _amiiboModelInfo.amiibo_id[4] = 0;
-        _amiiboModelInfo.amiibo_id[7] = 2;
-        // Store model info in creator struct
-        ModelFormat* amiiboModelInfo = reinterpret_cast<ModelFormat*>(_amiiboModelInfo.amiibo_id);
-        amiiboInfo.game_character_id = amiiboModelInfo->gameCharacterID;
-        amiiboInfo.character_variant = amiiboModelInfo->characterVariant;
-        amiiboInfo.figure_type = amiiboModelInfo->figureType;
-        amiiboInfo.model_number = __builtin_bswap16(amiiboModelInfo->modelNumber);
-        amiiboInfo.series = amiiboModelInfo->series;
+        NfpModelInfo amiiboModelInfo = {};
+        nfpGetModelInfo(&readerHandle, &amiiboModelInfo);
+        amiiboInfo.game_character_id = amiiboModelInfo.game_character_id;
+        amiiboInfo.character_variant = amiiboModelInfo.character_variant;
+        amiiboInfo.figure_type = amiiboModelInfo.nfp_type;
+        amiiboInfo.model_number = __builtin_bswap16(amiiboModelInfo.numbering_id);
+        amiiboInfo.series = amiiboModelInfo.series_id;
 
         // Get Amiibo name from user
         SwkbdConfig kbinput;
