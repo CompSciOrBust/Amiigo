@@ -23,6 +23,7 @@ namespace Amiigo::Settings {
             if (settingsJson.contains("useRandomisedUUID")) useRandomisedUUID = settingsJson["useRandomisedUUID"].get<bool>();
             if (settingsJson.contains("timeToCheckUpdate")) updateTime = settingsJson["timeToCheckUpdate"].get<long unsigned int>();
             if (settingsJson.contains("categoryMode")) categoryMode = settingsJson["categoryMode"].get<unsigned char>() % Amiigo::Settings::categoryModes::categoryCount;
+            if (settingsJson.contains("saveAmiiboImages")) saveAmiiboImages = settingsJson["saveAmiiboImages"].get<bool>();
 
             // Back compat with versions < 2.2.0
             if (!settingsJson.contains("categoryMode") && settingsJson.contains("saveAmiibosToCategory")) {
@@ -110,6 +111,7 @@ namespace Amiigo::Settings {
         settingsJson["timeToCheckUpdate"] = updateTime;
         settingsJson["categoryMode"] = categoryMode;
         settingsJson["useRandomisedUUID"] = useRandomisedUUID;
+        settingsJson["saveAmiiboImages"] = saveAmiiboImages;
         fileStream << settingsJson << std::endl;
         fileStream.close();
     }

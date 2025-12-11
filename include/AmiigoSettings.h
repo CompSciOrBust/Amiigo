@@ -12,6 +12,7 @@ namespace Amiigo::Settings {
     inline long unsigned int updateTime = 0;
     inline unsigned char categoryMode = 0;
     inline std::string emuiiboVersionText = "";
+    inline bool saveAmiiboImages = false;
     void loadSettings();
     void saveSettings();
 

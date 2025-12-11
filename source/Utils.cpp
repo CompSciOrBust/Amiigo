@@ -191,6 +191,8 @@ std::vector<AmiiboCreatorData> getAmiibosFromSeries(std::string series) {
                 newAmiibo.gameName = ASCIIToUnicodeConverter.from_bytes(APIJson["amiibo"][i]["gameSeries"].get<std::string>().c_str());
                 // Get the Amiibo series name (only used for categorization)
                 newAmiibo.amiiboSeries = ASCIIToUnicodeConverter.from_bytes(APIJson["amiibo"][i]["amiiboSeries"].get<std::string>().c_str());
+                // Get the Amiibo image URL
+                newAmiibo.imageURL = APIJson["amiibo"][i]["image"].get<std::string>();
                 // Add new amiibo to list
                 amiibos.push_back(newAmiibo);
             }
@@ -286,6 +288,12 @@ void createVirtualAmiibo(AmiiboCreatorData amiibo) {
         amiiboJson["use_random_uuid"] = true;
     fileStream << std::setw(4) << amiiboJson << std::endl;
     fileStream.close();
+
+    // TODO: Save images in a different thread to avoid hanging the UI
+    if (Amiigo::Settings::saveAmiiboImages) {
+        std::string imagePath = pathBase + "/amiibo.png";
+        if (!retrieveToFile(amiibo.imageURL, imagePath)) Amiigo::UI::updateStatusError(U"Failed to save Amiibo image");
+    }
 }
 
 void firstTimeSetup() {
