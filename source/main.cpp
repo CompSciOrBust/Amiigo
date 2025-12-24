@@ -43,11 +43,11 @@ int main(int argc, char *argv[]) {
 		bg->renderer->thisShader.setFloat1("iTime", Arriba::time);
 		
 		// Scan for Physical amiibos to dump
-		NfpDeviceState nfpState;
-		bool hasDumped = false;
-		nfpGetDeviceState(&Amiigo::NFC::Dumper::readerHandle, &nfpState);
-		if (nfpState == NfpDeviceState_TagFound) hasDumped = Amiigo::NFC::Dumper::dumpNFC();
-		if (hasDumped) Amiigo::UI::updateSelectorStrings();
+		//NfpDeviceState nfpState;
+		//bool hasDumped = false;
+		//nfpGetDeviceState(&Amiigo::NFC::Dumper::readerHandle, &nfpState);
+		//if (nfpState == NfpDeviceState_TagFound) hasDumped = Amiigo::NFC::Dumper::dumpNFC();
+		//if (hasDumped) Amiigo::UI::updateSelectorStrings();
 	}
 	
 	// Deinit

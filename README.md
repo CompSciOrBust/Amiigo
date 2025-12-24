@@ -46,8 +46,6 @@ The "Amiigo Store" tab is used to generate virtual Amiibo files. Any Amiibos gen
 ### Settings / Update
 The "Settings" tab can be used to configure how Amiigo works and to update the Amiigo app. Note that when an update is available for the Amiigo app this tab will automatically change from "Settings" to "Update".
 
-The "Update API cache" button will download the latest Amiibo data to be displayed in the Amiigo store.
-
 The "Update Amiigo" button can be used to download the latest version of Amiigo within the app. This button will only be visible when an update is available.
 
 The "Save to X" button is used to configure which folder virtual Amiibos are saved to. This changes how Amiibos appear in the Amiibo list. Possible options are:

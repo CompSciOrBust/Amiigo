@@ -475,6 +475,7 @@ namespace Amiigo::UI {
 				makerIsInCategory = false;
 			} else {
 				createVirtualAmiibo(creatorData[index-1]);
+				updateStatusInfo((U"Created " + creatorData[index-1].name).c_str());
 			}
 		} else {
 			creatorData = getAmiibosFromSeries(seriesList[index]);
