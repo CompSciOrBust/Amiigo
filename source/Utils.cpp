@@ -216,7 +216,7 @@ std::vector<AmiiboCreatorData> getAmiibosFromSeries(std::string series) {
     return amiibos;
 }
 
-std::string sanitizePathString(std::u32string path) {
+std::string sanitizeAmiiboName(std::u32string path) {
     std::string output;
     for (char32_t c: path) {
         switch (c)
@@ -248,12 +248,12 @@ void createVirtualAmiibo(AmiiboCreatorData amiibo) {
     std::string pathBase = "sdmc:/emuiibo/amiibo/";
     switch (Amiigo::Settings::categoryMode) {
         case Amiigo::Settings::saveByGameName:
-        pathBase += sanitizePathString(amiibo.gameName) + "/";
+        pathBase += sanitizeAmiiboName(amiibo.gameName) + "/";
         mkdir(pathBase.c_str(), 0);
         break;
     
         case Amiigo::Settings::saveByAmiiboSeries:
-        pathBase += sanitizePathString(amiibo.amiiboSeries) + "/";
+        pathBase += sanitizeAmiiboName(amiibo.amiiboSeries) + "/";
         mkdir(pathBase.c_str(), 0);
         break;
 
@@ -261,13 +261,13 @@ void createVirtualAmiibo(AmiiboCreatorData amiibo) {
         if (Amiigo::UI::selectorPath != "Favorites") pathBase = Amiigo::UI::selectorPath + "/";
         break;;
     }
-    pathBase += sanitizePathString(amiibo.name);
+    pathBase += sanitizeAmiiboName(amiibo.name);
     mkdir(pathBase.c_str(), 0);
     std::ofstream fileStream(pathBase + "/amiibo.flag");
     fileStream.close();
     fileStream.open(pathBase + "/amiibo.json");
     nlohmann::json amiiboJson;
-    amiiboJson["name"] = amiibo.name;
+    amiiboJson["name"] = std::string(sanitizeAmiiboName(amiibo.name));
     amiiboJson["write_counter"] = 0;
     amiiboJson["version"] = 0;
     amiiboJson["mii_charinfo_file"] = "mii-charinfo.bin";
