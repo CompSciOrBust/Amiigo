@@ -460,11 +460,15 @@ namespace Amiigo::UI {
 				updateStatusError(U"Folder does not exist");
 			}
 		} else {
-			char path[FS_MAX_PATH];
-			strcpy(path, selectorAmiibos[index].path.c_str());
+			std::string path;
+			path += selectorAmiibos[index].path;
 			emu::SetEmulationStatus(emu::EmulationStatus::On);
-			emu::SetActiveVirtualAmiibo(path, FS_MAX_PATH);
-			updateStatusInfo(Arriba::Text::ASCIIToUnicode(path));
+			Result res = emu::SetActiveVirtualAmiibo(path.c_str(), path.size());
+			if R_FAILED(res) {
+				updateStatusError(U"Failed to set active Amiibo");
+				return;
+			}
+			updateStatusInfo(Arriba::Text::ASCIIToUnicode(path.c_str()));
 		}
 	}
 
