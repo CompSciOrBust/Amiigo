@@ -14,6 +14,13 @@
 #include <emuiibo.hpp>
 #include <nlohmann/json.hpp>
 
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image.h>
+#include <stb_image_resize2.h>
+#include <stb_image_write.h>
+
 #include <arribaText.h>
 #include <codecvt> // TODO: Replace with custom transcoder
 
@@ -291,8 +298,30 @@ void createVirtualAmiibo(AmiiboCreatorData amiibo) {
 
     // TODO: Save images in a different thread to avoid hanging the UI
     if (Amiigo::Settings::saveAmiiboImages) {
+        int maxImageSize = 512;
         std::string imagePath = pathBase + "/amiibo.png";
-        if (!retrieveToFile(amiibo.imageURL, imagePath)) Amiigo::UI::updateStatusError(U"Failed to save Amiibo image");
+        bool downloadSuccess = retrieveToFile(amiibo.imageURL, imagePath);
+        if (!downloadSuccess) Amiigo::UI::updateStatusError(U"Failed to save Amiibo image");
+        else {
+            int width, height, channels;
+            unsigned char* input = stbi_load(imagePath.c_str(), &width, &height, &channels, 0);
+            if (width > maxImageSize || height > maxImageSize) {
+                int* largestDim = width > height ? &width : &height;
+                int newWidth = (maxImageSize * width) / *largestDim;
+                int newHeight = (maxImageSize * height) / *largestDim;
+
+                unsigned char* newImg = (unsigned char*)malloc(newWidth * newHeight * channels);
+                stbir_resize_uint8_linear(
+                    input, width, height, 0,
+                    newImg, newWidth, newHeight, 0,
+                    (stbir_pixel_layout)channels
+                );
+
+                stbi_write_png(imagePath.c_str(), newWidth, newHeight, channels, newImg, newWidth * channels);
+                free(newImg);
+            }
+            stbi_image_free(input);
+        }
     }
 }
 

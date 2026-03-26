@@ -2,5 +2,8 @@
 	path = Arriba
 	url = https://github.com/CompSciOrBust/Arriba
 [submodule "json"]
-	path = json
+	path = thirdparty/json
 	url = https://github.com/nlohmann/json
+[submodule "thirdparty/stb"]
+	path = thirdparty/stb
+	url = https://github.com/nothings/stb.git

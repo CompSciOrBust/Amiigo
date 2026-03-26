@@ -41,7 +41,9 @@ TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
 SOURCES		:=	source $(shell find Arriba/source -type d) zipper/zipper
 DATA		:=	data
-INCLUDES	:=	include $(shell find Arriba/include -type d) json/single_include zipper/zipper
+INCLUDES	:=	include $(shell find Arriba/include -type d) zipper/zipper \
+				thirdparty/json/single_include \
+				thirdparty/stb
 ROMFS	:=	romfs
 APP_TITLE := Amiigo
 APP_AUTHOR := CompSciOrBust
