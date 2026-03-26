@@ -162,65 +162,68 @@ namespace Amiigo::UI {
 		makerList->enabled = false;
 	}
 
+	const char32_t* getCategoryModeLabel() {
+		switch (Amiigo::Settings::categoryMode) {
+			case Amiigo::Settings::categoryModes::saveToRoot:
+			return U"Save to Game Name";
+			break;
+
+			case Amiigo::Settings::categoryModes::saveByGameName:
+			return U"Save to Amiibo Series";
+			break;
+
+			case Amiigo::Settings::categoryModes::saveByAmiiboSeries:
+			return U"Save to Current Folder";
+			break;
+
+			case Amiigo::Settings::categoryModes::saveByCurrentFolder:
+			return U"Save to Root";
+			break;
+		
+			default:
+			return U"Error";
+			break;
+		}
+	}
+
 	void initSettings() {
 		const int buttonHeight = 100;
-		const int buttonCount = 3 + 1;
+		const int buttonCount = 4 + 1;
 		settingsScene = new Arriba::Primitives::Quad(0, statusHeight, Arriba::Graphics::windowWidth - switcherWidth - 1, Arriba::Graphics::windowHeight - statusHeight, Arriba::Graphics::Pivot::topLeft);
 		// Not a list but pretending makes scene switching easier
 		settingsScene->name = "SettingsScene";
 		settingsScene->tag = "List";
 		settingsScene->enabled = false;
 		settingsScene->setColour({0, 0, 0, 0});
+
 		// Toggle category save button
 		Arriba::Elements::Button* categoryButton = new Arriba::Elements::Button();
 		categoryButton->setParent(settingsScene);
 		categoryButton->setDimensions(550, buttonHeight, Arriba::Graphics::Pivot::centre);
 		categoryButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 1/buttonCount, 0};
-		switch (Amiigo::Settings::categoryMode) {
-			case Amiigo::Settings::categoryModes::saveToRoot:
-			categoryButton->setText(U"Save to game name");
-			break;
-
-			case Amiigo::Settings::categoryModes::saveByGameName:
-			categoryButton->setText(U"Save to Amiibo series");
-			break;
-
-			case Amiigo::Settings::categoryModes::saveByAmiiboSeries:
-			categoryButton->setText(U"Save to current folder");
-			break;
-
-			case Amiigo::Settings::categoryModes::saveByCurrentFolder:
-			categoryButton->setText(U"Save to root");
-			break;
-		
-			default:
-			categoryButton->setText(U"Error");
-			break;
-		}
+		categoryButton->setText(getCategoryModeLabel());
 		categoryButton->name = "CategorySettingsButton";
+		categoryButton->tag = "SettingsButton";
 		// Callback to save setting
 		categoryButton->registerCallback([](){
 			Amiigo::Settings::categoryMode = (Amiigo::Settings::categoryMode+1) % Amiigo::Settings::categoryModes::categoryCount;
 			printf("%d", Amiigo::Settings::categoryMode);
 			Amiigo::Settings::saveSettings();
+			static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("CategorySettingsButton"))->setText(getCategoryModeLabel());
 			switch (Amiigo::Settings::categoryMode) {
 				case Amiigo::Settings::categoryModes::saveToRoot:
-				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("CategorySettingsButton"))->setText(U"Save to game name");
 				updateStatusInfo(U"Amiibos will save to sdmc:/emuiibo/amiibo");
 				break;
 			
 				case Amiigo::Settings::categoryModes::saveByGameName:
-				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("CategorySettingsButton"))->setText(U"Save to Amiibo series");
 				updateStatusInfo(U"Amiibos will save to sdmc:/emuiibo/game name");
 				break;
 
 				case Amiigo::Settings::categoryModes::saveByAmiiboSeries:
-				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("CategorySettingsButton"))->setText(U"Save to current folder");
 				updateStatusInfo(U"Amiibos will save to sdmc:/emuiibo/amiibo series");
 				break;
 
 				case Amiigo::Settings::categoryModes::saveByCurrentFolder:
-				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("CategorySettingsButton"))->setText(U"Save to root");
 				updateStatusInfo(U"Amiibos will save to the current location");
 				break;
 
@@ -230,6 +233,7 @@ namespace Amiigo::UI {
 				break;
 			}
 		});
+
 		// Toggle random UUIDs button
 		Arriba::Elements::Button* randomUUIDButton = new Arriba::Elements::Button();
 		randomUUIDButton->setParent(settingsScene);
@@ -237,11 +241,11 @@ namespace Amiigo::UI {
 		randomUUIDButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 2/buttonCount, 0};
 		switch (Amiigo::Settings::useRandomisedUUID) {
 			case true:
-			randomUUIDButton->setText(U"Disable random UUID");
+			randomUUIDButton->setText(U"Disable Random UUID");
 			break;
 
 			case false:
-			randomUUIDButton->setText(U"Enable random UUID");
+			randomUUIDButton->setText(U"Enable Random UUID");
 			break;
 		
 			default:
@@ -249,6 +253,7 @@ namespace Amiigo::UI {
 			break;
 		}
 		randomUUIDButton->name = "ToggleRandomUUIDButton";
+		randomUUIDButton->tag = "SettingsButton";
 		randomUUIDButton->registerCallback([](){
 			Amiigo::Settings::useRandomisedUUID = !Amiigo::Settings::useRandomisedUUID;
 			Amiigo::Settings::saveSettings();
@@ -268,13 +273,30 @@ namespace Amiigo::UI {
 				break;
 			}
 		});
+
+		// Update API cache button
+		Arriba::Elements::Button* cacheUpdateButton = new Arriba::Elements::Button();
+		cacheUpdateButton->setParent(settingsScene);
+		cacheUpdateButton->setDimensions(550, buttonHeight, Arriba::Graphics::Pivot::centre);
+		cacheUpdateButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 3/buttonCount, 0};
+		cacheUpdateButton->setText(U"Update API Cache");
+		cacheUpdateButton->name = "cacheUpdateButton";
+		cacheUpdateButton->tag = "SettingsButton";
+		cacheUpdateButton->enabled = hasNetworkConnection();
+		cacheUpdateButton->registerCallback([]() {
+			remove("sdmc:/config/amiigo/API.json");
+			initSplash();
+		});
+
+
 		// Check for updates button
 		Arriba::Elements::Button* updaterButton = new Arriba::Elements::Button();
 		updaterButton->setParent(settingsScene);
 		updaterButton->setDimensions(550, buttonHeight, Arriba::Graphics::Pivot::centre);
-		updaterButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 3/buttonCount, 0};
+		updaterButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 4/buttonCount, 0};
 		updaterButton->setText(U"Update Amiigo");
 		updaterButton->name = "UpdaterButton";
+		updaterButton->tag = "SettingsButton";
 		updaterButton->enabled = false;
 		// Callback for updating Amiigo
 		updaterButton->registerCallback([](){
@@ -292,7 +314,7 @@ namespace Amiigo::UI {
 		creditsQuad->setParent(settingsScene);
 		creditsQuad->setColour({0, 0, 0, 0.9});
 		int yOffset = 0;
-		// et Emuiibo version
+		// Get Emuiibo version
 		char emuVer[12];
 		emu::Version emuiiboVersion = emu::GetVersion();
 		sprintf(emuVer, "%u.%u.%u", emuiiboVersion.major, emuiiboVersion.minor, emuiiboVersion.micro);
@@ -386,15 +408,22 @@ namespace Amiigo::UI {
 				// Left / right pressed
 				if (Arriba::Input::buttonDown(Arriba::Input::DPadRight) && Arriba::highlightedObject->tag != "SwitcherButton") Arriba::highlightedObject = selectorButton;
 				if (Arriba::Input::buttonDown(Arriba::Input::DPadLeft) && Arriba::highlightedObject->tag == "SwitcherButton") Arriba::highlightedObject = Arriba::findObjectByName("CategorySettingsButton");
-				// Up pressed
-				if (Arriba::Input::buttonDown(Arriba::Input::DPadUp)) {
-					if (Arriba::highlightedObject == Arriba::findObjectByName("ToggleRandomUUIDButton")) Arriba::highlightedObject = Arriba::findObjectByName("CategorySettingsButton");
-					else if (Arriba::highlightedObject == Arriba::findObjectByName("UpdaterButton")) Arriba::highlightedObject = Arriba::findObjectByName("ToggleRandomUUIDButton");
-				}
-				// Down pressed
-				if (Arriba::Input::buttonDown(Arriba::Input::DPadDown)) {
-					if (Arriba::highlightedObject == Arriba::findObjectByName("CategorySettingsButton")) Arriba::highlightedObject = Arriba::findObjectByName("ToggleRandomUUIDButton");
-					else if (Arriba::highlightedObject == Arriba::findObjectByName("ToggleRandomUUIDButton") && Arriba::findObjectByName("UpdaterButton")->enabled) Arriba::highlightedObject = Arriba::findObjectByName("UpdaterButton");
+				// Up / Down pressed
+				int horizontalDirection = 0;
+				if (Arriba::Input::buttonDown(Arriba::Input::DPadUp)) horizontalDirection -= 1;
+				if (Arriba::Input::buttonDown(Arriba::Input::DPadDown)) horizontalDirection += 1;
+				std::vector<Arriba::UIObject*> settingsButtons;
+				if (horizontalDirection != 0) settingsButtons = Arriba::findObjectsByTag("SettingsButton");
+				for (int i = 0; i < settingsButtons.size(); i++) {
+					int buttonIndex = i;
+					if (settingsButtons[i] == Arriba::highlightedObject) {
+						do {
+							buttonIndex += horizontalDirection;
+							buttonIndex = buttonIndex % (settingsButtons.size());
+						} while (!settingsButtons[buttonIndex]->enabled);
+						Arriba::highlightedObject = settingsButtons[buttonIndex];
+						break;
+					}
 				}
 			}
 		}

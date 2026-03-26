@@ -39,9 +39,9 @@ include $(DEVKITPRO)/libnx/switch_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
-SOURCES		:=	source Arriba/source zipper/zipper
+SOURCES		:=	source $(shell find Arriba/source -type d) zipper/zipper
 DATA		:=	data
-INCLUDES	:=	include Arriba/include json/single_include zipper/zipper
+INCLUDES	:=	include $(shell find Arriba/include -type d) json/single_include zipper/zipper
 ROMFS	:=	romfs
 APP_TITLE := Amiigo
 APP_AUTHOR := CompSciOrBust

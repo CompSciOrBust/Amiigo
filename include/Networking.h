@@ -1,4 +1,5 @@
 #pragma once
+
 #include <switch.h>
 #include <curl/curl.h>
 #include <string>

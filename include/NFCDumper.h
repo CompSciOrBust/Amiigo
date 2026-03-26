@@ -1,4 +1,5 @@
 #pragma once
+
 #include <switch.h>
 
 namespace Amiigo::NFC::Dumper {

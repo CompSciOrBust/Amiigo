@@ -297,17 +297,21 @@ void createVirtualAmiibo(AmiiboCreatorData amiibo) {
 }
 
 void firstTimeSetup() {
-    // Extract local copy of the Amiibo API data
+    // Get the API cache
     if (!checkIfFileExists("sdmc:/config/amiigo/API.json")) {
-        unzFile zipFile = unzOpen("romfs:/API.cache");
-        unz_file_info fileInfo;
-        unzOpenCurrentFile(zipFile);
-        unzGetCurrentFileInfo(zipFile, &fileInfo, nullptr, 0, nullptr, 0, nullptr, 0);
-        void* buffer = malloc(437793);
-        FILE* outFile = fopen("sdmc:/config/amiigo/API.json", "wb");
-        for (int i = unzReadCurrentFile(zipFile, buffer, 437793); i > 0; i = unzReadCurrentFile(zipFile, buffer, 437793)) fwrite(buffer, 1, i, outFile);
-        fclose(outFile);
-        free(buffer);
+        bool downloadSuccess = retrieveToFile("https://amiiboapi.org/api/amiibo/", "sdmc:/config/amiigo/API.json");
+        if (!downloadSuccess) {
+            // Extract local copy of the Amiibo API data
+            unzFile zipFile = unzOpen("romfs:/API.cache");
+            unz_file_info fileInfo;
+            unzOpenCurrentFile(zipFile);
+            unzGetCurrentFileInfo(zipFile, &fileInfo, nullptr, 0, nullptr, 0, nullptr, 0);
+            void* buffer = malloc(437793);
+            FILE* outFile = fopen("sdmc:/config/amiigo/API.json", "wb");
+            for (int i = unzReadCurrentFile(zipFile, buffer, 437793); i > 0; i = unzReadCurrentFile(zipFile, buffer, 437793)) fwrite(buffer, 1, i, outFile);
+            fclose(outFile);
+            free(buffer);
+        }
     }
     
     // Install emuiibo

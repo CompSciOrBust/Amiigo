@@ -1,4 +1,5 @@
 #pragma once
+
 #include <arribaMaths.h>
 #include <switch.h>
 #include <string>
