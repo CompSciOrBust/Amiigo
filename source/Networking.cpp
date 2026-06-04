@@ -3,6 +3,46 @@
 #include <switch.h>
 #include <string>
 #include <fstream>
+#include <vector>
+#include <cstring>
+
+size_t memDataWriteCallback(char* inData, size_t chunkSize, size_t numChunks, void* outData_) {
+    std::vector<char>* outData = (std::vector<char>*)outData_;
+    size_t realSize = chunkSize * numChunks;
+    outData->insert(outData->end(), inData, inData + realSize);
+    return realSize;
+}
+
+bool downloadToRAM(std::string URL, char* &buffer, int &dataSize) {
+    if (!hasNetworkConnection()) return false;
+    CURL *curl = curl_easy_init();
+    if (!curl) return false;
+    std::vector<char> outData;
+    
+    curl_easy_setopt(curl, CURLOPT_URL, URL.c_str());
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "Amiigo");
+    curl_easy_setopt(curl, CURLOPT_CAINFO, "romfs:/certificate.pem");
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, memDataWriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &outData);
+    curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
+
+    CURLcode errorCode = curl_easy_perform(curl);
+    if (errorCode != CURLE_OK) {
+        printf("ERROR: Failed to download %s\n", URL.c_str());
+        curl_easy_cleanup(curl);
+        return false;
+    }
+
+    buffer = (char*)malloc(outData.size());
+    dataSize = outData.size();
+    memcpy(buffer, outData.data(), dataSize);
+
+    curl_easy_cleanup(curl);
+    return true;
+}
 
 bool retrieveToFile(std::string URL, std::string path) {
     if (!hasNetworkConnection()) return false;
@@ -33,34 +73,18 @@ bool retrieveToFile(std::string URL, std::string path) {
     return true;
 }
 
-// https://github.com/XorTroll/Goldleaf/blob/e1f5f9f9c797911e1902df37df2f0cdcc8940868/Goldleaf/source/net/net_Network.cpp#L48
-bool retrieveToString(std::string URL, std::string mimeType, std::string *out) {
-    CURL *curl = curl_easy_init();
-    if (!mimeType.empty()) {
-        curl_slist *header_data = curl_slist_append(header_data, ("Content-Type: " + mimeType).c_str());
-        header_data = curl_slist_append(header_data, ("Accept: " + mimeType).c_str());
-        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header_data);
-    }
-    std::string content;
-    curl_easy_setopt(curl, CURLOPT_URL, URL.c_str());
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, "Amiigo");
-    curl_easy_setopt(curl, CURLOPT_CAINFO, "romfs:/certificate.pem");
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
-    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-    // curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, StringWriteImpl);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, +[](const char* in, std::size_t size, std::size_t count, std::string *out){
-        const auto total_size = size * count;
-        out->append(in, total_size);
-        return total_size;
-    });
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, out);
-    CURLcode errorCode = curl_easy_perform(curl);
-    curl_easy_cleanup(curl);
-    if (errorCode != CURLE_OK) {
-        printf("ERROR: failed to download %s\nCurl error code:%d\n", URL.c_str(), errorCode);
+bool downloadToString(std::string URL, std::string *out) {
+    char* downloadedData;
+    int dataSize = 0;
+    bool success = downloadToRAM(URL, downloadedData, dataSize);
+    if (!success) {
+        printf("Failed to download data from %s\n", URL.c_str());
         return false;
     }
+    printf("Downloaded %d bytes from %s\n", dataSize, URL.c_str());
+    out->clear();
+    out->assign(downloadedData, dataSize);
+    free(downloadedData);
     return true;
 }
 

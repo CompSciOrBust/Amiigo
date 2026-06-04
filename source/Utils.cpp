@@ -167,7 +167,7 @@ std::vector<AmiiboCreatorData> getAmiibosFromSeries(std::string series) {
         }
         nlohmann::json APIJson = nlohmann::json::parse(APIData);
         fileStream.close();
-        // Loop over every entry under the AMiibo object
+        // Loop over every entry under the Amiibo object
         for (int i = 0; i < APIJson["amiibo"].size(); i++) {
             // If series matches add it to the list
             if (APIJson["amiibo"][i]["amiiboSeries"].get<std::string>() == series) {
@@ -300,27 +300,26 @@ void createVirtualAmiibo(AmiiboCreatorData amiibo) {
     if (Amiigo::Settings::saveAmiiboImages) {
         int maxImageSize = 512;
         std::string imagePath = pathBase + "/amiibo.png";
-        bool downloadSuccess = retrieveToFile(amiibo.imageURL, imagePath);
+        char* imageData;
+        int imageSize = 0;
+        bool downloadSuccess = downloadToRAM(amiibo.imageURL, imageData, imageSize);
         if (!downloadSuccess) Amiigo::UI::updateStatusError(U"Failed to save Amiibo image");
         else {
             int width, height, channels;
-            unsigned char* input = stbi_load(imagePath.c_str(), &width, &height, &channels, 0);
+            unsigned char* input = stbi_load_from_memory((const stbi_uc*)imageData, imageSize, &width, &height, &channels, 0);
+            int outWidth = width, outHeight = height;
+            unsigned char* outImg = input;
             if (width > maxImageSize || height > maxImageSize) {
                 int* largestDim = width > height ? &width : &height;
-                int newWidth = (maxImageSize * width) / *largestDim;
-                int newHeight = (maxImageSize * height) / *largestDim;
-
-                unsigned char* newImg = (unsigned char*)malloc(newWidth * newHeight * channels);
-                stbir_resize_uint8_linear(
-                    input, width, height, 0,
-                    newImg, newWidth, newHeight, 0,
-                    (stbir_pixel_layout)channels
-                );
-
-                stbi_write_png(imagePath.c_str(), newWidth, newHeight, channels, newImg, newWidth * channels);
-                free(newImg);
+                outWidth = (maxImageSize * width) / *largestDim;
+                outHeight = (maxImageSize * height) / *largestDim;
+                outImg = (unsigned char*)malloc(outWidth * outHeight * channels);
+                stbir_resize_uint8_linear(input, width, height, 0, outImg, outWidth, outHeight, 0, (stbir_pixel_layout)channels);
             }
+            stbi_write_png(imagePath.c_str(), outWidth, outHeight, channels, outImg, outWidth * channels);
+            if (outImg != input) free(outImg);
             stbi_image_free(input);
+            free(imageData);
         }
     }
 }
@@ -328,19 +327,27 @@ void createVirtualAmiibo(AmiiboCreatorData amiibo) {
 void firstTimeSetup() {
     // Get the API cache
     if (!checkIfFileExists("sdmc:/config/amiigo/API.json")) {
-        bool downloadSuccess = retrieveToFile("https://amiiboapi.org/api/amiibo/", "sdmc:/config/amiigo/API.json");
-        if (!downloadSuccess) {
+        std::string APIData;
+        std::ofstream out("sdmc:/config/amiigo/API.json");
+        bool downloadSuccess = downloadToString("https://amiiboapi.org/api/amiibo/", &APIData);
+        if (downloadSuccess) {
+            out << APIData;
+        } else {
             // Extract local copy of the Amiibo API data
             unzFile zipFile = unzOpen("romfs:/API.cache");
             unz_file_info fileInfo;
             unzOpenCurrentFile(zipFile);
             unzGetCurrentFileInfo(zipFile, &fileInfo, nullptr, 0, nullptr, 0, nullptr, 0);
-            void* buffer = malloc(437793);
-            FILE* outFile = fopen("sdmc:/config/amiigo/API.json", "wb");
-            for (int i = unzReadCurrentFile(zipFile, buffer, 437793); i > 0; i = unzReadCurrentFile(zipFile, buffer, 437793)) fwrite(buffer, 1, i, outFile);
-            fclose(outFile);
+            unsigned long dataSize = fileInfo.uncompressed_size;
+            printf("Extracting local API cache. Size is %ld bytes\n", dataSize);
+            char* buffer = (char*)malloc(dataSize);
+            unzReadCurrentFile(zipFile, buffer, dataSize);
+            out.write(buffer, dataSize);
             free(buffer);
+            unzCloseCurrentFile(zipFile);
+            unzClose(zipFile);
         }
+        out.close();
     }
     
     // Install emuiibo
@@ -353,7 +360,7 @@ void firstTimeSetup() {
             if (checkIfFileExists("sdmc:/config/amiigo/emuiibo.tmp")) remove("sdmc:/config/amiigo/emuiibo.tmp");
             // We should probably do this in a more robust way
             std::string emuiiboReleaseInfo;
-            while (!retrieveToString("https://api.github.com/repos/XorTroll/Emuiibo/releases", "application/json", &emuiiboReleaseInfo)) continue;
+            while (!downloadToString("https://api.github.com/repos/XorTroll/Emuiibo/releases", &emuiiboReleaseInfo)) continue;
             emuiiboInfo = nlohmann::json::parse(emuiiboReleaseInfo, nullptr, false);
             hasValidEmuiiboJSON = !emuiiboInfo.is_discarded();
         }
@@ -433,7 +440,7 @@ bool checkForUpdates() {
     }
     printf("Getting API data\n");
     std::string amiigoReleaseInfo;
-    bool releaseInfoSuccess = retrieveToString("https://api.github.com/repos/CompSciOrBust/Amiigo/releases", "application/json", &amiigoReleaseInfo);
+    bool releaseInfoSuccess = downloadToString("https://api.github.com/repos/CompSciOrBust/Amiigo/releases", &amiigoReleaseInfo);
     // User is probably being rate limited
     if (amiigoReleaseInfo.size() < 300 || !releaseInfoSuccess) {
         printf("%s\n", amiigoReleaseInfo.c_str());
