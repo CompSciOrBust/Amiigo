@@ -80,7 +80,7 @@ namespace Amiigo::UI {
 	}
 
 	void initSceneSwitcher() {
-		// Set up divider quads
+		// Setup divider quads
 		Arriba::Primitives::Quad* div1 = new Arriba::Primitives::Quad(Arriba::Graphics::windowWidth - switcherWidth - 1, statusHeight, 5, switcherHeight, Arriba::Graphics::Pivot::topLeft);
 		div1->setColour({0, 0, 0, 1});
 		Arriba::Primitives::Quad* div2 = new Arriba::Primitives::Quad(0, statusHeight - 1, Arriba::Graphics::windowWidth, 5, Arriba::Graphics::Pivot::topLeft);
@@ -92,7 +92,7 @@ namespace Amiigo::UI {
 		div4->setColour({0, 0, 0, 1});
 		Arriba::Primitives::Quad* div5 = new Arriba::Primitives::Quad(buttomDivX, statusHeight + (switcherHeight/4)*3 - 1, switcherWidth, 5, Arriba::Graphics::Pivot::topLeft);
 		div5->setColour({0, 0, 0, 1});
-		// Set up status bar
+		// Setup status bar
 		Arriba::Primitives::Quad* statusBar = new Arriba::Primitives::Quad(0, 0, Arriba::Graphics::windowWidth, statusHeight - 1, Arriba::Graphics::Pivot::topLeft);
 		Amiigo::AmiigoBehaviours::StatusBarColourBehaviour* statusBarColourBehaviour = new Amiigo::AmiigoBehaviours::StatusBarColourBehaviour();
 		statusBar->setColour(Amiigo::Settings::Colour::statusBar);
@@ -103,10 +103,10 @@ namespace Amiigo::UI {
 		statusText->setDimensions(statusText->width, statusText->height, Arriba::Graphics::centre);
 		statusText->transform.position = {statusBar->width/2, statusBar->height/2, 0};
 		statusText->setParent(statusBar);
-		// Set up switcher quad
+		// Setup switcher quad
 		sceneSwitcher = new Arriba::Primitives::Quad(Arriba::Graphics::windowWidth, statusHeight, switcherWidth, switcherHeight, Arriba::Graphics::Pivot::topRight);
 		sceneSwitcher->setColour({0, 0, 0, 0});
-		// Set up Amiibo list button
+		// Setup Amiibo list button
 		selectorButton = new Arriba::Elements::Button();
 		selectorButton->setText(U"My Amiibo");
 		selectorButton->setDimensions(switcherWidth, switcherHeight/4 - 1, Arriba::Graphics::Pivot::topRight);
@@ -114,7 +114,7 @@ namespace Amiigo::UI {
 		selectorButton->name = "SelectorButton";
 		selectorButton->tag = "SwitcherButton";
 		selectorButton->registerCallback(switcherPressed);
-		// Set up Amiigo maker button
+		// Setup Amiigo maker button
 		makerButton = new Arriba::Elements::Button();
 		makerButton->setText(U"Amiigo Store");
 		makerButton->transform.position.y = selectorButton->height + 1;
@@ -123,7 +123,7 @@ namespace Amiigo::UI {
 		makerButton->name = "MakerButton";
 		makerButton->tag = "SwitcherButton";
 		makerButton->registerCallback(switcherPressed);
-		// Set up settings button
+		// Setup settings button
 		settingsButton = new Arriba::Elements::Button();
 		settingsButton->setText(U"Settings");
 		settingsButton->transform.position.y = makerButton->height + makerButton->transform.position.y + 1;
@@ -132,7 +132,7 @@ namespace Amiigo::UI {
 		settingsButton->name = "SettingsButton";
 		settingsButton->tag = "SwitcherButton";
 		settingsButton->registerCallback(switcherPressed);
-		// Set up exit button
+		// Setup exit button
 		exitButton = new Arriba::Elements::Button();
 		exitButton->setText(U"Exit");
 		exitButton->transform.position.y = settingsButton->height + settingsButton->transform.position.y + 1;
@@ -144,7 +144,7 @@ namespace Amiigo::UI {
 	}
 
 	void initSelector() {
-	    // Set up the list
+	    // Setup the list
 	    selectorList = new Arriba::Elements::InertialList(0, statusHeight, Arriba::Graphics::windowWidth - switcherWidth - 1, Arriba::Graphics::windowHeight - statusHeight, std::vector<std::string>{});
 		updateSelectorStrings();
 		selectorList->name = "SelectorList";
@@ -498,6 +498,9 @@ namespace Amiigo::UI {
 				return;
 			}
 			updateStatusInfo(Arriba::Text::ASCIIToUnicode(path.c_str()));
+			if (amiiboPreview) amiiboPreview->destroy();
+			amiiboPreview = new Amiigo::Elements::AmiiboPreview(path);
+			amiiboPreview->setParent(selectorList);
 		}
 	}
 

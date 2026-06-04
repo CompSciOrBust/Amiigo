@@ -39,9 +39,9 @@ include $(DEVKITPRO)/libnx/switch_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
-SOURCES		:=	source $(shell find Arriba/source -type d) zipper/zipper
+SOURCES		:=	$(shell find source -type d) $(shell find Arriba/source -type d) zipper/zipper
 DATA		:=	data
-INCLUDES	:=	include $(shell find Arriba/include -type d) zipper/zipper \
+INCLUDES	:=	$(shell find include -type d) $(shell find Arriba/include -type d) zipper/zipper \
 				thirdparty/json/single_include \
 				thirdparty/stb
 ROMFS	:=	romfs

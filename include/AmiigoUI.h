@@ -37,6 +37,8 @@ namespace Amiigo::UI {
     inline Arriba::Elements::Button* exitButton = nullptr;
     // Settings objects
     inline Arriba::Primitives::Quad* settingsScene = nullptr;
+    // Preview
+    inline Arriba::UIObject* amiiboPreview = nullptr;
 
 
     void initUI();

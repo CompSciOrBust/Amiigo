@@ -41,6 +41,7 @@ int main(int argc, char *argv[]) {
 		if(Arriba::Input::buttonUp(Arriba::Input::PlusButtonSwitch) || !Amiigo::UI::isRunning) break;
 		Arriba::drawFrame();
 		bg->renderer->thisShader.setFloat1("iTime", Arriba::time);
+		MainThread::poll();
 		
 		// Scan for Physical amiibos to dump
 		//NfpDeviceState nfpState;
@@ -51,6 +52,7 @@ int main(int argc, char *argv[]) {
 	}
 	
 	// Deinit
+	workerQueue.shutdown();
 	socketExit();
 	romfsExit();
 	nifmExit();
