@@ -26,14 +26,13 @@ namespace Amiigo::Elements {
             unsigned char* data = stbi_load(imagePath.c_str(), &w, &h, &channels, 4);
             if (data) {
                 int outW = w, outH = h;
-                unsigned char* outData = scaleImageToFit(data, w, h, 4, 200, outW, outH);
+                auto outData = scaleImageToFit(data, w, h, 4, 200, outW, outH);
 
                 this->transform.position.x -= (outW/2 + 10);
                 setDimensions(outW, outH, Arriba::Graphics::Pivot::centre);
-                texID = Arriba::Graphics::bufferTexture_RGBA(outW, outH, outData);
+                texID = Arriba::Graphics::bufferTexture_RGBA(outW, outH, outData.data());
                 renderer->setTexture(texID);
 
-                if (outData != data) free(outData);
                 stbi_image_free(data);
             }
         } else {

@@ -71,6 +71,7 @@ namespace Amiigo::UI {
 			else if (!checkIfFileExists("sdmc:/atmosphere/contents/0100000000000352/exefs.nsp")) doingText->setText(U"Installing Emuiibo...");
 			else if (checkIfFileExists("sdmc:/config/amiigo/update.flag")) doingText->setText(U"Updating Amiigo...");
 			Arriba::drawFrame();
+			svcSleepThread(1'000'000'000 / 60);
 		}
 		initThread.join();
 		splashScene->destroy();
@@ -324,35 +325,20 @@ namespace Amiigo::UI {
 		creditsTitleText->setColour({0, 0.7, 1, 1});
 		creditsTitleText->setParent(creditsQuad);
 		creditsTitleText->transform.position = {creditsQuad->width/2, yOffset += creditsTitleText->height + 30, 0};
-		for (int i = 0; i < 5; i++) {
-			std::u32string titleText = U"Place holder";
-			std::u32string nameText = U"Place holder";
-			switch (i) {
-				case 0:
-				titleText = U"Developer";
-				nameText = U"CompSciOrBust";
-				break;
-				case 1:
-				titleText = U"Emuiibo " + std::u32string(Arriba::Text::ASCIIToUnicode(Amiigo::Settings::emuiiboVersionText.c_str()));
-				nameText = U"XorTroll";
-				break;
-				case 2:
-				titleText = U"Contribuyente";
-				nameText = U"Kronos2308";
-				break;
-				case 3:
-				titleText = U"The Pizza Guy";
-				nameText = U"Za";
-				break;
-				case 4:
-				titleText = U"Amiibo API";
-				nameText = U"N3evin";
-				break;
-			}
-			Arriba::Primitives::Text* titleTextObject = new Arriba::Primitives::Text(titleText.c_str(), 38);
+		struct Credit { std::u32string title; std::u32string name; };
+		const std::u32string emuiiboTitle = U"Emuiibo " + std::u32string(Arriba::Text::ASCIIToUnicode(Amiigo::Settings::emuiiboVersionText.c_str()));
+		const Credit credits[] = {
+			{U"Developer",   U"CompSciOrBust"},
+			{emuiiboTitle,   U"XorTroll"},
+			{U"Contribuyente", U"Kronos2308"},
+			{U"The Pizza Guy", U"Za"},
+			{U"Amiibo API",  U"N3evin"},
+		};
+		for (const auto& credit : credits) {
+			Arriba::Primitives::Text* titleTextObject = new Arriba::Primitives::Text(credit.title.c_str(), 38);
 			titleTextObject->setParent(creditsQuad);
 			titleTextObject->transform.position = {creditsQuad->width/2, yOffset += titleTextObject->height + 20, 0};
-			Arriba::Primitives::Text* nameTextObject = new Arriba::Primitives::Text(nameText.c_str(), 28);
+			Arriba::Primitives::Text* nameTextObject = new Arriba::Primitives::Text(credit.name.c_str(), 28);
 			nameTextObject->setParent(creditsQuad);
 			nameTextObject->transform.position = {creditsQuad->width/2, yOffset += nameTextObject->height + 10, 0};
 			titleTextObject->setColour({0, 0.7, 1, 1});

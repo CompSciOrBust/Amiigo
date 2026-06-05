@@ -74,13 +74,12 @@ namespace Amiigo::Elements {
                 swkbdConfigMakePresetDefault(&kbinput);
                 swkbdConfigSetGuideText(&kbinput, "Enter folder name");
                 swkbdConfigSetInitialText(&kbinput, "New folder");
-                char *kbout = reinterpret_cast<char*>(malloc(256));
+                char kbout[256];
                 swkbdShow(&kbinput, kbout, 255);
                 swkbdClose(&kbinput);
                 std::string newFolderPath = Amiigo::UI::selectorPath + "/" + kbout;
                 printf("%s\n", newFolderPath.c_str());
                 mkdir(newFolderPath.c_str(), 0);
-                free(kbout);
                 // Refresh list and close menu
                 Amiigo::UI::updateSelectorStrings();
                 Arriba::highlightedObject = nullptr;

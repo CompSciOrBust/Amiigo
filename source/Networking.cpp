@@ -4,7 +4,6 @@
 #include <string>
 #include <fstream>
 #include <vector>
-#include <cstring>
 
 size_t memDataWriteCallback(char* inData, size_t chunkSize, size_t numChunks, void* outData_) {
     std::vector<char>* outData = (std::vector<char>*)outData_;
@@ -13,13 +12,13 @@ size_t memDataWriteCallback(char* inData, size_t chunkSize, size_t numChunks, vo
     return realSize;
 }
 
-bool downloadToRAM(std::string URL, char* &buffer, int &dataSize) {
-    if (!hasNetworkConnection()) return false;
+std::optional<std::vector<char>> downloadToRAM(const std::string& url) {
+    if (!hasNetworkConnection()) return std::nullopt;
     CURL *curl = curl_easy_init();
-    if (!curl) return false;
+    if (!curl) return std::nullopt;
     std::vector<char> outData;
-    
-    curl_easy_setopt(curl, CURLOPT_URL, URL.c_str());
+
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_USERAGENT, "Amiigo");
     curl_easy_setopt(curl, CURLOPT_CAINFO, "romfs:/certificate.pem");
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
@@ -30,18 +29,12 @@ bool downloadToRAM(std::string URL, char* &buffer, int &dataSize) {
     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
 
     CURLcode errorCode = curl_easy_perform(curl);
-    if (errorCode != CURLE_OK) {
-        printf("ERROR: Failed to download %s\n", URL.c_str());
-        curl_easy_cleanup(curl);
-        return false;
-    }
-
-    buffer = (char*)malloc(outData.size());
-    dataSize = outData.size();
-    memcpy(buffer, outData.data(), dataSize);
-
     curl_easy_cleanup(curl);
-    return true;
+    if (errorCode != CURLE_OK) {
+        printf("ERROR: Failed to download %s\n", url.c_str());
+        return std::nullopt;
+    }
+    return outData;
 }
 
 bool retrieveToFile(std::string URL, std::string path) {
@@ -76,17 +69,13 @@ bool retrieveToFile(std::string URL, std::string path) {
 }
 
 bool downloadToString(std::string URL, std::string *out) {
-    char* downloadedData;
-    int dataSize = 0;
-    bool success = downloadToRAM(URL, downloadedData, dataSize);
-    if (!success) {
+    auto data = downloadToRAM(URL);
+    if (!data) {
         printf("Failed to download data from %s\n", URL.c_str());
         return false;
     }
-    printf("Downloaded %d bytes from %s\n", dataSize, URL.c_str());
-    out->clear();
-    out->assign(downloadedData, dataSize);
-    free(downloadedData);
+    printf("Downloaded %zu bytes from %s\n", data->size(), URL.c_str());
+    out->assign(data->begin(), data->end());
     return true;
 }
 

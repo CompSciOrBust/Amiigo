@@ -221,36 +221,34 @@ std::string sanitizeAmiiboName(std::u32string path) {
     return output;
 }
 
-unsigned char* scaleImageToFit(unsigned char* src, int w, int h, int channels, int maxSize, int& outW, int& outH) {
+std::vector<unsigned char> scaleImageToFit(unsigned char* src, int w, int h, int channels, int maxSize, int& outW, int& outH) {
     int largest = (w > h) ? w : h;
     outW = (maxSize * w) / largest;
     outH = (maxSize * h) / largest;
-    if (outW == w && outH == h) return src;
-    unsigned char* out = (unsigned char*)malloc(outW * outH * channels);
-    stbir_resize_uint8_linear(src, w, h, 0, out, outW, outH, 0, (stbir_pixel_layout)channels);
+    std::vector<unsigned char> out(outW * outH * channels);
+    stbir_resize_uint8_linear(src, w, h, 0, out.data(), outW, outH, 0, (stbir_pixel_layout)channels);
     return out;
 }
 
 void saveAmiiboImage(std::string pathBase, AmiiboCreatorData amiibo) {
     int maxImageSize = 512;
     std::string imagePath = pathBase + "/amiibo.png";
-    char* imageData;
-    int imageSize = 0;
-    bool downloadSuccess = downloadToRAM(amiibo.imageURL, imageData, imageSize);
-    if (!downloadSuccess) {
+    auto imageData = downloadToRAM(amiibo.imageURL);
+    if (!imageData) {
         MainThread::dispatch([]() { Amiigo::UI::updateStatusError(U"Failed to save Amiibo image"); });
         return;
     }
     int width, height, channels;
-    unsigned char* input = stbi_load_from_memory((const stbi_uc*)imageData, imageSize, &width, &height, &channels, 0);
+    unsigned char* input = stbi_load_from_memory((const stbi_uc*)imageData->data(), imageData->size(), &width, &height, &channels, 0);
     int outWidth = width, outHeight = height;
-    unsigned char* outImg = input;
-    if (width > maxImageSize || height > maxImageSize)
-        outImg = scaleImageToFit(input, width, height, channels, maxImageSize, outWidth, outHeight);
+    const unsigned char* outImg = input;
+    std::vector<unsigned char> scaled;
+    if (width > maxImageSize || height > maxImageSize) {
+        scaled = scaleImageToFit(input, width, height, channels, maxImageSize, outWidth, outHeight);
+        outImg = scaled.data();
+    }
     stbi_write_png(imagePath.c_str(), outWidth, outHeight, channels, outImg, outWidth * channels);
-    if (outImg != input) free(outImg);
     stbi_image_free(input);
-    free(imageData);
 }
 
 void createVirtualAmiibo(AmiiboCreatorData amiibo) {
@@ -378,6 +376,7 @@ void firstTimeSetup() {
         NcmProgramLocation emuiiboLoc = {0x0100000000000352, NcmStorageId_None};
         pmshellLaunchProgram(0, &emuiiboLoc, nullptr);
         pmshellExit();
+        while(!emu::IsAvailable()) continue;
     }
     // If flag exists download update
     if (checkIfFileExists("sdmc:/config/amiigo/update.flag")) {
