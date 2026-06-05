@@ -47,7 +47,7 @@ INCLUDES	:=	$(shell find include -type d) $(shell find Arriba/include -type d) z
 ROMFS	:=	romfs
 APP_TITLE := Amiigo
 APP_AUTHOR := CompSciOrBust
-APP_VERSION := 2.4.2
+APP_VERSION := 2.5.0
 
 #---------------------------------------------------------------------------------
 # options for code generation

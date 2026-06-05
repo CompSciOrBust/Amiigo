@@ -2,7 +2,9 @@
 
 #include <string>
 #include <vector>
+#include <fstream>
 #include <WorkerQueue.h>
+#include <nlohmann/json.hpp>
 
 struct AmiiboEntry {
     std::u32string name;
@@ -23,6 +25,18 @@ struct AmiiboCreatorData {
 };
 
 bool checkIfFileExists(const char* path);
+
+template<typename T>
+T readJsonField(const std::string& filePath, const std::string& field, T defaultValue = T{}) {
+    if (!checkIfFileExists(filePath.c_str())) return defaultValue;
+    std::ifstream fileStream(filePath);
+    std::string content, line;
+    while (getline(fileStream, line)) content += line;
+    nlohmann::json j = nlohmann::json::parse(content, nullptr, false);
+    if (j.is_discarded() || !j.contains(field)) return defaultValue;
+    return j[field].get<T>();
+}
+
 unsigned char* scaleImageToFit(unsigned char* src, int w, int h, int channels, int maxSize, int& outW, int& outH);
 std::vector<AmiiboEntry> scanForAmiibo(const char* path);
 std::vector<std::string> getListOfSeries();

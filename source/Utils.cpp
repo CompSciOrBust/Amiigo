@@ -28,6 +28,11 @@ bool checkIfFileExists(const char* path) {
     return !access(path, F_OK);
 }
 
+static std::u32string getAmiiboDisplayName(const std::string& path, bool isCategory) {
+    if (isCategory) return Arriba::Text::ASCIIToUnicode(path.substr(path.find_last_of('/') + 1).c_str());
+    return Arriba::Text::ASCIIToUnicode(readJsonField<std::string>(path + "/amiibo.json", "name", "Corrupt Amiibo Data").c_str());
+}
+
 std::vector<AmiiboEntry> scanForAmiibo(const char* path) {
     // Open path
     DIR* folder = opendir(path);
@@ -37,7 +42,6 @@ std::vector<AmiiboEntry> scanForAmiibo(const char* path) {
         dirent* entry;
         while (entry = readdir(folder)) {
             AmiiboEntry amiibo;
-            amiibo.name = Arriba::Text::ASCIIToUnicode(entry->d_name);
             char flagPath[512] = "";
             strcat(flagPath, path);
             strcat(flagPath, "/");
@@ -45,6 +49,7 @@ std::vector<AmiiboEntry> scanForAmiibo(const char* path) {
             amiibo.path = flagPath;
             strcat(flagPath, "/amiibo.flag");
             amiibo.isCategory = !checkIfFileExists(flagPath);
+            amiibo.name = getAmiiboDisplayName(amiibo.path, amiibo.isCategory);
             amiibos.push_back(amiibo);
         }
         closedir(folder);
@@ -84,10 +89,8 @@ std::vector<AmiiboEntry> scanForAmiibo(const char* path) {
             strcat(flagPath, tempLine.c_str());
             strcat(flagPath, "/amiibo.flag");
             // Add to amiibo list
-            amiibos.push_back({
-                Arriba::Text::ASCIIToUnicode(tempLine.substr(tempLine.find_last_of('/')+1, tempLine.length()+1 - tempLine.find_last_of('/')).c_str()),
-                !checkIfFileExists(flagPath),
-                tempLine});
+            bool isCategory = !checkIfFileExists(flagPath);
+            amiibos.push_back({getAmiiboDisplayName(tempLine, isCategory), isCategory, tempLine});
         }
         fileStream.close();
         return amiibos;
