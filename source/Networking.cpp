@@ -68,6 +68,8 @@ bool retrieveToFile(std::string URL, std::string path) {
             file.close();
             return false;
         }
+    } else {
+        return false;
     }
     file.close();
     return true;

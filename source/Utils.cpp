@@ -26,6 +26,17 @@ bool checkIfFileExists(const char* path) {
     return !access(path, F_OK);
 }
 
+template<typename Str>
+static bool caseInsensitiveSort(const Str& a, const Str& b) {
+    size_t maxLength = std::min(a.length(), b.length());
+    for (size_t i = 0; i < maxLength; i++) {
+        auto ca = std::tolower(a[i]);
+        auto cb = std::tolower(b[i]);
+        if (ca != cb) return ca < cb;
+    }
+    return false;
+}
+
 static std::u32string getAmiiboDisplayName(const std::string& path, bool isCategory) {
     if (isCategory) return Arriba::Text::ASCIIToUnicode(path.substr(path.find_last_of('/') + 1).c_str());
     return Arriba::Text::ASCIIToUnicode(readJsonField<std::string>(path + "/amiibo.json", "name", "Corrupt Amiibo Data").c_str());
@@ -52,16 +63,8 @@ std::vector<AmiiboEntry> scanForAmiibo(const char* path) {
         }
         closedir(folder);
         // Sort alphabetically
-        std::sort(amiibos.begin(), amiibos.end(), [](AmiiboEntry amiiboA, AmiiboEntry amiiboB)->bool{
-            int maxLength = (amiiboA.name.length() < amiiboB.name.length()) ? amiiboA.name.length() : amiiboB.name.length();
-            int iterations = 0;
-            while (iterations < maxLength) {
-                if (std::tolower(amiiboA.name[iterations]) != std::tolower(amiiboB.name[iterations]))
-                    return std::tolower(amiiboA.name[iterations]) < std::tolower(amiiboB.name[iterations]);
-                else
-                    iterations++;
-            }
-            return false;
+        std::sort(amiibos.begin(), amiibos.end(), [](const AmiiboEntry& a, const AmiiboEntry& b) {
+            return caseInsensitiveSort(a.name, b.name);
         });
         // Prepend favorites if path is sdmc:/emuiibo/amiibo
         if (!strcmp(path, "sdmc:/emuiibo/amiibo")) {
@@ -72,7 +75,6 @@ std::vector<AmiiboEntry> scanForAmiibo(const char* path) {
             upDir = upDir.substr(0, upDir.find_last_of("/"));
             amiibos.insert(amiibos.begin(), {U"← Back", true, upDir});
         }
-        return amiibos;
     }
     // Check if path is supposed to be favorites
     if (!strcmp(path, "Favorites")) {
@@ -91,8 +93,8 @@ std::vector<AmiiboEntry> scanForAmiibo(const char* path) {
             amiibos.push_back({getAmiiboDisplayName(tempLine, isCategory), isCategory, tempLine});
         }
         fileStream.close();
-        return amiibos;
     }
+    return amiibos;
 }
 
 std::vector<std::string> getListOfSeries() {
@@ -110,8 +112,11 @@ std::vector<std::string> getListOfSeries() {
             bool isKnown = false;
             std::string seriesName = APIJson["amiibo"][i]["amiiboSeries"].get<std::string>();
             // Check if series is in list
-            for (size_t i = 0; i < series.size(); i++) {
-                if (series[i] == seriesName) isKnown = true;
+            for (size_t j = 0; j < series.size(); j++) {
+                if (series[j] == seriesName) {
+                    isKnown = true;
+                    break;
+                }
             }
             // If not add it to the list
             if (!isKnown) series.push_back(seriesName);
@@ -121,17 +126,7 @@ std::vector<std::string> getListOfSeries() {
     }
 
     // Sort alphabetically
-    std::sort(series.begin(), series.end(), [](std::string seriesA, std::string seriesB)->bool{
-        int maxLength = (seriesA.length() < seriesB.length()) ? seriesA.length() : seriesB.length();
-        int iterations = 0;
-        while (iterations < maxLength) {
-            if (std::tolower(seriesA[iterations]) != std::tolower(seriesB[iterations]))
-                return std::tolower(seriesA[iterations]) < std::tolower(seriesB[iterations]);
-            else
-                iterations++;
-        }
-        return false;
-    });
+    std::sort(series.begin(), series.end(), caseInsensitiveSort<std::string>);
     return series;
 }
 
@@ -192,16 +187,8 @@ std::vector<AmiiboCreatorData> getAmiibosFromSeries(std::string series) {
     }
 
     // Sort alphabetically
-    std::sort(amiibos.begin(), amiibos.end(), [](AmiiboCreatorData amiiboA, AmiiboCreatorData amiiboB)->bool{
-        int maxLength = (amiiboA.name.length() < amiiboB.name.length()) ? amiiboA.name.length() : amiiboB.name.length();
-        int iterations = 0;
-        while (iterations < maxLength) {
-            if (std::tolower(amiiboA.name[iterations]) != std::tolower(amiiboB.name[iterations]))
-                return std::tolower(amiiboA.name[iterations]) < std::tolower(amiiboB.name[iterations]);
-            else
-                iterations++;
-        }
-        return false;
+    std::sort(amiibos.begin(), amiibos.end(), [](const AmiiboCreatorData& a, const AmiiboCreatorData& b) {
+        return caseInsensitiveSort(a.name, b.name);
     });
     return amiibos;
 }
@@ -281,7 +268,7 @@ void createVirtualAmiibo(AmiiboCreatorData amiibo) {
 
         case Amiigo::Settings::saveByCurrentFolder:
         if (Amiigo::UI::selectorPath != "Favorites") pathBase = Amiigo::UI::selectorPath + "/";
-        break;;
+        break;
     }
     pathBase += sanitizeAmiiboName(amiibo.name);
     mkdir(pathBase.c_str(), 0);
@@ -367,10 +354,10 @@ void firstTimeSetup() {
         for (int i = 0; i < zipInfo.number_entry; i++) {
             char fileName[256];
             unz_file_info fileInfo;
-            unzOpenCurrentFile(zipFile);
             unzGetCurrentFileInfo(zipFile, &fileInfo, fileName, sizeof(fileName), nullptr, 0, nullptr, 0);
             printf("Zip index:%d is %s\n", i, fileName);
             if (strcmp("SdOut/atmosphere/contents/0100000000000352/exefs.nsp", fileName) == 0) {
+                unzOpenCurrentFile(zipFile);
                 void* buffer = malloc(500000);
                 FILE* outfile = fopen("sdmc:/atmosphere/contents/0100000000000352/exefs.nsp", "wb");
                 for (int j = unzReadCurrentFile(zipFile, buffer, 500000); j > 0; j = unzReadCurrentFile(zipFile, buffer, 500000)) {
@@ -378,9 +365,9 @@ void firstTimeSetup() {
                 }
                 fclose(outfile);
                 free(buffer);
+                unzCloseCurrentFile(zipFile);
                 break;
             }
-            unzCloseCurrentFile(zipFile);
             unzGoToNextFile(zipFile);
         }
         printf("Unzip done\n");

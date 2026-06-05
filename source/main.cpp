@@ -33,6 +33,7 @@ int main(int argc, char *argv[]) {
 	Amiigo::NFC::Dumper::init();
 	// Init UI
 	Amiigo::UI::initUI();
+	srand (time(NULL));
 
 	// Main loop
 	while (appletMainLoop()) {
