@@ -12,8 +12,6 @@
 #include <AmiigoUI.h>
 #include <Networking.h>
 #include <emuiibo.hpp>
-#include <nlohmann/json.hpp>
-
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -100,15 +98,7 @@ std::vector<AmiiboEntry> scanForAmiibo(const char* path) {
 std::vector<std::string> getListOfSeries() {
     std::vector<std::string> series;
     if (checkIfFileExists("sdmc:/config/amiigo/API.json")) {
-        std::string APIData;
-        std::string tempLine;
-        std::ifstream fileStream("sdmc:/config/amiigo/API.json");
-        // Read the file from disk
-        while (getline(fileStream, tempLine)) {
-            APIData += tempLine;
-        }
-        fileStream.close();
-        nlohmann::json APIJson = nlohmann::json::parse(APIData, nullptr, false);
+        JsonDoc APIJson = loadJsonFile("sdmc:/config/amiigo/API.json");
         // Check API cache is valid
         if (APIJson.is_discarded()) {
             printf("API cache is corrupt\n");
@@ -159,17 +149,7 @@ unsigned short shiftAndDec(std::string input) {
 std::vector<AmiiboCreatorData> getAmiibosFromSeries(std::string series) {
     std::vector<AmiiboCreatorData> amiibos;
     if (checkIfFileExists("sdmc:/config/amiigo/API.json")) {
-        std::wstring APIData;
-        std::wstring tempLine;
-        std::wifstream fileStream("sdmc:/config/amiigo/API.json");
-        std::locale utf8_locale(std::locale(), new std::codecvt_utf8<wchar_t>);
-        fileStream.imbue(utf8_locale);
-        // Read the file from disk
-        while (getline(fileStream, tempLine)) {
-            APIData += tempLine;
-        }
-        nlohmann::json APIJson = nlohmann::json::parse(APIData);
-        fileStream.close();
+        JsonDoc APIJson = loadJsonFile("sdmc:/config/amiigo/API.json");
         // Loop over every entry under the Amiibo object
         for (int i = 0; i < APIJson["amiibo"].size(); i++) {
             // If series matches add it to the list
@@ -307,8 +287,7 @@ void createVirtualAmiibo(AmiiboCreatorData amiibo) {
     mkdir(pathBase.c_str(), 0);
     std::ofstream fileStream(pathBase + "/amiibo.flag");
     fileStream.close();
-    fileStream.open(pathBase + "/amiibo.json");
-    nlohmann::json amiiboJson;
+    JsonDoc amiiboJson;
     amiiboJson["name"] = std::string(sanitizeAmiiboName(amiibo.name));
     amiiboJson["write_counter"] = 0;
     amiiboJson["version"] = 0;
@@ -328,8 +307,7 @@ void createVirtualAmiibo(AmiiboCreatorData amiibo) {
         amiiboJson["uuid"] = {rand() % 256, rand() % 256, rand() % 256, rand() % 256, rand() % 256, rand() % 256, rand() % 256, 0, 0, 0};
     else
         amiiboJson["use_random_uuid"] = true;
-    fileStream << std::setw(4) << amiiboJson << std::endl;
-    fileStream.close();
+    writeJsonFile(pathBase + "/amiibo.json", amiiboJson);
 
     if (Amiigo::Settings::saveAmiiboImages) workerQueue.enqueue(std::bind(saveAmiiboImage, pathBase, amiibo));
 }
@@ -363,7 +341,7 @@ void firstTimeSetup() {
     // Install emuiibo
     if (!checkIfFileExists("sdmc:/atmosphere/contents/0100000000000352/exefs.nsp")) {
         bool hasValidEmuiiboJSON = false;
-        nlohmann::json emuiiboInfo;
+        JsonDoc emuiiboInfo;
         while (!hasValidEmuiiboJSON) {
             printf("Downloading Emuiibo zip\n");
             while (!hasNetworkConnection()) continue;
@@ -371,7 +349,7 @@ void firstTimeSetup() {
             // We should probably do this in a more robust way
             std::string emuiiboReleaseInfo;
             while (!downloadToString("https://api.github.com/repos/XorTroll/Emuiibo/releases", &emuiiboReleaseInfo)) continue;
-            emuiiboInfo = nlohmann::json::parse(emuiiboReleaseInfo, nullptr, false);
+            emuiiboInfo = parseJsonString(emuiiboReleaseInfo);
             hasValidEmuiiboJSON = !emuiiboInfo.is_discarded();
         }
         printf("hasValidEmuiiboJSON: %d\n", hasValidEmuiiboJSON);
@@ -457,7 +435,7 @@ bool checkForUpdates() {
         printf("Error, getting Amiigo update info failed\n");
         return false;
     }
-    nlohmann::json amiigoInfoParsed = nlohmann::json::parse(amiigoReleaseInfo, nullptr, false);
+    JsonDoc amiigoInfoParsed = parseJsonString(amiigoReleaseInfo);
 
     // If data is corrupt do nothing
     if (amiigoInfoParsed.is_discarded()) {

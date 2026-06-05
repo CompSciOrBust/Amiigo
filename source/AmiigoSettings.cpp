@@ -1,24 +1,12 @@
 #include <AmiigoSettings.h>
 
 #include <utils.h>
-#include <string>
-#include <fstream>
-
-#include <nlohmann/json.hpp>
 
 namespace Amiigo::Settings {
     void loadSettings() {
         // Parse main config
         if (checkIfFileExists("sdmc:/config/amiigo/settings.json")) {
-            // Load the file from the sd
-            std::ifstream fileStream("sdmc:/config/amiigo/settings.json");
-            std::string tempLine;
-            std::string fileString;
-            while (getline(fileStream, tempLine)) fileString += tempLine;
-
-            // Parse the file
-            nlohmann::json settingsJson = nlohmann::json::parse(fileString);
-            fileStream.close();
+            JsonDoc settingsJson = loadJsonFile("sdmc:/config/amiigo/settings.json");
             if (settingsJson.contains("saveAmiibosToCategory")) saveAmiibosToCategory = settingsJson["saveAmiibosToCategory"].get<bool>();
             if (settingsJson.contains("useRandomisedUUID")) useRandomisedUUID = settingsJson["useRandomisedUUID"].get<bool>();
             if (settingsJson.contains("timeToCheckUpdate")) updateTime = settingsJson["timeToCheckUpdate"].get<long unsigned int>();
@@ -38,15 +26,7 @@ namespace Amiigo::Settings {
 
         // Parse theme config
         if (checkIfFileExists("sdmc:/config/amiigo/theme.json")) {
-            // Load the theme file
-            std::ifstream fileStream("sdmc:/config/amiigo/theme.json");
-            std::string tempLine;
-            std::string fileString;
-            while (getline(fileStream, tempLine)) fileString += tempLine;
-
-            // Parse the file to load the colours
-            nlohmann::json themeJson = nlohmann::json::parse(fileString);
-            fileStream.close();
+            JsonDoc themeJson = loadJsonFile("sdmc:/config/amiigo/theme.json");
 
             // Status bar
             if (themeJson.contains("StatusBar_Neutral_R")) Colour::statusBar.r = themeJson["StatusBar_Neutral_R"].get<float>();
@@ -105,14 +85,11 @@ namespace Amiigo::Settings {
     }
 
     void saveSettings() {
-        if (checkIfFileExists("sdmc:/config/amiigo/settings.json")) std::remove("sdmc:/config/amiigo/settings.json");
-        std::ofstream fileStream("sdmc:/config/amiigo/settings.json");
-        nlohmann::json settingsJson;
+        JsonDoc settingsJson;
         settingsJson["timeToCheckUpdate"] = updateTime;
         settingsJson["categoryMode"] = categoryMode;
         settingsJson["useRandomisedUUID"] = useRandomisedUUID;
         settingsJson["saveAmiiboImages"] = saveAmiiboImages;
-        fileStream << settingsJson << std::endl;
-        fileStream.close();
+        writeJsonFile("sdmc:/config/amiigo/settings.json", settingsJson);
     }
 }  // namespace Amiigo::Settings
