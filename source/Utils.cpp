@@ -265,7 +265,7 @@ void createVirtualAmiibo(AmiiboCreatorData amiibo) {
         break;
 
         case Amiigo::Settings::saveByCurrentFolder:
-        if (Amiigo::UI::selectorPath != "Favorites") pathBase = Amiigo::UI::selectorPath + "/";
+        if (Amiigo::UI::getSelectorPath() != "Favorites") pathBase = Amiigo::UI::getSelectorPath() + "/";
         break;
     }
     pathBase += sanitizeAmiiboName(amiibo.name);

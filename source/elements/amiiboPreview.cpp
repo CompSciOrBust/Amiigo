@@ -47,7 +47,6 @@ namespace Amiigo::Elements {
     void AmiiboPreview::onFrame() {
         double elapsed = Arriba::time - spawnTime;
         if (elapsed >= displayDuration + fadeDuration) {
-            Amiigo::UI::amiiboPreview = nullptr;
             destroy();
             return;
         }

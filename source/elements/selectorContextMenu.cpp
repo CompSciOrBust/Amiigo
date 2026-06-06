@@ -6,7 +6,7 @@
 
 namespace Amiigo::Elements {
     selectorContextMenu::selectorContextMenu(int x, int y, AmiiboEntry entry) : Arriba::Primitives::Quad(x, y, 0, 0, Arriba::Graphics::Pivot::centre) {
-        name = "ContextMenu";
+        setName("ContextMenu");
         Arriba::activeLayer++;
         setColour({0, 0, 0, 1});
         amiiboEntryGlobal = entry;
@@ -61,7 +61,7 @@ namespace Amiigo::Elements {
             }
         }
         // Spawn new folder button
-        if (Amiigo::UI::selectorPath != "Favorites") {
+        if (Amiigo::UI::getSelectorPath() != "Favorites") {
             Arriba::Elements::Button* newFolderButton = new Arriba::Elements::Button();
             newFolderButton->setParent(this);
             newFolderButton->setText("New folder");
@@ -77,7 +77,7 @@ namespace Amiigo::Elements {
                 char kbout[256];
                 swkbdShow(&kbinput, kbout, 255);
                 swkbdClose(&kbinput);
-                std::string newFolderPath = Amiigo::UI::selectorPath + "/" + kbout;
+                std::string newFolderPath = Amiigo::UI::getSelectorPath() + "/" + kbout;
                 printf("%s\n", newFolderPath.c_str());
                 mkdir(newFolderPath.c_str(), 0);
                 // Refresh list and close menu
@@ -86,7 +86,7 @@ namespace Amiigo::Elements {
             });
         }
         // Spawn delete button
-        if (entry.name != U"★Favorites" && Amiigo::UI::selectorPath != "Favorites" && entry.name != U"← Back") {
+        if (entry.name != U"★Favorites" && Amiigo::UI::getSelectorPath() != "Favorites" && entry.name != U"← Back") {
             Arriba::Elements::Button* deleteButton = new Arriba::Elements::Button();
             deleteButton->setParent(this);
             deleteButton->setText("Delete");

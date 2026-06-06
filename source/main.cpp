@@ -28,12 +28,12 @@ int main(int argc, char *argv[]) {
 		bg->renderer->thisShader.updateFragments("romfs:/VertexDefault.glsl", "sdmc:/config/amiigo/bgFragment.glsl");
 	else
 		bg->renderer->thisShader.updateFragments("romfs:/VertexDefault.glsl", "romfs:/bgFragment.glsl");
-	bg->name = "AmiigoBG";
+	bg->setName("AmiigoBG");
 	// Init NFC dumper
 	Amiigo::NFC::Dumper::init();
 	// Init UI
 	Amiigo::UI::initUI();
-	srand (time(NULL));
+	srand(time(NULL));
 
 	// Main loop
 	while (appletMainLoop()) {
