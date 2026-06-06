@@ -303,14 +303,13 @@ namespace Amiigo::UI {
 		char emuVer[12];
 		emu::Version emuiiboVersion = emu::GetVersion();
 		sprintf(emuVer, "%u.%u.%u", emuiiboVersion.major, emuiiboVersion.minor, emuiiboVersion.micro);
-		Amiigo::Settings::emuiiboVersionText = emuVer;
 
 		Arriba::Primitives::Text* creditsTitleText = new Arriba::Primitives::Text(U"Credits", 64);
 		creditsTitleText->setColour({0, 0.7, 1, 1});
 		creditsTitleText->setParent(creditsQuad);
 		creditsTitleText->transform.position = {creditsQuad->width/2, yOffset += creditsTitleText->height + 30, 0};
 		struct Credit { std::u32string title; std::u32string name; };
-		const std::u32string emuiiboTitle = U"Emuiibo " + std::u32string(Arriba::Text::ASCIIToUnicode(Amiigo::Settings::emuiiboVersionText.c_str()));
+		const std::u32string emuiiboTitle = U"Emuiibo " + std::u32string(Arriba::Text::ASCIIToUnicode(emuVer));
 		const Credit credits[] = {
 			{U"Developer",   U"CompSciOrBust"},
 			{emuiiboTitle,   U"XorTroll"},

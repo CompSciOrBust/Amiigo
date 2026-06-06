@@ -22,6 +22,8 @@
 #include <arribaText.h>
 #include <codecvt> // TODO: Replace with custom transcoder
 
+static std::string updateURL;
+
 bool checkIfFileExists(const char* path) {
     return !access(path, F_OK);
 }
@@ -381,13 +383,13 @@ void firstTimeSetup() {
     // If flag exists download update
     if (checkIfFileExists("sdmc:/config/amiigo/update.flag")) {
         while (!hasNetworkConnection()) continue;
-        bool DLSuccess = retrieveToFile(Amiigo::Settings::updateURL, "sdmc:/switch/Failed_Amiigo_Update.nro");
+        bool DLSuccess = retrieveToFile(updateURL, "sdmc:/switch/Failed_Amiigo_Update.nro");
         if (checkIfFileExists("sdmc:/switch/Failed_Amiigo_Update.nro") && DLSuccess) {
             romfsExit();
             if (checkIfFileExists(Amiigo::Settings::amiigoPath)) remove(Amiigo::Settings::amiigoPath);
             rename("sdmc:/switch/Failed_Amiigo_Update.nro", Amiigo::Settings::amiigoPath);
         }
-        if (Amiigo::Settings::amiigoPath) envSetNextLoad(Amiigo::Settings::amiigoPath, Amiigo::Settings::amiigoPath);
+        if (Amiigo::Settings::amiigoPath[0] != '\0') envSetNextLoad(Amiigo::Settings::amiigoPath, Amiigo::Settings::amiigoPath);
         Amiigo::UI::isRunning = 0;
         remove("sdmc:/config/amiigo/update.flag");
     }
@@ -403,8 +405,8 @@ bool checkForUpdates() {
 
     printf("Getting network time\n");
     timeInitialize();
-    long unsigned int time = Amiigo::Settings::updateTime;
-    timeGetCurrentTime(TimeType_NetworkSystemClock, &time);
+    long unsigned int time = 0;
+    if (R_FAILED(timeGetCurrentTime(TimeType_NetworkSystemClock, &time))) time = Amiigo::Settings::updateTime;
     timeExit();
 
     // Only check for updates once every 24 hours, unless an update is found.
@@ -435,6 +437,6 @@ bool checkForUpdates() {
         Amiigo::Settings::updateTime = time + 86400;
         Amiigo::Settings::saveSettings();
         return false;
-    } else {Amiigo::Settings::updateURL = amiigoInfoParsed[0]["assets"][0]["browser_download_url"].get<std::string>().c_str();}
+    } else {updateURL = amiigoInfoParsed[0]["assets"][0]["browser_download_url"].get<std::string>();}
     return true;
 }
