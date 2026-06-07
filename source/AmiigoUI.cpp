@@ -26,7 +26,16 @@ namespace {
 }
 
 namespace Amiigo::UI {
+	void initBG() {
+		Arriba::Primitives::Quad* bg = new Arriba::Primitives::Quad(0, 0, Arriba::Graphics::windowWidth, Arriba::Graphics::windowHeight, Arriba::Graphics::Pivot::topLeft);
+		bg->setName("AmiigoBG");
+		Amiigo::AmiigoBehaviours::BGBehaviour* bgBehaviour = new Amiigo::AmiigoBehaviours::BGBehaviour();
+		bg->addBehaviour(bgBehaviour);
+		bgBehaviour->init();
+	}
+
 	void initUI() {
+		initBG();
 		Amiigo::Settings::loadSettings();
 		Arriba::Colour::neutral = Amiigo::Settings::Colour::listNeutral;
 		Arriba::Colour::highlightA = Amiigo::Settings::Colour::listHighlightA;

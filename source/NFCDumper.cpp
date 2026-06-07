@@ -19,6 +19,13 @@ namespace Amiigo::NFC::Dumper {
         nfpExit();
     }
 
+    bool poll() {
+        NfpDeviceState nfpState;
+        nfpGetDeviceState(&readerHandle, &nfpState);
+        if (nfpState == NfpDeviceState_TagFound) return dumpNFC();
+        return false;
+    }
+
     bool dumpNFC() {
         AmiiboCreatorData amiiboInfo;
         amiiboInfo.name = U"Default";

@@ -2,57 +2,37 @@
 #include <AmiigoUI.h>
 #include <sys/stat.h>
 #include <Networking.h>
-#include <utils.h>
 #include <emuiibo.hpp>
 #include <AmiigoSettings.h>
 #include <NFCDumper.h>
 
 int main(int argc, char *argv[]) {
-	// Init
 	socketInitializeDefault();
 	nxlinkStdio();
 	romfsInit();
 	nifmInitialize(NifmServiceType_User);
-	// Create folder for caching API data
-	mkdir("sdmc:/config/amiigo", 0);
-	// Create folder for Amiibos
-	mkdir("sdmc:/emuiibo/amiibo", 0);
-	Arriba::init();
-	// Save current path
-	strcpy(Amiigo::Settings::amiigoPath, argv[0]);
-	printf("%s\n", Amiigo::Settings::amiigoPath);
-	// Load bg
-	Arriba::Primitives::Quad* bg = new Arriba::Primitives::Quad(0, 0, Arriba::Graphics::windowWidth, Arriba::Graphics::windowHeight, Arriba::Graphics::Pivot::topLeft);
-	// If a custom background shader exists use it, otherwise load the default from romfs
-	if(checkIfFileExists("sdmc:/config/amiigo/bgFragment.glsl"))
-		bg->renderer->thisShader.updateFragments("romfs:/VertexDefault.glsl", "sdmc:/config/amiigo/bgFragment.glsl");
-	else
-		bg->renderer->thisShader.updateFragments("romfs:/VertexDefault.glsl", "romfs:/bgFragment.glsl");
-	bg->setName("AmiigoBG");
-	// Init NFC dumper
-	Amiigo::NFC::Dumper::init();
-	// Init UI
-	Amiigo::UI::initUI();
-	srand(time(NULL));
 
-	// Main loop
+	mkdir("sdmc:/config/amiigo", 0);
+	mkdir("sdmc:/emuiibo/amiibo", 0);
+
+	Arriba::init();
+
+	strcpy(Amiigo::Settings::amiigoPath, argv[0]);
+
+	Amiigo::NFC::Dumper::init();
+
+	Amiigo::UI::initUI();
+
 	while (appletMainLoop()) {
-		// Handle UI input and rendering
 		Amiigo::UI::handleInput();
 		if(Arriba::Input::buttonUp(Arriba::Input::PlusButtonSwitch) || !Amiigo::UI::isRunning) break;
 		Arriba::drawFrame();
-		bg->renderer->thisShader.setFloat1("iTime", Arriba::time);
 		MainThread::poll();
 		
-		// Scan for Physical amiibos to dump
-		//NfpDeviceState nfpState;
-		//bool hasDumped = false;
-		//nfpGetDeviceState(&Amiigo::NFC::Dumper::readerHandle, &nfpState);
-		//if (nfpState == NfpDeviceState_TagFound) hasDumped = Amiigo::NFC::Dumper::dumpNFC();
-		//if (hasDumped) Amiigo::UI::updateSelectorStrings();
+		// TODO: Enabled once feature complete
+		//if (Amiigo::NFC::Dumper::poll()) Amiigo::UI::updateSelectorStrings();
 	}
 	
-	// Deinit
 	workerQueue.shutdown();
 	socketExit();
 	romfsExit();

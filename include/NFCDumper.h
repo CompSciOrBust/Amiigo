@@ -21,5 +21,6 @@ namespace Amiigo::NFC::Dumper {
     // Functions
     void init();
     void exit();
+    bool poll();
     bool dumpNFC();
 }  // namespace Amiigo::NFC::Dumper
