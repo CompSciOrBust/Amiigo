@@ -8,7 +8,7 @@ namespace Amiigo::Elements {
     inline AmiiboEntry amiiboEntryGlobal;
     class selectorContextMenu : public Arriba::Primitives::Quad {
         private:
-            std::vector<Arriba::UIObject*> buttonVector;
+            std::vector<Arriba::Elements::Button*> buttonVector;
 
         public:
             selectorContextMenu(int x, int y, AmiiboEntry entry);

@@ -39,7 +39,7 @@ namespace Amiigo::UI {
 		initSettings();
 		Arriba::highlightedObject = Arriba::findObjectByName("SelectorList");
 		if (checkForUpdates()) {
-			static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("SettingsButton"))->setText(U"Update");
+			Arriba::findObjectByName<Arriba::Elements::Button>("SettingsButton")->setText(U"Update");
 			Arriba::findObjectByName("UpdaterButton")->enabled = true;
 		}
 	}
@@ -124,7 +124,7 @@ namespace Amiigo::UI {
 		selectorButton->setDimensions(switcherWidth, switcherHeight/4 - 1, Arriba::Graphics::Pivot::topRight);
 		selectorButton->setParent(sceneSwitcher);
 		selectorButton->setName("SelectorButton");
-		selectorButton->tag = "SwitcherButton";
+		selectorButton->setTag("SwitcherButton");
 		selectorButton->registerCallback(switcherPressed);
 
 		// Amiigo store button
@@ -134,7 +134,7 @@ namespace Amiigo::UI {
 		storeButton->setDimensions(switcherWidth, switcherHeight/4 - 1, Arriba::Graphics::Pivot::topRight);
 		storeButton->setParent(sceneSwitcher);
 		storeButton->setName("MakerButton");
-		storeButton->tag = "SwitcherButton";
+		storeButton->setTag("SwitcherButton");
 		storeButton->registerCallback(switcherPressed);
 
 		// Settings button
@@ -144,7 +144,7 @@ namespace Amiigo::UI {
 		settingsButton->setDimensions(switcherWidth, switcherHeight/4 - 1, Arriba::Graphics::Pivot::topRight);
 		settingsButton->setParent(sceneSwitcher);
 		settingsButton->setName("SettingsButton");
-		settingsButton->tag = "SwitcherButton";
+		settingsButton->setTag("SwitcherButton");
 		settingsButton->registerCallback(switcherPressed);
 
 		// Exit button
@@ -154,14 +154,14 @@ namespace Amiigo::UI {
 		exitButton->setDimensions(switcherWidth, switcherHeight/4, Arriba::Graphics::Pivot::topRight);
 		exitButton->setParent(sceneSwitcher);
 		exitButton->setName("ExitButton");
-		exitButton->tag = "SwitcherButton";
+		exitButton->setTag("SwitcherButton");
 		exitButton->registerCallback([](){isRunning = 0;});
 	}
 
 	void initSelector() {
 	    Arriba::Elements::InertialList* selectorList = new Arriba::Elements::InertialList(0, statusHeight, Arriba::Graphics::windowWidth - switcherWidth - 1, Arriba::Graphics::windowHeight - statusHeight, std::vector<std::string>{});
 		selectorList->setName("SelectorList");
-		selectorList->tag = "List";
+		selectorList->setTag("List");
 		selectorList->registerCallback(selectorInput);
 		selectorList->registerAltCallback(selectorContextMenuSpawner);
 		updateSelectorStrings();
@@ -172,7 +172,7 @@ namespace Amiigo::UI {
 	    Arriba::Elements::InertialList* makerList = new Arriba::Elements::InertialList(0, statusHeight, Arriba::Graphics::windowWidth - switcherWidth - 1, Arriba::Graphics::windowHeight - statusHeight, seriesList);
 		makerList->registerCallback(makerInput);
 		makerList->setName("MakerList");
-		makerList->tag = "List";
+		makerList->setTag("List");
 		makerList->enabled = false;
 	}
 
@@ -200,7 +200,7 @@ namespace Amiigo::UI {
 		const int buttonOffsets = 5;
 		Arriba::Primitives::Quad* settingsScene = new Arriba::Primitives::Quad(0, statusHeight, Arriba::Graphics::windowWidth - switcherWidth - 1, Arriba::Graphics::windowHeight - statusHeight, Arriba::Graphics::Pivot::topLeft);
 		settingsScene->setName("SettingsScene");
-		settingsScene->tag = "List"; // Not a list but pretending makes scene switching easier
+		settingsScene->setTag("List"); // Not a list but pretending makes scene switching easier
 		settingsScene->enabled = false;
 		settingsScene->setColour({0, 0, 0, 0});
 
@@ -210,12 +210,12 @@ namespace Amiigo::UI {
 		categoryButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 1/buttonOffsets, 0};
 		categoryButton->setText(getCategoryModeLabel());
 		categoryButton->setName("CategorySettingsButton");
-		categoryButton->tag = "SettingsButton";
+		categoryButton->setTag("SettingsButton");
 
 		categoryButton->registerCallback([](){
 			Amiigo::Settings::categoryMode = (Amiigo::Settings::categoryMode+1) % Amiigo::Settings::categoryModes::categoryCount;
 			Amiigo::Settings::saveSettings();
-			static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("CategorySettingsButton"))->setText(getCategoryModeLabel());
+			Arriba::findObjectByName<Arriba::Elements::Button>("CategorySettingsButton")->setText(getCategoryModeLabel());
 			switch (Amiigo::Settings::categoryMode) {
 				case Amiigo::Settings::categoryModes::saveToRoot:
 				updateStatusInfo(U"Amiibos will save to sdmc:/emuiibo/amiibo");
@@ -234,7 +234,7 @@ namespace Amiigo::UI {
 				break;
 
 				default:
-				static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("CategorySettingsButton"))->setText(U"Error");
+				Arriba::findObjectByName<Arriba::Elements::Button>("CategorySettingsButton")->setText(U"Error");
 				updateStatusError(U"Error, uknown category mode");
 				break;
 			}
@@ -247,12 +247,12 @@ namespace Amiigo::UI {
 		if (Amiigo::Settings::useRandomisedUUID) randomUUIDButton->setText(U"Disable Random UUID");
 		else randomUUIDButton->setText(U"Enable Random UUID");
 		randomUUIDButton->setName("ToggleRandomUUIDButton");
-		randomUUIDButton->tag = "SettingsButton";
+		randomUUIDButton->setTag("SettingsButton");
 
 		randomUUIDButton->registerCallback([](){
 			Amiigo::Settings::useRandomisedUUID = !Amiigo::Settings::useRandomisedUUID;
 			Amiigo::Settings::saveSettings();
-			auto* uuidBtn = static_cast<Arriba::Elements::Button*>(Arriba::findObjectByName("ToggleRandomUUIDButton"));
+			auto* uuidBtn = Arriba::findObjectByName<Arriba::Elements::Button>("ToggleRandomUUIDButton");
 			if (Amiigo::Settings::useRandomisedUUID) {
 				uuidBtn->setText(U"Disable random UUID");
 				updateStatusInfo(U"Amiibos will now generate with random UUIDs");
@@ -268,7 +268,7 @@ namespace Amiigo::UI {
 		cacheUpdateButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 3/buttonOffsets, 0};
 		cacheUpdateButton->setText(U"Update API Cache");
 		cacheUpdateButton->setName("CacheUpdateButton");
-		cacheUpdateButton->tag = "SettingsButton";
+		cacheUpdateButton->setTag("SettingsButton");
 		cacheUpdateButton->enabled = hasNetworkConnection();
 
 		cacheUpdateButton->registerCallback([]() {
@@ -282,7 +282,7 @@ namespace Amiigo::UI {
 		updaterButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 4/buttonOffsets, 0};
 		updaterButton->setText(U"Update Amiigo");
 		updaterButton->setName("UpdaterButton");
-		updaterButton->tag = "SettingsButton";
+		updaterButton->setTag("SettingsButton");
 		updaterButton->enabled = false;
 
 		updaterButton->registerCallback([](){
@@ -332,7 +332,7 @@ namespace Amiigo::UI {
 	void handleSelectorInput() {
 		if (Arriba::Input::buttonDown(Arriba::Input::BButtonSwitch) && selectorPath != "sdmc:/emuiibo/amiibo") {
 			selectorPath = selectorPath.substr(0, selectorPath.find_last_of("/"));
-			if (selectorPath.length() < sizeof("sdmc:/emuiibo/amiibo")) selectorPath = "sdmc:/emuiibo/amiibo";
+			if (selectorPath.length() < strlen("sdmc:/emuiibo/amiibo")) selectorPath = "sdmc:/emuiibo/amiibo";
 			updateSelectorStrings();
 		}
 
@@ -356,14 +356,14 @@ namespace Amiigo::UI {
 
 	void handleMakerInput() {
 		if (Arriba::Input::buttonDown(Arriba::Input::BButtonSwitch) && makerIsInCategory) {
-			static_cast<Arriba::Elements::InertialList*>(Arriba::findObjectByName("MakerList"))->updateStrings(seriesList);
+			Arriba::findObjectByName<Arriba::Elements::InertialList>("MakerList")->updateStrings(seriesList);
 			makerIsInCategory = false;
 		}
 	}
 
 	void handleSettingsInput() {
 		if (Arriba::highlightedObject == Arriba::findObjectByName("SettingsScene")) Arriba::highlightedObject = Arriba::findObjectByName("CategorySettingsButton");
-		if (Arriba::Input::buttonDown(Arriba::Input::DPadRight) && Arriba::highlightedObject->tag != "SwitcherButton") Arriba::highlightedObject = Arriba::findObjectByName("SelectorButton");
+		if (Arriba::Input::buttonDown(Arriba::Input::DPadRight) && Arriba::highlightedObject->getTag() != "SwitcherButton") Arriba::highlightedObject = Arriba::findObjectByName("SelectorButton");
 		int direction = 0;
 		if (Arriba::Input::buttonDown(Arriba::Input::DPadUp)) direction -= 1;
 		if (Arriba::Input::buttonDown(Arriba::Input::DPadDown)) direction += 1;
@@ -430,7 +430,7 @@ namespace Amiigo::UI {
 			Arriba::Colour::highlightB = Amiigo::Settings::Colour::listHighlightB;
 			updateStatusSilent(U"Amiigo + Arriba");
 		} else if (Arriba::highlightedObject == Arriba::findObjectByName("MakerButton")) {
-			Arriba::Elements::InertialList* makerList = static_cast<Arriba::Elements::InertialList*>(Arriba::findObjectByName("MakerList"));
+			Arriba::Elements::InertialList* makerList = Arriba::findObjectByName<Arriba::Elements::InertialList>("MakerList");
 			makerList->enabled = true;
 			makerIsInCategory = false;
 			makerList->updateStrings(seriesList);
@@ -476,7 +476,7 @@ namespace Amiigo::UI {
 	void makerInput(int index) {
 		if (makerIsInCategory) {
 			if (index == 0) {
-				static_cast<Arriba::Elements::InertialList*>(Arriba::findObjectByName("MakerList"))->updateStrings(seriesList);
+				Arriba::findObjectByName<Arriba::Elements::InertialList>("MakerList")->updateStrings(seriesList);
 				makerIsInCategory = false;
 			} else {
 				createVirtualAmiibo(creatorData[index-1]);
@@ -486,7 +486,7 @@ namespace Amiigo::UI {
 			creatorData = getAmiibosFromSeries(seriesList[index]);
 			std::vector<std::u32string> amiiboNames = {U"← Back"};
 			for (const auto& data : creatorData) amiiboNames.push_back(data.name);
-			static_cast<Arriba::Elements::InertialList*>(Arriba::findObjectByName("MakerList"))->updateStrings(amiiboNames);
+			Arriba::findObjectByName<Arriba::Elements::InertialList>("MakerList")->updateStrings(amiiboNames);
 			makerIsInCategory = true;
 		}
 	}
@@ -495,7 +495,7 @@ namespace Amiigo::UI {
 		selectorAmiibos = scanForAmiibo(selectorPath.c_str());
 		std::vector<std::u32string> amiiboNames;
 		for (const auto& amiibo : selectorAmiibos) amiiboNames.push_back(amiibo.name);
-		static_cast<Arriba::Elements::InertialList*>(Arriba::findObjectByName("SelectorList"))->updateStrings(amiiboNames);
+		Arriba::findObjectByName<Arriba::Elements::InertialList>("SelectorList")->updateStrings(amiiboNames);
 	}
 
 	void selectorContextMenuSpawner(int index, Arriba::Maths::vec2<float> pos) {
@@ -503,17 +503,17 @@ namespace Amiigo::UI {
 	}
 
 	void updateStatusInfo(const char32_t* text) {
-		static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText(text);
-		static_cast<Arriba::Primitives::Quad*>(Arriba::findObjectByName("StatusBar"))->setColour({1,1,1,1});
+		Arriba::findObjectByName<Arriba::Primitives::Text>("StatusBarText")->setText(text);
+		Arriba::findObjectByName<Arriba::Primitives::Quad>("StatusBar")->setColour({1,1,1,1});
 	}
 
 	void updateStatusError(const char32_t* text) {
-		static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText(text);
-		static_cast<Arriba::Primitives::Quad*>(Arriba::findObjectByName("StatusBar"))->setColour({1,0,0,1});
+		Arriba::findObjectByName<Arriba::Primitives::Text>("StatusBarText")->setText(text);
+		Arriba::findObjectByName<Arriba::Primitives::Quad>("StatusBar")->setColour({1,0,0,1});
 	}
 
 	void updateStatusSilent(const char32_t* text) {
-		static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText(text);
+		Arriba::findObjectByName<Arriba::Primitives::Text>("StatusBarText")->setText(text);
 	}
 
 	const std::string& getSelectorPath() {

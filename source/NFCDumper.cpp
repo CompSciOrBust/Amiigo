@@ -72,13 +72,13 @@ namespace Amiigo::NFC::Dumper {
         if (amiiboInfo.name == U"") {
             nfpUnmount(&readerHandle);
             nfpStartDetection(&readerHandle);
-            static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Dump failed (No name provided)");
+            Arriba::findObjectByName<Arriba::Primitives::Text>("StatusBarText")->setText("Dump failed (No name provided)");
             return false;
         }
 
         // Create the virtual amiibo
         createVirtualAmiibo(amiiboInfo);
-        static_cast<Arriba::Primitives::Text*>(Arriba::findObjectByName("StatusBarText"))->setText("Amiibo dumped to SD");
+        Arriba::findObjectByName<Arriba::Primitives::Text>("StatusBarText")->setText("Amiibo dumped to SD");
         nfpUnmount(&readerHandle);
         nfpStartDetection(&readerHandle);
         return true;

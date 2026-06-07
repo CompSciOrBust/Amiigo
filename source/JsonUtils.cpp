@@ -5,8 +5,7 @@
 
 JsonDoc loadJsonFile(const std::string& path) {
     std::ifstream fileStream(path);
-    std::string content, line;
-    while (getline(fileStream, line)) content += line;
+    std::string content((std::istreambuf_iterator<char>(fileStream)), std::istreambuf_iterator<char>());
     return JsonDoc::parse(content, nullptr, false);
 }
 
