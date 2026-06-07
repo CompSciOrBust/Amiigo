@@ -1,5 +1,6 @@
-
 #pragma once
+// https://github.com/XorTroll/emuiibo/blob/master/overlay/include/emu/emu_Service.hpp
+// Style modifications applied.
 #include <switch.h>
 #include <cstring>
 
@@ -23,8 +24,8 @@ namespace emu {
         VirtualAmiiboDate last_write_date;
         MiiCharInfo mii_charinfo;
 
-        inline bool IsValid() {
-            return strlen(this->name) > 0;
+        bool IsValid() {
+            return strlen(name) > 0;
         }
     };
 
@@ -50,8 +51,8 @@ namespace emu {
         u8 micro;
         bool dev_build;
 
-        inline constexpr bool EqualsExceptBuild(const Version &other) {
-            return (other.major == this->major) && (other.minor == this->minor) && (other.micro == this->micro);
+        constexpr bool EqualsExceptBuild(const Version& other) {
+            return (other.major == major) && (other.minor == minor) && (other.micro == micro);
         }
     };
 
@@ -62,36 +63,36 @@ namespace emu {
 
     Version GetVersion();
 
-    void GetVirtualAmiiboDirectory(char *out_path, const size_t out_path_size);
+    void GetVirtualAmiiboDirectory(char* outPath, size_t outPathSize);
 
     EmulationStatus GetEmulationStatus();
-    void SetEmulationStatus(const EmulationStatus status);
+    void SetEmulationStatus(EmulationStatus status);
 
-    Result GetActiveVirtualAmiibo(VirtualAmiiboData *out_amiibo_data, char *out_path, size_t out_path_size);
-    Result SetActiveVirtualAmiibo(const char *path, const size_t path_size);
+    Result GetActiveVirtualAmiibo(VirtualAmiiboData* outAmiiboData, char* outPath, size_t outPathSize);
+    Result SetActiveVirtualAmiibo(const char* path, size_t pathSize);
     void ResetActiveVirtualAmiibo();
 
     VirtualAmiiboStatus GetActiveVirtualAmiiboStatus();
-    void SetActiveVirtualAmiiboStatus(const VirtualAmiiboStatus status);
+    void SetActiveVirtualAmiiboStatus(VirtualAmiiboStatus status);
 
-    bool IsApplicationIdIntercepted(const u64 app_id);
+    bool IsApplicationIdIntercepted(u64 appId);
 
     inline bool IsCurrentApplicationIdIntercepted() {
         bool intercepted = false;
-        u64 process_id = 0;
-        if(R_SUCCEEDED(pmdmntGetApplicationProcessId(&process_id))) {
-            u64 program_id = 0;
-            if(R_SUCCEEDED(pmdmntGetProgramId(&program_id, process_id))) {
-                intercepted = IsApplicationIdIntercepted(program_id);
+        u64 processId = 0;
+        if (R_SUCCEEDED(pmdmntGetApplicationProcessId(&processId))) {
+            u64 programId = 0;
+            if (R_SUCCEEDED(pmdmntGetProgramId(&programId, processId))) {
+                intercepted = IsApplicationIdIntercepted(programId);
             }
         }
         return intercepted;
     }
 
-    Result TryParseVirtualAmiibo(const char *path, const size_t path_size, VirtualAmiiboData *out_amiibo_data);
-    Result GetActiveVirtualAmiiboAreas(VirtualAmiiboAreaEntry *out_area_buf, const size_t out_area_size, u32 *out_area_count);
-    Result GetActiveVirtualAmiiboCurrentArea(u32 *out_access_id);
-    Result SetActiveVirtualAmiiboCurrentArea(const u32 access_id);
-    Result SetActiveVirtualAmiiboUuidInfo(const VirtualAmiiboUuidInfo uuid_info);
+    Result TryParseVirtualAmiibo(const char* path, size_t pathSize, VirtualAmiiboData* outAmiiboData);
+    Result GetActiveVirtualAmiiboAreas(VirtualAmiiboAreaEntry* outAreaBuf, size_t outAreaSize, u32* outAreaCount);
+    Result GetActiveVirtualAmiiboCurrentArea(u32* outAccessId);
+    Result SetActiveVirtualAmiiboCurrentArea(u32 accessId);
+    Result SetActiveVirtualAmiiboUuidInfo(VirtualAmiiboUuidInfo uuidInfo);
 
-}
+}  // namespace emu
