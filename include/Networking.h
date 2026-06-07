@@ -7,6 +7,6 @@
 #include <vector>
 
 std::optional<std::vector<char>> downloadToRAM(const std::string& url);
-bool retrieveToFile(std::string URL, std::string path);
-bool downloadToString(std::string URL, std::string *out);
+bool retrieveToFile(const std::string& URL, const std::string& path);
+std::optional<std::string> downloadToString(const std::string& URL);
 bool hasNetworkConnection();

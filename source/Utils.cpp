@@ -51,15 +51,12 @@ std::vector<AmiiboEntry> scanForAmiibo(const char* path) {
     if (folder) {
         // List folder entries
         dirent* entry;
-        while (entry = readdir(folder)) {
+        while ((entry = readdir(folder)) != nullptr) {
             AmiiboEntry amiibo;
-            char flagPath[512] = "";
-            strcat(flagPath, path);
-            strcat(flagPath, "/");
-            strcat(flagPath, entry->d_name);
+            std::string flagPath = std::string(path) + "/" + entry->d_name;
             amiibo.path = flagPath;
-            strcat(flagPath, "/amiibo.flag");
-            amiibo.isCategory = !checkIfFileExists(flagPath);
+            flagPath += "/amiibo.flag";
+            amiibo.isCategory = !checkIfFileExists(flagPath.c_str());
             amiibo.name = getAmiiboDisplayName(amiibo.path, amiibo.isCategory);
             amiibos.push_back(amiibo);
         }
@@ -143,7 +140,7 @@ unsigned short shiftAndDec(std::string input) {
     return value;
 }
 
-std::vector<AmiiboCreatorData> getAmiibosFromSeries(std::string series) {
+std::vector<AmiiboCreatorData> getAmiibosFromSeries(const std::string& series) {
     std::vector<AmiiboCreatorData> amiibos;
     if (checkIfFileExists("sdmc:/config/amiigo/API.json")) {
         JsonDoc APIJson = loadJsonFile("sdmc:/config/amiigo/API.json");
@@ -232,7 +229,7 @@ std::vector<unsigned char> scaleImageToFit(unsigned char* src, int w, int h, int
     return out;
 }
 
-void saveAmiiboImage(std::string pathBase, AmiiboCreatorData amiibo) {
+void saveAmiiboImage(const std::string& pathBase, const AmiiboCreatorData& amiibo) {
     int maxImageSize = 512;
     std::string imagePath = pathBase + "/amiibo.png";
     auto imageData = downloadToRAM(amiibo.imageURL);
@@ -253,7 +250,7 @@ void saveAmiiboImage(std::string pathBase, AmiiboCreatorData amiibo) {
     stbi_image_free(input);
 }
 
-void createVirtualAmiibo(AmiiboCreatorData amiibo) {
+void createVirtualAmiibo(const AmiiboCreatorData& amiibo) {
     std::string pathBase = "sdmc:/emuiibo/amiibo/";
     switch (Amiigo::Settings::categoryMode) {
         case Amiigo::Settings::saveByGameName:
@@ -302,11 +299,10 @@ void createVirtualAmiibo(AmiiboCreatorData amiibo) {
 void firstTimeSetup() {
     // Get the API cache
     if (!checkIfFileExists("sdmc:/config/amiigo/API.json")) {
-        std::string APIData;
         std::ofstream out("sdmc:/config/amiigo/API.json");
-        bool downloadSuccess = downloadToString("https://amiiboapi.org/api/amiibo/", &APIData);
-        if (downloadSuccess) {
-            out << APIData;
+        auto APIData = downloadToString("https://amiiboapi.org/api/amiibo/");
+        if (APIData) {
+            out << *APIData;
         } else {
             // Extract local copy of the Amiibo API data
             unzFile zipFile = unzOpen("romfs:/API.cache");
@@ -334,9 +330,9 @@ void firstTimeSetup() {
             while (!hasNetworkConnection()) continue;
             if (checkIfFileExists("sdmc:/config/amiigo/emuiibo.tmp")) remove("sdmc:/config/amiigo/emuiibo.tmp");
             // We should probably do this in a more robust way
-            std::string emuiiboReleaseInfo;
-            while (!downloadToString("https://api.github.com/repos/XorTroll/Emuiibo/releases", &emuiiboReleaseInfo)) continue;
-            emuiiboInfo = parseJsonString(emuiiboReleaseInfo);
+            std::optional<std::string> emuiiboReleaseInfo;
+            while (!(emuiiboReleaseInfo = downloadToString("https://api.github.com/repos/XorTroll/Emuiibo/releases"))) continue;
+            emuiiboInfo = parseJsonString(*emuiiboReleaseInfo);
             hasValidEmuiiboJSON = !emuiiboInfo.is_discarded();
         }
         printf("hasValidEmuiiboJSON: %d\n", hasValidEmuiiboJSON);
@@ -415,19 +411,18 @@ bool checkForUpdates() {
         return false;
     }
     printf("Getting API data\n");
-    std::string amiigoReleaseInfo;
-    bool releaseInfoSuccess = downloadToString("https://api.github.com/repos/CompSciOrBust/Amiigo/releases", &amiigoReleaseInfo);
+    auto amiigoReleaseInfo = downloadToString("https://api.github.com/repos/CompSciOrBust/Amiigo/releases");
     // User is probably being rate limited
-    if (amiigoReleaseInfo.size() < 300 || !releaseInfoSuccess) {
-        printf("%s\n", amiigoReleaseInfo.c_str());
+    if (!amiigoReleaseInfo || amiigoReleaseInfo->size() < 300) {
+        printf("%s\n", amiigoReleaseInfo.value_or("").c_str());
         printf("Error, getting Amiigo update info failed\n");
         return false;
     }
-    JsonDoc amiigoInfoParsed = parseJsonString(amiigoReleaseInfo);
+    JsonDoc amiigoInfoParsed = parseJsonString(*amiigoReleaseInfo);
 
     // If data is corrupt do nothing
     if (amiigoInfoParsed.is_discarded()) {
-        printf("%s\n", amiigoReleaseInfo.c_str());
+        printf("%s\n", amiigoReleaseInfo->c_str());
         printf("Error, Amiigo update info corrupt\n");
         return false;
     }

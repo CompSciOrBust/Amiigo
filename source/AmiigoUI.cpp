@@ -508,7 +508,7 @@ namespace Amiigo::UI {
 	}
 
 	void selectorContextMenuSpawner(int index, Arriba::Maths::vec2<float> pos) {
-		if (index != -1) new Amiigo::Elements::selectorContextMenu(static_cast<int>(pos.x), static_cast<int>(pos.y), selectorAmiibos[index]);
+		if (index != -1) new Amiigo::Elements::SelectorContextMenu(static_cast<int>(pos.x), static_cast<int>(pos.y), selectorAmiibos[index]);
 	}
 
 	void updateStatusInfo(const char32_t* text) {

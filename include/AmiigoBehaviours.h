@@ -1,8 +1,11 @@
+#pragma once
+
 #include <arriba.h>
 
 namespace Amiigo::AmiigoBehaviours {
     class StatusBarColourBehaviour : public Arriba::Behaviour {
-        void update();
+    public:
+        void update() override;
     };
 
     class BGBehaviour : public Arriba::Behaviour {

@@ -8,7 +8,6 @@
 #include <string>
 
 namespace Amiigo::UI {
-    // Variables
     inline int isRunning = 1;
     inline const int statusHeight = Arriba::Graphics::windowHeight * 0.1;
     inline const int switcherWidth = Arriba::Graphics::windowWidth * 0.3;

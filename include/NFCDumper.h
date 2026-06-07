@@ -3,11 +3,6 @@
 #include <switch.h>
 
 namespace Amiigo::NFC::Dumper {
-    // Variables
-    static NfcDeviceHandle readerHandle;
-    static int readerCount = 0;
-
-    // Structs
     struct ModelFormat {
         unsigned short gameCharacterID;
         char characterVariant;
@@ -18,7 +13,6 @@ namespace Amiigo::NFC::Dumper {
     } NX_PACKED;
     static_assert(sizeof(ModelFormat) == 8);
 
-    // Functions
     void init();
     void exit();
     bool poll();

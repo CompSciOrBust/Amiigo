@@ -8,6 +8,9 @@
 // https://github.com/XorTroll/Goldleaf/blob/master/Goldleaf/source/nfp/nfp_Amiibo.cpp
 
 namespace Amiigo::NFC::Dumper {
+    NfcDeviceHandle readerHandle;
+    int readerCount = 0;
+
     void init() {
         nfpInitialize(NfpServiceType_Debug);
         nfpListDevices(&readerCount, &readerHandle, 1);
@@ -70,13 +73,12 @@ namespace Amiigo::NFC::Dumper {
         swkbdConfigMakePresetDefault(&kbinput);
         swkbdConfigSetGuideText(&kbinput, "Enter Amiibo name");
         swkbdConfigSetInitialText(&kbinput, amiiboRegInfo.amiibo_name);
-        char *amiiboName = reinterpret_cast<char*>(malloc(256));
+        char amiiboName[256];
         swkbdShow(&kbinput, amiiboName, 255);
         swkbdClose(&kbinput);
         amiiboInfo.name = std::u32string(Arriba::Text::ASCIIToUnicode(amiiboName));
-        free(amiiboName);
 
-        if (amiiboInfo.name == U"") {
+        if (amiiboInfo.name.empty()) {
             nfpUnmount(&readerHandle);
             nfpStartDetection(&readerHandle);
             Arriba::findObjectByName<Arriba::Primitives::Text>("StatusBarText")->setText("Dump failed (No name provided)");

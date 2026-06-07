@@ -5,11 +5,10 @@
 #include <vector>
 
 namespace Amiigo::Elements {
-    selectorContextMenu::selectorContextMenu(int x, int y, AmiiboEntry entry) : Arriba::Primitives::Quad(x, y, 0, 0, Arriba::Graphics::Pivot::centre) {
+    SelectorContextMenu::SelectorContextMenu(int x, int y, AmiiboEntry entry) : Arriba::Primitives::Quad(x, y, 0, 0, Arriba::Graphics::Pivot::centre) {
         setName("ContextMenu");
         Arriba::activeLayer++;
         setColour({0, 0, 0, 1});
-        amiiboEntryGlobal = entry;
 
         if (entry.name != U"★Favorites" && entry.name != U"← Back") {
             Arriba::Elements::Button* favoriteButton = new Arriba::Elements::Button();
@@ -29,19 +28,19 @@ namespace Amiigo::Elements {
                 favoriteButton->setText("Unfavorite");
             favoriteButton->setTag("ContextMenuButton");
             if (!isFavorited) {
-                favoriteButton->registerCallback([](){
+                favoriteButton->registerCallback([entry](){
                     mkdir("sdmc:/emuiibo/overlay/", 0);
                     std::ofstream favFile("sdmc:/emuiibo/overlay/favorites.txt", std::ofstream::app);
-                    favFile << Amiigo::Elements::amiiboEntryGlobal.path << "\n";
+                    favFile << entry.path << "\n";
                     favFile.close();
-                    Arriba::findObjectByName<selectorContextMenu>("ContextMenu")->closeMenu();
+                    Arriba::findObjectByName<SelectorContextMenu>("ContextMenu")->closeMenu();
                 });
             } else {
-                favoriteButton->registerCallback([](){
+                favoriteButton->registerCallback([entry](){
                     std::string tempLine;
                     std::ifstream favFile("sdmc:/emuiibo/overlay/favorites.txt");
                     std::vector<std::string> amiiboPaths;
-                    while (getline(favFile, tempLine)) if (Amiigo::Elements::amiiboEntryGlobal.path != tempLine) amiiboPaths.push_back(tempLine);
+                    while (getline(favFile, tempLine)) if (entry.path != tempLine) amiiboPaths.push_back(tempLine);
                     favFile.close();
                     std::ofstream reFavFile("sdmc:/emuiibo/overlay/favorites.txt", std::ofstream::trunc);
                     for (unsigned int i = 0; i < amiiboPaths.size(); i++) {
@@ -49,7 +48,7 @@ namespace Amiigo::Elements {
                     }
                     reFavFile.close();
                     Amiigo::UI::updateSelectorStrings();
-                    Arriba::findObjectByName<selectorContextMenu>("ContextMenu")->closeMenu();
+                    Arriba::findObjectByName<SelectorContextMenu>("ContextMenu")->closeMenu();
                 });
             }
         }
@@ -71,7 +70,7 @@ namespace Amiigo::Elements {
                 std::string newFolderPath = Amiigo::UI::getSelectorPath() + "/" + kbout;
                 mkdir(newFolderPath.c_str(), 0);
                 Amiigo::UI::updateSelectorStrings();
-                Arriba::findObjectByName<selectorContextMenu>("ContextMenu")->closeMenu();
+                Arriba::findObjectByName<SelectorContextMenu>("ContextMenu")->closeMenu();
             });
         }
 
@@ -80,10 +79,10 @@ namespace Amiigo::Elements {
             deleteButton->setParent(this);
             deleteButton->setText("Delete");
             deleteButton->setTag("ContextMenuButton");
-            deleteButton->registerCallback([](){
-                fsdevDeleteDirectoryRecursively(amiiboEntryGlobal.path.c_str());
+            deleteButton->registerCallback([entry](){
+                fsdevDeleteDirectoryRecursively(entry.path.c_str());
                 Amiigo::UI::updateSelectorStrings();
-                Arriba::findObjectByName<selectorContextMenu>("ContextMenu")->closeMenu();
+                Arriba::findObjectByName<SelectorContextMenu>("ContextMenu")->closeMenu();
             });
         }
 
@@ -115,7 +114,7 @@ namespace Amiigo::Elements {
         Arriba::highlightedObject = buttonVector[0];
     }
 
-    void selectorContextMenu::onFrame() {
+    void SelectorContextMenu::onFrame() {
         // We have to use buttonUp to detect B being pressed otherwise handleInput from AmiigoUI.h will force the selector to go up a directory
         if ((Arriba::Input::touch.end && Arriba::highlightedObject == nullptr) || Arriba::Input::buttonUp(Arriba::Input::BButtonSwitch) || Arriba::highlightedObject == nullptr) {
             closeMenu();
@@ -135,7 +134,7 @@ namespace Amiigo::Elements {
         }
     }
 
-    void selectorContextMenu::closeMenu() {
+    void SelectorContextMenu::closeMenu() {
         destroy();
         Arriba::activeLayer--;
         Arriba::highlightedObject = Arriba::findObjectByName("SelectorList");
