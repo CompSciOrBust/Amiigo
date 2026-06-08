@@ -318,7 +318,7 @@ namespace Amiigo::UI {
 		creditsTitleText->setParent(creditsQuad);
 		creditsTitleText->transform.position = {creditsQuad->width/2, yOffset += creditsTitleText->height + 30, 0};
 		struct Credit { std::u32string title; std::u32string name; };
-		const std::u32string emuiiboTitle = U"Emuiibo " + std::u32string(Arriba::Text::ASCIIToUnicode(emuVer));
+		const std::u32string emuiiboTitle = U"Emuiibo " + Arriba::Text::ASCIIToUnicode(emuVer);
 		const Credit credits[] = {
 			{U"Developer",   U"CompSciOrBust"},
 			{emuiiboTitle,   U"XorTroll"},
@@ -473,7 +473,7 @@ namespace Amiigo::UI {
 				return;
 			}
 			
-			updateStatusInfo(Arriba::Text::ASCIIToUnicode(path.c_str()));
+			updateStatusInfo(Arriba::Text::ASCIIToUnicode(path.c_str()).c_str());
 			Arriba::UIObject* amiiboPreview = Arriba::findObjectByName("AmiiboPreview");
 			if (amiiboPreview) amiiboPreview->destroy();
 			amiiboPreview = new Amiigo::Elements::AmiiboPreview(path);

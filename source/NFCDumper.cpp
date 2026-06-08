@@ -76,7 +76,7 @@ namespace Amiigo::NFC::Dumper {
         char amiiboName[256];
         swkbdShow(&kbinput, amiiboName, 255);
         swkbdClose(&kbinput);
-        amiiboInfo.name = std::u32string(Arriba::Text::ASCIIToUnicode(amiiboName));
+        amiiboInfo.name = Arriba::Text::ASCIIToUnicode(amiiboName);
 
         if (amiiboInfo.name.empty()) {
             nfpUnmount(&readerHandle);
