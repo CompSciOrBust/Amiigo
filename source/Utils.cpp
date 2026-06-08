@@ -108,7 +108,7 @@ std::vector<std::string> getListOfSeries() {
     return series;
 }
 
-// Written on 27/01/2021 for Kronos, can't remember how it works but does magic bit shifting
+// Written on 27/01/2021 for Kronos, turns Amiibo API data strings into a usable format
 unsigned short shiftAndDec(const std::string& input) {
     unsigned short value = std::stoi(input, nullptr, 16);
     unsigned short a = value & 0xFF00;
@@ -140,10 +140,10 @@ std::vector<AmiiboCreatorData> getAmiibosFromSeries(const std::string& series) {
         std::string series_str = fullID.substr(12, 2);
         // Swap endianess for game ID
         newAmiibo.game_character_id = shiftAndDec(character_game_id_str);
-        newAmiibo.character_variant = static_cast<char>(stoi(character_variant_str, nullptr, 16));
-        newAmiibo.figure_type = static_cast<char>(stoi(figure_type_str, nullptr, 16));
-        newAmiibo.model_number = (unsigned short)stoi(model_no_str, nullptr, 16);
-        newAmiibo.series = static_cast<char>(stoi(series_str, nullptr, 16));
+        newAmiibo.character_variant = static_cast<uint8_t>(stoi(character_variant_str, nullptr, 16));
+        newAmiibo.figure_type = static_cast<uint8_t>(stoi(figure_type_str, nullptr, 16));
+        newAmiibo.model_number = static_cast<unsigned short>(stoi(model_no_str, nullptr, 16));
+        newAmiibo.series = static_cast<uint8_t>(stoi(series_str, nullptr, 16));
         newAmiibo.gameName = ASCIIToUnicodeConverter.from_bytes(APIJson["amiibo"][i]["gameSeries"].get<std::string>().c_str()); // only used for categorization
         newAmiibo.amiiboSeries = ASCIIToUnicodeConverter.from_bytes(APIJson["amiibo"][i]["amiiboSeries"].get<std::string>().c_str()); // only used for categorization
         newAmiibo.imageURL = APIJson["amiibo"][i]["image"].get<std::string>();
@@ -184,7 +184,7 @@ void saveAmiiboImage(const std::string& pathBase, const AmiiboCreatorData& amiib
     std::string imagePath = pathBase + "/amiibo.png";
     auto imageData = downloadToRAM(amiibo.imageURL);
     if (!imageData) {
-        MainThread::dispatch([]() { Amiigo::UI::updateStatusError(U"Failed to save Amiibo image"); });
+        MainThread::dispatch([]() { Amiigo::UI::updateStatus(U"Failed to save Amiibo image", Amiigo::UI::StatusLevel::Error); });
         return;
     }
     int width, height, channels;

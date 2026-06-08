@@ -230,24 +230,24 @@ namespace Amiigo::UI {
 			Arriba::findObjectByName<Arriba::Elements::Button>("CategorySettingsButton")->setText(getCategoryModeLabel());
 			switch (Amiigo::Settings::categoryMode) {
 				case Amiigo::Settings::categoryModes::saveToRoot:
-				updateStatusInfo(U"Amiibos will save to sdmc:/emuiibo/amiibo");
+				updateStatus(U"Amiibos will save to sdmc:/emuiibo/amiibo", StatusLevel::Info);
 				break;
 			
 				case Amiigo::Settings::categoryModes::saveByGameName:
-				updateStatusInfo(U"Amiibos will save to sdmc:/emuiibo/game name");
+				updateStatus(U"Amiibos will save to sdmc:/emuiibo/game name", StatusLevel::Info);
 				break;
 
 				case Amiigo::Settings::categoryModes::saveByAmiiboSeries:
-				updateStatusInfo(U"Amiibos will save to sdmc:/emuiibo/amiibo series");
+				updateStatus(U"Amiibos will save to sdmc:/emuiibo/amiibo series", StatusLevel::Info);
 				break;
 
 				case Amiigo::Settings::categoryModes::saveByCurrentFolder:
-				updateStatusInfo(U"Amiibos will save to the current location");
+				updateStatus(U"Amiibos will save to the current location", StatusLevel::Info);
 				break;
 
 				default:
 				Arriba::findObjectByName<Arriba::Elements::Button>("CategorySettingsButton")->setText(U"Error");
-				updateStatusError(U"Error, uknown category mode");
+				updateStatus(U"Error, uknown category mode", StatusLevel::Error);
 				break;
 			}
 		});
@@ -267,10 +267,10 @@ namespace Amiigo::UI {
 			auto* uuidBtn = Arriba::findObjectByName<Arriba::Elements::Button>("ToggleRandomUUIDButton");
 			if (Amiigo::Settings::useRandomisedUUID) {
 				uuidBtn->setText(U"Disable random UUID");
-				updateStatusInfo(U"Amiibos will now generate with random UUIDs");
+				updateStatus(U"Amiibos will now generate with random UUIDs", StatusLevel::Info);
 			} else {
 				uuidBtn->setText(U"Enable random UUID");
-				updateStatusInfo(U"Amiibos will now generate with static UUIDs");
+				updateStatus(U"Amiibos will now generate with static UUIDs", StatusLevel::Info);
 			}
 		});
 
@@ -299,7 +299,7 @@ namespace Amiigo::UI {
 
 		updaterButton->registerCallback([](){
 			if (!hasNetworkConnection()) {
-				updateStatusError(U"No network connection!");
+				updateStatus(U"No network connection!", StatusLevel::Error);
 			} else {
 				std::ofstream fileStream("sdmc:/config/amiigo/update.flag");
 				fileStream.close();
@@ -353,14 +353,14 @@ namespace Amiigo::UI {
 				case emu::EmulationStatus::On:
 					emu::ResetActiveVirtualAmiibo();
 					emu::SetEmulationStatus(emu::EmulationStatus::Off);
-					updateStatusInfo(U"Emuiibo disabled");
+					updateStatus(U"Emuiibo disabled", StatusLevel::Info);
 				break;
 				case emu::EmulationStatus::Off:
 					emu::SetEmulationStatus(emu::EmulationStatus::On);
-					updateStatusInfo(U"Emuiibo enabled");
+					updateStatus(U"Emuiibo enabled", StatusLevel::Info);
 				break;
 				default:
-					updateStatusInfo(U"Error: Unkown emulation status!");
+					updateStatus(U"Error: Unkown emulation status!", StatusLevel::Info);
 				break;
 			}
 		}
@@ -440,7 +440,7 @@ namespace Amiigo::UI {
 			Arriba::Colour::neutral = Amiigo::Settings::Colour::listNeutral;
 			Arriba::Colour::highlightA = Amiigo::Settings::Colour::listHighlightA;
 			Arriba::Colour::highlightB = Amiigo::Settings::Colour::listHighlightB;
-			updateStatusSilent(U"Amiigo + Arriba");
+			updateStatus(U"Amiigo + Arriba", StatusLevel::Silent);
 		} else if (Arriba::highlightedObject == Arriba::findObjectByName("MakerButton")) {
 			Arriba::Elements::InertialList* makerList = Arriba::findObjectByName<Arriba::Elements::InertialList>("MakerList");
 			makerList->enabled = true;
@@ -449,13 +449,13 @@ namespace Amiigo::UI {
 			Arriba::Colour::neutral = Amiigo::Settings::Colour::makerNeutral;
 	    	Arriba::Colour::highlightA = Amiigo::Settings::Colour::makerHighlightA;
 	    	Arriba::Colour::highlightB = Amiigo::Settings::Colour::makerHighlightB;
-			updateStatusSilent(U"Amiigo Store");
+			updateStatus(U"Amiigo Store", StatusLevel::Silent);
 		} else if (Arriba::highlightedObject == Arriba::findObjectByName("SettingsButton")) {
 			Arriba::findObjectByName("SettingsScene")->enabled = true;
 			Arriba::Colour::neutral = Amiigo::Settings::Colour::settingsNeutral;
 	    	Arriba::Colour::highlightA = Amiigo::Settings::Colour::settingsHighlightA;
 	    	Arriba::Colour::highlightB = Amiigo::Settings::Colour::settingsHighlightB;
-			updateStatusSilent(U"Settings");
+			updateStatus(U"Settings", StatusLevel::Silent);
 		}
 	}
 
@@ -465,18 +465,18 @@ namespace Amiigo::UI {
 				selectorPath = selectorAmiibos[index].path;
 				updateSelectorStrings();
 			} else {
-				updateStatusError(U"Folder does not exist");
+				updateStatus(U"Folder does not exist", StatusLevel::Error);
 			}
 		} else {
 			std::string path = selectorAmiibos[index].path;
 			emu::SetEmulationStatus(emu::EmulationStatus::On);
 			Result res = emu::SetActiveVirtualAmiibo(path.c_str(), path.size());
 			if R_FAILED(res) {
-				updateStatusError(U"Failed to set active Amiibo");
+				updateStatus(U"Failed to set active Amiibo", StatusLevel::Error);
 				return;
 			}
 			
-			updateStatusInfo(Arriba::Text::ASCIIToUnicode(path.c_str()).c_str());
+			updateStatus(Arriba::Text::ASCIIToUnicode(path.c_str()).c_str(), StatusLevel::Info);
 			Arriba::UIObject* amiiboPreview = Arriba::findObjectByName("AmiiboPreview");
 			if (amiiboPreview) amiiboPreview->destroy();
 			amiiboPreview = new Amiigo::Elements::AmiiboPreview(path);
@@ -492,7 +492,7 @@ namespace Amiigo::UI {
 				makerIsInCategory = false;
 			} else {
 				createVirtualAmiibo(creatorData[index-1]);
-				updateStatusInfo((U"Created " + creatorData[index-1].name).c_str());
+				updateStatus((U"Created " + creatorData[index-1].name).c_str(), StatusLevel::Info);
 			}
 		} else {
 			creatorData = getAmiibosFromSeries(seriesList[index]);
@@ -514,18 +514,13 @@ namespace Amiigo::UI {
 		if (index != -1) new Amiigo::Elements::SelectorContextMenu(static_cast<int>(pos.x), static_cast<int>(pos.y), selectorAmiibos[index]);
 	}
 
-	void updateStatusInfo(const char32_t* text) {
+	void updateStatus(const char32_t* text, StatusLevel level) {
 		Arriba::findObjectByName<Arriba::Primitives::Text>("StatusBarText")->setText(text);
-		Arriba::findObjectByName<Arriba::Primitives::Quad>("StatusBar")->setColour({1,1,1,1});
-	}
-
-	void updateStatusError(const char32_t* text) {
-		Arriba::findObjectByName<Arriba::Primitives::Text>("StatusBarText")->setText(text);
-		Arriba::findObjectByName<Arriba::Primitives::Quad>("StatusBar")->setColour({1,0,0,1});
-	}
-
-	void updateStatusSilent(const char32_t* text) {
-		Arriba::findObjectByName<Arriba::Primitives::Text>("StatusBarText")->setText(text);
+		switch (level) {
+			case StatusLevel::Info:   Arriba::findObjectByName<Arriba::Primitives::Quad>("StatusBar")->setColour({1,1,1,1}); break;
+			case StatusLevel::Error:  Arriba::findObjectByName<Arriba::Primitives::Quad>("StatusBar")->setColour({1,0,0,1}); break;
+			case StatusLevel::Silent: break;
+		}
 	}
 
 	const std::string& getSelectorPath() {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <WorkerQueue.h>
@@ -17,10 +18,10 @@ struct AmiiboCreatorData {
     std::u32string amiiboSeries;
     std::string imageURL;
     unsigned short game_character_id;
-    char character_variant;
-    char figure_type;
+    uint8_t character_variant;
+    uint8_t figure_type;
     unsigned short model_number;
-    char series;
+    uint8_t series;
 };
 
 bool checkIfFileExists(const char* path);

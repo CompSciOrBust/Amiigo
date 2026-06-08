@@ -46,13 +46,21 @@ namespace Amiigo::NFC::Dumper {
 
         // Get the tag info
         NfpTagInfo amiiboTagInfo;
-        nfpGetTagInfo(&readerHandle, &amiiboTagInfo);
         // TODO: Dump UUID
+        if (R_FAILED(nfpGetTagInfo(&readerHandle, &amiiboTagInfo))) {
+            nfpUnmount(&readerHandle);
+            nfpStartDetection(&readerHandle);
+            return false;
+        }
 
         // Get register info
         NfpRegisterInfo amiiboRegInfo;
-        nfpGetRegisterInfo(&readerHandle, &amiiboRegInfo);
         // TODO: Dump mii data and get first write
+        if (R_FAILED(nfpGetRegisterInfo(&readerHandle, &amiiboRegInfo))) {
+            nfpUnmount(&readerHandle);
+            nfpStartDetection(&readerHandle);
+            return false;
+        }
 
         // Get common area
         NfpCommonInfo amiiboCommonArea;
@@ -60,7 +68,11 @@ namespace Amiigo::NFC::Dumper {
 
         // Get model info
         NfpModelInfo amiiboModelInfo = {};
-        nfpGetModelInfo(&readerHandle, &amiiboModelInfo);
+        if (R_FAILED(nfpGetModelInfo(&readerHandle, &amiiboModelInfo))) {
+            nfpUnmount(&readerHandle);
+            nfpStartDetection(&readerHandle);
+            return false;
+        }
         amiiboInfo.game_character_id = amiiboModelInfo.game_character_id;
         amiiboInfo.character_variant = amiiboModelInfo.character_variant;
         amiiboInfo.figure_type = amiiboModelInfo.nfp_type;
