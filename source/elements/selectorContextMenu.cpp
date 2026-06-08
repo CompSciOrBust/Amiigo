@@ -62,6 +62,7 @@ namespace Amiigo::Elements {
                 SwkbdConfig kbinput;
                 swkbdCreate(&kbinput, 0);
                 swkbdConfigMakePresetDefault(&kbinput);
+                swkbdConfigSetKeySetDisableBitmask(&kbinput, SwkbdKeyDisableBitmask_ForwardSlash | SwkbdKeyDisableBitmask_Backslash);
                 swkbdConfigSetGuideText(&kbinput, "Enter folder name");
                 swkbdConfigSetInitialText(&kbinput, "New folder");
                 char kbout[256];
