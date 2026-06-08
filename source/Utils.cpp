@@ -7,6 +7,8 @@
 #include <cstring>
 #include <fstream>
 #include <iomanip>
+#include <unordered_map>
+#include <unordered_set>
 
 #include <AmiigoSettings.h>
 #include <AmiigoUI.h>
@@ -51,23 +53,23 @@ std::vector<AmiiboEntry> scanForAmiibo(const char* path) {
         dirent* entry;
         while ((entry = readdir(folder)) != nullptr) {
             AmiiboEntry amiibo;
-            std::string flagPath = std::string(path) + "/" + entry->d_name;
-            amiibo.path = flagPath;
-            flagPath += "/amiibo.flag";
-            amiibo.isCategory = !checkIfFileExists(flagPath.c_str());
+            amiibo.path = std::string(path) + "/" + entry->d_name;
+            std::string flagCheckPath = amiibo.path + "/amiibo.flag";
+            amiibo.isCategory = !checkIfFileExists(flagCheckPath.c_str());
             amiibo.name = getAmiiboDisplayName(amiibo.path, amiibo.isCategory);
             amiibos.push_back(amiibo);
         }
         closedir(folder);
+
         std::sort(amiibos.begin(), amiibos.end(), [](const AmiiboEntry& a, const AmiiboEntry& b) {
             return caseInsensitiveSort(a.name, b.name);
         });
+
         if (!strcmp(path, "sdmc:/emuiibo/amiibo")) {
             amiibos.insert(amiibos.begin(), {U"★Favorites", true, "Favorites"});
         } else {
-            std::string upDir = path;
-            upDir = upDir.substr(0, upDir.find_last_of("/"));
-            amiibos.insert(amiibos.begin(), {U"← Back", true, upDir});
+            std::string cleanPath(path);
+            amiibos.insert(amiibos.begin(), {U"← Back", true, cleanPath.substr(0, cleanPath.find_last_of("/"))});
         }
     }
 
@@ -76,10 +78,8 @@ std::vector<AmiiboEntry> scanForAmiibo(const char* path) {
         std::string tempLine;
         std::ifstream fileStream("sdmc:/emuiibo/overlay/favorites.txt");
         while (getline(fileStream, tempLine)) {
-            char flagPath[512] = "";
-            strcat(flagPath, tempLine.c_str());
-            strcat(flagPath, "/amiibo.flag");
-            bool isCategory = !checkIfFileExists(flagPath);
+            std::string flagCheckPath = tempLine + "/amiibo.flag";
+            bool isCategory = !checkIfFileExists(flagCheckPath.c_str());
             amiibos.push_back({getAmiiboDisplayName(tempLine, isCategory), isCategory, tempLine});
         }
         fileStream.close();
@@ -88,27 +88,20 @@ std::vector<AmiiboEntry> scanForAmiibo(const char* path) {
 }
 
 std::vector<std::string> getListOfSeries() {
+    if (!checkIfFileExists("sdmc:/config/amiigo/API.json")) return {"Error, no API cache!"};
+
+    JsonDoc APIJson = loadJsonFile("sdmc:/config/amiigo/API.json");
+    if (APIJson.is_discarded()) {
+        printf("API cache is corrupt\n");
+        remove("sdmc:/config/amiigo/API.json");
+        return {"Error, API cache corrupt!", "Try updating cache in settings!"};
+    }
+
+    std::unordered_set<std::string> seen;
     std::vector<std::string> series;
-    if (checkIfFileExists("sdmc:/config/amiigo/API.json")) {
-        JsonDoc APIJson = loadJsonFile("sdmc:/config/amiigo/API.json");
-        if (APIJson.is_discarded()) {
-            printf("API cache is corrupt\n");
-            remove("sdmc:/config/amiigo/API.json");
-            return {"Error, API cache corrupt!", "Try updating cache in settings!"};
-        }
-        for (int i = 0; i < APIJson["amiibo"].size(); i++) {
-            bool isKnown = false;
-            std::string seriesName = APIJson["amiibo"][i]["amiiboSeries"].get<std::string>();
-            for (size_t j = 0; j < series.size(); j++) {
-                if (series[j] == seriesName) {
-                    isKnown = true;
-                    break;
-                }
-            }
-            if (!isKnown) series.push_back(seriesName);
-        }
-    } else {
-        return {"Error, no API cache!"};
+    for (int i = 0; i < APIJson["amiibo"].size(); i++) {
+        std::string seriesName = APIJson["amiibo"][i]["amiiboSeries"].get<std::string>();
+        if (seen.insert(seriesName).second) series.push_back(seriesName);
     }
 
     std::sort(series.begin(), series.end(), caseInsensitiveSort<std::string>);
@@ -116,7 +109,7 @@ std::vector<std::string> getListOfSeries() {
 }
 
 // Written on 27/01/2021 for Kronos, can't remember how it works but does magic bit shifting
-unsigned short shiftAndDec(std::string input) {
+unsigned short shiftAndDec(const std::string& input) {
     unsigned short value = std::stoi(input, nullptr, 16);
     unsigned short a = value & 0xFF00;
     a = 0x00FF & (a >> 8);
@@ -127,38 +120,35 @@ unsigned short shiftAndDec(std::string input) {
 }
 
 std::vector<AmiiboCreatorData> getAmiibosFromSeries(const std::string& series) {
-    std::vector<AmiiboCreatorData> amiibos;
-    if (checkIfFileExists("sdmc:/config/amiigo/API.json")) {
-        JsonDoc APIJson = loadJsonFile("sdmc:/config/amiigo/API.json");
-        for (int i = 0; i < APIJson["amiibo"].size(); i++) {
-            if (APIJson["amiibo"][i]["amiiboSeries"].get<std::string>() == series) {
-                // Process the API data the same way Emutool does
-                // https://github.com/XorTroll/emuiibo/blob/90cbc54a95c0aa4a9ceb6dd55b633de206763094/emutool/emutool/AmiiboUtils.cs#L144
-                AmiiboCreatorData newAmiibo;
-                std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> ASCIIToUnicodeConverter;
-                newAmiibo.name = ASCIIToUnicodeConverter.from_bytes(APIJson["amiibo"][i]["name"].get<std::string>().c_str());
-                std::string fullID = APIJson["amiibo"][i]["head"].get<std::string>() + APIJson["amiibo"][i]["tail"].get<std::string>();
-                // Var names taken from emutool
-                std::string character_game_id_str = fullID.substr(0, 4);
-                std::string character_variant_str = fullID.substr(4, 2);
-                std::string figure_type_str = fullID.substr(6, 2);
-                std::string model_no_str = fullID.substr(8, 4);
-                std::string series_str = fullID.substr(12, 2);
-                // Swap endianess for game ID
-                newAmiibo.game_character_id = shiftAndDec(character_game_id_str);
-                newAmiibo.character_variant = static_cast<char>(stoi(character_variant_str, nullptr, 16));
-                newAmiibo.figure_type = static_cast<char>(stoi(figure_type_str, nullptr, 16));
-                newAmiibo.model_number = (unsigned short)stoi(model_no_str, nullptr, 16);
-                newAmiibo.series = static_cast<char>(stoi(series_str, nullptr, 16));
-                newAmiibo.gameName = ASCIIToUnicodeConverter.from_bytes(APIJson["amiibo"][i]["gameSeries"].get<std::string>().c_str()); // only used for categorization
-                newAmiibo.amiiboSeries = ASCIIToUnicodeConverter.from_bytes(APIJson["amiibo"][i]["amiiboSeries"].get<std::string>().c_str()); // only used for categorization
-                newAmiibo.imageURL = APIJson["amiibo"][i]["image"].get<std::string>();
+    if (!checkIfFileExists("sdmc:/config/amiigo/API.json")) return {{U"Error, API cache vanished?", U"", U"", 0, 0, 0}};
+    JsonDoc APIJson = loadJsonFile("sdmc:/config/amiigo/API.json");
 
-                amiibos.push_back(newAmiibo);
-            }
-        }
-    } else {
-        return {{U"Error, API cache vanished?", U"", U"", 0, 0, 0}};
+    std::vector<AmiiboCreatorData> amiibos;
+    for (int i = 0; i < APIJson["amiibo"].size(); i++) {
+        if (APIJson["amiibo"][i]["amiiboSeries"].get<std::string>() != series) continue;
+        // Process the API data the same way Emutool does
+        // https://github.com/XorTroll/emuiibo/blob/90cbc54a95c0aa4a9ceb6dd55b633de206763094/emutool/emutool/AmiiboUtils.cs#L144
+        AmiiboCreatorData newAmiibo;
+        std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> ASCIIToUnicodeConverter;
+        newAmiibo.name = ASCIIToUnicodeConverter.from_bytes(APIJson["amiibo"][i]["name"].get<std::string>().c_str());
+        std::string fullID = APIJson["amiibo"][i]["head"].get<std::string>() + APIJson["amiibo"][i]["tail"].get<std::string>();
+        // Var names taken from emutool
+        std::string character_game_id_str = fullID.substr(0, 4);
+        std::string character_variant_str = fullID.substr(4, 2);
+        std::string figure_type_str = fullID.substr(6, 2);
+        std::string model_no_str = fullID.substr(8, 4);
+        std::string series_str = fullID.substr(12, 2);
+        // Swap endianess for game ID
+        newAmiibo.game_character_id = shiftAndDec(character_game_id_str);
+        newAmiibo.character_variant = static_cast<char>(stoi(character_variant_str, nullptr, 16));
+        newAmiibo.figure_type = static_cast<char>(stoi(figure_type_str, nullptr, 16));
+        newAmiibo.model_number = (unsigned short)stoi(model_no_str, nullptr, 16);
+        newAmiibo.series = static_cast<char>(stoi(series_str, nullptr, 16));
+        newAmiibo.gameName = ASCIIToUnicodeConverter.from_bytes(APIJson["amiibo"][i]["gameSeries"].get<std::string>().c_str()); // only used for categorization
+        newAmiibo.amiiboSeries = ASCIIToUnicodeConverter.from_bytes(APIJson["amiibo"][i]["amiiboSeries"].get<std::string>().c_str()); // only used for categorization
+        newAmiibo.imageURL = APIJson["amiibo"][i]["image"].get<std::string>();
+
+        amiibos.push_back(newAmiibo);
     }
 
     std::sort(amiibos.begin(), amiibos.end(), [](const AmiiboCreatorData& a, const AmiiboCreatorData& b) {
@@ -167,30 +157,15 @@ std::vector<AmiiboCreatorData> getAmiibosFromSeries(const std::string& series) {
     return amiibos;
 }
 
-std::string sanitizeAmiiboName(std::u32string path) {
+std::string sanitizeAmiiboName(const std::u32string& name) {
+    static const std::unordered_map<char32_t, char> replacements = {
+        {U'é', 'e'}, {U'ō', 'o'}, {U'É', 'E'}, {U'“', '\''}, {U'”', '\''}
+    };
     std::string output;
-    for (char32_t c: path) {
-        switch (c)
-        {
-        case U'é':
-        output += 'e';
-            break;
-        case U'ō':
-        output += (char)'o';
-            break;
-        case U'É':
-        output += 'E';
-            break;
-        case U'“':
-        output += '\'';
-            break;
-        case U'”':
-        output += '\'';
-            break;
-        default:
-        output += (char)c;
-            break;
-        }
+    output.reserve(name.size());
+    for (char32_t c : name) {
+        auto it = replacements.find(c);
+        output += (it != replacements.end()) ? it->second : static_cast<char>(c);
     }
     return output;
 }
