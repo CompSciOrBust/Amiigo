@@ -45,11 +45,9 @@ static std::u32string getAmiiboDisplayName(const std::string& path, bool isCateg
 }
 
 std::vector<AmiiboEntry> scanForAmiibo(const char* path) {
-    // Open path
     DIR* folder = opendir(path);
     std::vector<AmiiboEntry> amiibos;
     if (folder) {
-        // List folder entries
         dirent* entry;
         while ((entry = readdir(folder)) != nullptr) {
             AmiiboEntry amiibo;
@@ -61,33 +59,26 @@ std::vector<AmiiboEntry> scanForAmiibo(const char* path) {
             amiibos.push_back(amiibo);
         }
         closedir(folder);
-        // Sort alphabetically
         std::sort(amiibos.begin(), amiibos.end(), [](const AmiiboEntry& a, const AmiiboEntry& b) {
             return caseInsensitiveSort(a.name, b.name);
         });
-        // Prepend favorites if path is sdmc:/emuiibo/amiibo
         if (!strcmp(path, "sdmc:/emuiibo/amiibo")) {
             amiibos.insert(amiibos.begin(), {U"★Favorites", true, "Favorites"});
         } else {
-            // If not in "sdmc:/emuiibo/amiibo" then add back entry
             std::string upDir = path;
             upDir = upDir.substr(0, upDir.find_last_of("/"));
             amiibos.insert(amiibos.begin(), {U"← Back", true, upDir});
         }
     }
-    // Check if path is supposed to be favorites
+
     if (!strcmp(path, "Favorites")) {
-        // Add in the back button
         amiibos.insert(amiibos.begin(), {U"← Back", true, "sdmc:/emuiibo/amiibo"});
-        // Read each line from the favorites file
         std::string tempLine;
         std::ifstream fileStream("sdmc:/emuiibo/overlay/favorites.txt");
         while (getline(fileStream, tempLine)) {
-            // Check if Amiibo or dir
             char flagPath[512] = "";
             strcat(flagPath, tempLine.c_str());
             strcat(flagPath, "/amiibo.flag");
-            // Add to amiibo list
             bool isCategory = !checkIfFileExists(flagPath);
             amiibos.push_back({getAmiiboDisplayName(tempLine, isCategory), isCategory, tempLine});
         }
@@ -100,31 +91,26 @@ std::vector<std::string> getListOfSeries() {
     std::vector<std::string> series;
     if (checkIfFileExists("sdmc:/config/amiigo/API.json")) {
         JsonDoc APIJson = loadJsonFile("sdmc:/config/amiigo/API.json");
-        // Check API cache is valid
         if (APIJson.is_discarded()) {
             printf("API cache is corrupt\n");
             remove("sdmc:/config/amiigo/API.json");
             return {"Error, API cache corrupt!", "Try updating cache in settings!"};
         }
-        // Loop over every entry under the Amiibo object
         for (int i = 0; i < APIJson["amiibo"].size(); i++) {
             bool isKnown = false;
             std::string seriesName = APIJson["amiibo"][i]["amiiboSeries"].get<std::string>();
-            // Check if series is in list
             for (size_t j = 0; j < series.size(); j++) {
                 if (series[j] == seriesName) {
                     isKnown = true;
                     break;
                 }
             }
-            // If not add it to the list
             if (!isKnown) series.push_back(seriesName);
         }
     } else {
         return {"Error, no API cache!"};
     }
 
-    // Sort alphabetically
     std::sort(series.begin(), series.end(), caseInsensitiveSort<std::string>);
     return series;
 }
@@ -144,9 +130,7 @@ std::vector<AmiiboCreatorData> getAmiibosFromSeries(const std::string& series) {
     std::vector<AmiiboCreatorData> amiibos;
     if (checkIfFileExists("sdmc:/config/amiigo/API.json")) {
         JsonDoc APIJson = loadJsonFile("sdmc:/config/amiigo/API.json");
-        // Loop over every entry under the Amiibo object
         for (int i = 0; i < APIJson["amiibo"].size(); i++) {
-            // If series matches add it to the list
             if (APIJson["amiibo"][i]["amiiboSeries"].get<std::string>() == series) {
                 // Process the API data the same way Emutool does
                 // https://github.com/XorTroll/emuiibo/blob/90cbc54a95c0aa4a9ceb6dd55b633de206763094/emutool/emutool/AmiiboUtils.cs#L144
@@ -154,7 +138,6 @@ std::vector<AmiiboCreatorData> getAmiibosFromSeries(const std::string& series) {
                 std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> ASCIIToUnicodeConverter;
                 newAmiibo.name = ASCIIToUnicodeConverter.from_bytes(APIJson["amiibo"][i]["name"].get<std::string>().c_str());
                 std::string fullID = APIJson["amiibo"][i]["head"].get<std::string>() + APIJson["amiibo"][i]["tail"].get<std::string>();
-                // Get strings needed to derive IDs
                 // Var names taken from emutool
                 std::string character_game_id_str = fullID.substr(0, 4);
                 std::string character_variant_str = fullID.substr(4, 2);
@@ -163,21 +146,14 @@ std::vector<AmiiboCreatorData> getAmiibosFromSeries(const std::string& series) {
                 std::string series_str = fullID.substr(12, 2);
                 // Swap endianess for game ID
                 newAmiibo.game_character_id = shiftAndDec(character_game_id_str);
-                // Get character variant
                 newAmiibo.character_variant = static_cast<char>(stoi(character_variant_str, nullptr, 16));
-                // Get figure type
                 newAmiibo.figure_type = static_cast<char>(stoi(figure_type_str, nullptr, 16));
-                // Get model number
                 newAmiibo.model_number = (unsigned short)stoi(model_no_str, nullptr, 16);
-                // Get series ID
                 newAmiibo.series = static_cast<char>(stoi(series_str, nullptr, 16));
-                // Get the Game series name (only used for categorization)
-                newAmiibo.gameName = ASCIIToUnicodeConverter.from_bytes(APIJson["amiibo"][i]["gameSeries"].get<std::string>().c_str());
-                // Get the Amiibo series name (only used for categorization)
-                newAmiibo.amiiboSeries = ASCIIToUnicodeConverter.from_bytes(APIJson["amiibo"][i]["amiiboSeries"].get<std::string>().c_str());
-                // Get the Amiibo image URL
+                newAmiibo.gameName = ASCIIToUnicodeConverter.from_bytes(APIJson["amiibo"][i]["gameSeries"].get<std::string>().c_str()); // only used for categorization
+                newAmiibo.amiiboSeries = ASCIIToUnicodeConverter.from_bytes(APIJson["amiibo"][i]["amiiboSeries"].get<std::string>().c_str()); // only used for categorization
                 newAmiibo.imageURL = APIJson["amiibo"][i]["image"].get<std::string>();
-                // Add new amiibo to list
+
                 amiibos.push_back(newAmiibo);
             }
         }
@@ -185,7 +161,6 @@ std::vector<AmiiboCreatorData> getAmiibosFromSeries(const std::string& series) {
         return {{U"Error, API cache vanished?", U"", U"", 0, 0, 0}};
     }
 
-    // Sort alphabetically
     std::sort(amiibos.begin(), amiibos.end(), [](const AmiiboCreatorData& a, const AmiiboCreatorData& b) {
         return caseInsensitiveSort(a.name, b.name);
     });
@@ -271,6 +246,7 @@ void createVirtualAmiibo(const AmiiboCreatorData& amiibo) {
     mkdir(pathBase.c_str(), 0);
     std::ofstream fileStream(pathBase + "/amiibo.flag");
     fileStream.close();
+
     JsonDoc amiiboJson;
     amiiboJson["name"] = std::string(sanitizeAmiiboName(amiibo.name));
     amiiboJson["write_counter"] = 0;
@@ -296,103 +272,111 @@ void createVirtualAmiibo(const AmiiboCreatorData& amiibo) {
     if (Amiigo::Settings::saveAmiiboImages) workerQueue.enqueue(std::bind(saveAmiiboImage, pathBase, amiibo));
 }
 
-void firstTimeSetup() {
-    // Get the API cache
-    if (!checkIfFileExists("sdmc:/config/amiigo/API.json")) {
-        std::ofstream out("sdmc:/config/amiigo/API.json");
-        auto APIData = downloadToString("https://amiiboapi.org/api/amiibo/");
-        if (APIData) {
-            out << *APIData;
-        } else {
-            // Extract local copy of the Amiibo API data
-            unzFile zipFile = unzOpen("romfs:/API.cache");
-            unz_file_info fileInfo;
+static std::vector<char> extractSingleFileZip(const char* zipPath) {
+    unzFile zipFile = unzOpen(zipPath);
+    unz_file_info fileInfo;
+    unzOpenCurrentFile(zipFile);
+    unzGetCurrentFileInfo(zipFile, &fileInfo, nullptr, 0, nullptr, 0, nullptr, 0);
+    printf("Extracting %s. Uncompressed size: %ld bytes\n", zipPath, fileInfo.uncompressed_size);
+    std::vector<char> buffer(fileInfo.uncompressed_size);
+    unzReadCurrentFile(zipFile, buffer.data(), buffer.size());
+    unzCloseCurrentFile(zipFile);
+    unzClose(zipFile);
+    return buffer;
+}
+
+static bool extractFileFromZip(const char* zipPath, const char* entryName, const char* destPath) {
+    unzFile zipFile = unzOpen(zipPath);
+    unz_global_info zipInfo;
+    unzGetGlobalInfo(zipFile, &zipInfo);
+    for (int i = 0; i < zipInfo.number_entry; i++) {
+        char fileName[FS_MAX_PATH];
+        unz_file_info fileInfo;
+        unzGetCurrentFileInfo(zipFile, &fileInfo, fileName, sizeof(fileName), nullptr, 0, nullptr, 0);
+        printf("Zip index:%d is %s\n", i, fileName);
+        if (strcmp(entryName, fileName) == 0) {
             unzOpenCurrentFile(zipFile);
-            unzGetCurrentFileInfo(zipFile, &fileInfo, nullptr, 0, nullptr, 0, nullptr, 0);
-            unsigned long dataSize = fileInfo.uncompressed_size;
-            printf("Extracting local API cache. Size is %ld bytes\n", dataSize);
-            char* buffer = (char*)malloc(dataSize);
-            unzReadCurrentFile(zipFile, buffer, dataSize);
-            out.write(buffer, dataSize);
+            void* buffer = malloc(500000);
+            FILE* outFile = fopen(destPath, "wb");
+            for (int j = unzReadCurrentFile(zipFile, buffer, 500000); j > 0; j = unzReadCurrentFile(zipFile, buffer, 500000))
+                fwrite(buffer, 1, j, outFile);
+            fclose(outFile);
             free(buffer);
             unzCloseCurrentFile(zipFile);
             unzClose(zipFile);
+            return true;
         }
-        out.close();
+        unzGoToNextFile(zipFile);
     }
-    
-    // Install emuiibo
-    if (!checkIfFileExists("sdmc:/atmosphere/contents/0100000000000352/exefs.nsp")) {
-        bool hasValidEmuiiboJSON = false;
-        JsonDoc emuiiboInfo;
-        while (!hasValidEmuiiboJSON) {
-            printf("Downloading Emuiibo zip\n");
-            while (!hasNetworkConnection()) continue;
-            if (checkIfFileExists("sdmc:/config/amiigo/emuiibo.tmp")) remove("sdmc:/config/amiigo/emuiibo.tmp");
-            // We should probably do this in a more robust way
-            std::optional<std::string> emuiiboReleaseInfo;
-            while (!(emuiiboReleaseInfo = downloadToString("https://api.github.com/repos/XorTroll/Emuiibo/releases"))) continue;
-            emuiiboInfo = parseJsonString(*emuiiboReleaseInfo);
-            hasValidEmuiiboJSON = !emuiiboInfo.is_discarded();
-        }
-        printf("hasValidEmuiiboJSON: %d\n", hasValidEmuiiboJSON);
-        while (!retrieveToFile(emuiiboInfo[0]["assets"][0]["browser_download_url"].get<std::string>().c_str(), "sdmc:/config/amiigo/emuiibo.tmp")) continue;
-        printf("Unzipping\n");
-        // Extract the files from the emuiibo zip
-        mkdir("sdmc:/atmosphere/contents/", 0);
-        mkdir("sdmc:/atmosphere/contents/0100000000000352/", 0);
-        mkdir("sdmc:/atmosphere/contents/0100000000000352/flags/", 0);
-        std::ofstream fileStream("sdmc:/atmosphere/contents/0100000000000352/flags/boot2.flag");
-        fileStream.close();
-        unzFile zipFile = unzOpen("sdmc:/config/amiigo/emuiibo.tmp");
-        unz_global_info zipInfo;
-        unzGetGlobalInfo(zipFile, &zipInfo);
-        for (int i = 0; i < zipInfo.number_entry; i++) {
-            char fileName[256];
-            unz_file_info fileInfo;
-            unzGetCurrentFileInfo(zipFile, &fileInfo, fileName, sizeof(fileName), nullptr, 0, nullptr, 0);
-            printf("Zip index:%d is %s\n", i, fileName);
-            if (strcmp("SdOut/atmosphere/contents/0100000000000352/exefs.nsp", fileName) == 0) {
-                unzOpenCurrentFile(zipFile);
-                void* buffer = malloc(500000);
-                FILE* outfile = fopen("sdmc:/atmosphere/contents/0100000000000352/exefs.nsp", "wb");
-                for (int j = unzReadCurrentFile(zipFile, buffer, 500000); j > 0; j = unzReadCurrentFile(zipFile, buffer, 500000)) {
-                    fwrite(buffer, 1, j, outfile);
-                }
-                fclose(outfile);
-                free(buffer);
-                unzCloseCurrentFile(zipFile);
-                break;
-            }
-            unzGoToNextFile(zipFile);
-        }
-        printf("Unzip done\n");
-        unzClose(zipFile);
-        remove("sdmc:/config/amiigo/emuiibo.tmp");
-        // Launch the sysmodule
-        pmshellInitialize();
-        NcmProgramLocation emuiiboLoc = {0x0100000000000352, NcmStorageId_None};
-        pmshellLaunchProgram(0, &emuiiboLoc, nullptr);
-        pmshellExit();
-        while(!emu::IsAvailable()) continue;
-    }
-    // If flag exists download update
-    if (checkIfFileExists("sdmc:/config/amiigo/update.flag")) {
-        while (!hasNetworkConnection()) continue;
-        bool DLSuccess = retrieveToFile(updateURL, "sdmc:/switch/Failed_Amiigo_Update.nro");
-        if (checkIfFileExists("sdmc:/switch/Failed_Amiigo_Update.nro") && DLSuccess) {
-            romfsExit();
-            if (checkIfFileExists(Amiigo::Settings::amiigoPath)) remove(Amiigo::Settings::amiigoPath);
-            rename("sdmc:/switch/Failed_Amiigo_Update.nro", Amiigo::Settings::amiigoPath);
-        }
-        if (Amiigo::Settings::amiigoPath[0] != '\0') envSetNextLoad(Amiigo::Settings::amiigoPath, Amiigo::Settings::amiigoPath);
-        Amiigo::UI::isRunning = 0;
-        remove("sdmc:/config/amiigo/update.flag");
+    unzClose(zipFile);
+    return false;
+}
+
+static void setupAPICache() {
+    if (checkIfFileExists("sdmc:/config/amiigo/API.json")) return;
+    std::ofstream out("sdmc:/config/amiigo/API.json");
+    auto APIData = downloadToString("https://amiiboapi.org/api/amiibo/");
+    if (APIData) {
+        out << *APIData;
+    } else {
+        auto buffer = extractSingleFileZip("romfs:/API.cache");
+        out.write(buffer.data(), buffer.size());
     }
 }
 
+static void installEmuiibo() {
+    if (checkIfFileExists("sdmc:/atmosphere/contents/0100000000000352/exefs.nsp")) return;
+    JsonDoc emuiiboInfo;
+    bool hasValidEmuiiboJSON = false;
+    while (!hasValidEmuiiboJSON) {
+        printf("Downloading Emuiibo zip\n");
+        while (!hasNetworkConnection()) continue;
+        if (checkIfFileExists("sdmc:/config/amiigo/emuiibo.tmp")) remove("sdmc:/config/amiigo/emuiibo.tmp");
+        std::optional<std::string> emuiiboReleaseInfo;
+        while (!(emuiiboReleaseInfo = downloadToString("https://api.github.com/repos/XorTroll/Emuiibo/releases"))) continue;
+        emuiiboInfo = parseJsonString(*emuiiboReleaseInfo);
+        hasValidEmuiiboJSON = !emuiiboInfo.is_discarded();
+    }
+    while (!retrieveToFile(emuiiboInfo[0]["assets"][0]["browser_download_url"].get<std::string>(), "sdmc:/config/amiigo/emuiibo.tmp")) continue;
+
+    printf("Unzipping\n");
+    mkdir("sdmc:/atmosphere/contents/", 0);
+    mkdir("sdmc:/atmosphere/contents/0100000000000352/", 0);
+    mkdir("sdmc:/atmosphere/contents/0100000000000352/flags/", 0);
+    std::ofstream fileStream("sdmc:/atmosphere/contents/0100000000000352/flags/boot2.flag");
+    fileStream.close();
+    extractFileFromZip("sdmc:/config/amiigo/emuiibo.tmp", "SdOut/atmosphere/contents/0100000000000352/exefs.nsp", "sdmc:/atmosphere/contents/0100000000000352/exefs.nsp");
+    printf("Unzip done\n");
+    remove("sdmc:/config/amiigo/emuiibo.tmp");
+
+    pmshellInitialize();
+    NcmProgramLocation emuiiboLoc = {0x0100000000000352, NcmStorageId_None};
+    pmshellLaunchProgram(0, &emuiiboLoc, nullptr);
+    pmshellExit();
+    while (!emu::IsAvailable()) continue;
+}
+
+static void applyPendingUpdate() {
+    if (!checkIfFileExists("sdmc:/config/amiigo/update.flag")) return;
+    while (!hasNetworkConnection()) continue;
+    bool DLSuccess = retrieveToFile(updateURL, "sdmc:/switch/Failed_Amiigo_Update.nro");
+    if (checkIfFileExists("sdmc:/switch/Failed_Amiigo_Update.nro") && DLSuccess) {
+        romfsExit();
+        if (checkIfFileExists(Amiigo::Settings::amiigoPath)) remove(Amiigo::Settings::amiigoPath);
+        rename("sdmc:/switch/Failed_Amiigo_Update.nro", Amiigo::Settings::amiigoPath);
+    }
+    if (Amiigo::Settings::amiigoPath[0] != '\0') envSetNextLoad(Amiigo::Settings::amiigoPath, Amiigo::Settings::amiigoPath);
+    Amiigo::UI::isRunning = 0;
+    remove("sdmc:/config/amiigo/update.flag");
+}
+
+void firstTimeSetup() {
+    setupAPICache();
+    installEmuiibo();
+    applyPendingUpdate();
+}
+
 bool checkForUpdates() {
-    // Return false if no internet
     printf("Checking for updates\n");
     if (!hasNetworkConnection()) {
         printf("No connection\b");
@@ -410,6 +394,7 @@ bool checkForUpdates() {
         printf("Last check less than 24 hours ago\n");
         return false;
     }
+
     printf("Getting API data\n");
     auto amiigoReleaseInfo = downloadToString("https://api.github.com/repos/CompSciOrBust/Amiigo/releases");
     // User is probably being rate limited
@@ -418,20 +403,21 @@ bool checkForUpdates() {
         printf("Error, getting Amiigo update info failed\n");
         return false;
     }
-    JsonDoc amiigoInfoParsed = parseJsonString(*amiigoReleaseInfo);
 
-    // If data is corrupt do nothing
+    JsonDoc amiigoInfoParsed = parseJsonString(*amiigoReleaseInfo);
     if (amiigoInfoParsed.is_discarded()) {
         printf("%s\n", amiigoReleaseInfo->c_str());
         printf("Error, Amiigo update info corrupt\n");
         return false;
     }
 
-    // If on the latest update wait another 24 hours before checking again
+    // If on the latest version wait another 24 hours before checking again
     if (amiigoInfoParsed[0]["tag_name"].get<std::string>() == VERSION) {
         Amiigo::Settings::updateTime = time + 86400;
         Amiigo::Settings::saveSettings();
         return false;
-    } else {updateURL = amiigoInfoParsed[0]["assets"][0]["browser_download_url"].get<std::string>();}
+    } else {
+        updateURL = amiigoInfoParsed[0]["assets"][0]["browser_download_url"].get<std::string>();
+    }
     return true;
 }

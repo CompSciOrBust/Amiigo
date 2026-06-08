@@ -12,6 +12,12 @@ size_t memDataWriteCallback(char* inData, size_t chunkSize, size_t numChunks, vo
     return realSize;
 }
 
+size_t fileDataWriteCallback(char* inData, size_t chunkSize, size_t numChunks, void* outFile) {
+    size_t realSize = chunkSize * numChunks;
+    static_cast<std::ofstream*>(outFile)->write(inData, realSize);
+    return realSize;
+}
+
 static void configureCurl(CURL* curl, const std::string& url, curl_write_callback writeFunc, void* writeData) {
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_USERAGENT, "Amiigo");
@@ -26,7 +32,7 @@ static void configureCurl(CURL* curl, const std::string& url, curl_write_callbac
 
 std::optional<std::vector<char>> downloadToRAM(const std::string& url) {
     if (!hasNetworkConnection()) return std::nullopt;
-    CURL *curl = curl_easy_init();
+    CURL* curl = curl_easy_init();
     if (!curl) return std::nullopt;
     std::vector<char> outData;
 
@@ -41,27 +47,20 @@ std::optional<std::vector<char>> downloadToRAM(const std::string& url) {
     return outData;
 }
 
-bool retrieveToFile(const std::string& URL, const std::string& path) {
+bool retrieveToFile(const std::string& url, const std::string& path) {
     if (!hasNetworkConnection()) return false;
     std::ofstream file(path.c_str(), std::ofstream::trunc | std::ofstream::binary);
-    if (file) {
-        CURL *curl = curl_easy_init();
-        if (!curl) return false;
-        configureCurl(curl, URL, +[](char* in, size_t size, size_t num, void* out){
-            static_cast<std::ofstream*>(out)->write(in, size * num);
-            return size * num;
-        }, &file);
-        CURLcode errorCode = curl_easy_perform(curl);
-        curl_easy_cleanup(curl);
-        if (errorCode != CURLE_OK) {
-            printf("ERROR: failed to download %s to %s\nCurl error code:%d\n", URL.c_str(), path.c_str(), errorCode);
-            file.close();
-            return false;
-        }
-    } else {
+    if (!file) return false;
+    CURL* curl = curl_easy_init();
+    if (!curl) return false;
+
+    configureCurl(curl, url, fileDataWriteCallback, &file);
+    CURLcode errorCode = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+    if (errorCode != CURLE_OK) {
+        printf("ERROR: failed to download %s to %s\nCurl error code:%d\n", url.c_str(), path.c_str(), errorCode);
         return false;
     }
-    file.close();
     return true;
 }
 

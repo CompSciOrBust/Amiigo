@@ -77,8 +77,10 @@ namespace Amiigo::UI {
 
 		Arriba::UIObject* sceneSwitcher = Arriba::findObjectByName("SceneSwitcher");
 		Arriba::UIObject* settingsScene = Arriba::findObjectByName("SettingsScene");
+		Arriba::UIObject* statusBar = Arriba::findObjectByName("StatusBar");
 		if (settingsScene) settingsScene->enabled = false;
 		if (sceneSwitcher) sceneSwitcher->enabled = false;
+		if (statusBar) statusBar->enabled = false;
 		while (!checkIfFileExists("sdmc:/config/amiigo/API.json") || !checkIfFileExists("sdmc:/atmosphere/contents/0100000000000352/exefs.nsp") || checkIfFileExists("sdmc:/config/amiigo/update.flag")) {
 			splashScene->setColour({(sin(Arriba::time)+1)/4, (cos(Arriba::time)+1)/4, 0.5, 0.95});
 			Arriba::findObjectByName("AmiigoBG")->renderer->thisShader.setFloat1("iTime", Arriba::time);
@@ -93,6 +95,7 @@ namespace Amiigo::UI {
 		splashScene->destroy();
 		if (settingsScene) settingsScene->enabled = true;
 		if (sceneSwitcher) sceneSwitcher->enabled = true;
+		if (statusBar) statusBar->enabled = true;
 		Arriba::activeLayer--;
 	}
 
