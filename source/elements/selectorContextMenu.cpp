@@ -1,5 +1,6 @@
 #include <elements/selectorContextMenu.h>
 #include <AmiigoUI.h>
+#include <AmiigoLang.h>
 #include <sys/stat.h>
 #include <fstream>
 #include <vector>
@@ -23,9 +24,9 @@ namespace Amiigo::Elements {
                 }
             }
             if (!isFavorited)
-                favoriteButton->setText("Favorite");
+                favoriteButton->setText(Amiigo::Lang::get("context_favorite").c_str());
             else
-                favoriteButton->setText("Unfavorite");
+                favoriteButton->setText(Amiigo::Lang::get("context_unfavorite").c_str());
             favoriteButton->setTag("ContextMenuButton");
             if (!isFavorited) {
                 favoriteButton->registerCallback([entry](){
@@ -56,15 +57,17 @@ namespace Amiigo::Elements {
         if (Amiigo::UI::getSelectorPath() != "Favorites") {
             Arriba::Elements::Button* newFolderButton = new Arriba::Elements::Button();
             newFolderButton->setParent(this);
-            newFolderButton->setText("New folder");
+            newFolderButton->setText(Amiigo::Lang::get("context_new_folder").c_str());
             newFolderButton->setTag("ContextMenuButton");
             newFolderButton->registerCallback([](){
                 SwkbdConfig kbinput;
                 swkbdCreate(&kbinput, 0);
                 swkbdConfigMakePresetDefault(&kbinput);
                 swkbdConfigSetKeySetDisableBitmask(&kbinput, SwkbdKeyDisableBitmask_ForwardSlash | SwkbdKeyDisableBitmask_Backslash);
-                swkbdConfigSetGuideText(&kbinput, "Enter folder name");
-                swkbdConfigSetInitialText(&kbinput, "New folder");
+                std::string kbGuide = Amiigo::Lang::getNarrow("context_new_folder_keyboard_guide");
+                std::string kbDefault = Amiigo::Lang::getNarrow("context_new_folder_keyboard_default");
+                swkbdConfigSetGuideText(&kbinput, kbGuide.c_str());
+                swkbdConfigSetInitialText(&kbinput, kbDefault.c_str());
                 char kbout[256];
                 swkbdShow(&kbinput, kbout, 255);
                 swkbdClose(&kbinput);
@@ -78,7 +81,7 @@ namespace Amiigo::Elements {
         if (entry.name != U"★Favorites" && Amiigo::UI::getSelectorPath() != "Favorites" && entry.name != U"← Back") {
             Arriba::Elements::Button* deleteButton = new Arriba::Elements::Button();
             deleteButton->setParent(this);
-            deleteButton->setText("Delete");
+            deleteButton->setText(Amiigo::Lang::get("context_delete").c_str());
             deleteButton->setTag("ContextMenuButton");
             deleteButton->registerCallback([entry](){
                 fsdevDeleteDirectoryRecursively(entry.path.c_str());

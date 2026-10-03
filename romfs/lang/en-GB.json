@@ -1,0 +1,53 @@
+{
+    "splash_waiting_internet": "Waiting for internet connection...",
+    "splash_caching_api": "Caching API data...",
+    "splash_installing_emuiibo": "Installing Emuiibo...",
+    "splash_updating_amiigo": "Updating Amiigo...",
+
+    "nav_my_amiibo": "My Amiibo",
+    "nav_amiigo_store": "Amiigo Store",
+    "nav_settings": "Settings",
+    "nav_exit": "Exit",
+    "nav_update": "Update",
+
+    "category_save_to_game_name": "Save to Game Name",
+    "category_save_to_amiibo_series": "Save to Amiibo Series",
+    "category_save_to_current_folder": "Save to Current Folder",
+    "category_save_to_root": "Save to Root",
+
+    "status_category_root": "Amiibos will save to sdmc:/emuiibo/amiibo",
+    "status_category_game_name": "Amiibos will save to sdmc:/emuiibo/game name",
+    "status_category_amiibo_series": "Amiibos will save to sdmc:/emuiibo/amiibo series",
+    "status_category_current_folder": "Amiibos will save to the current location",
+    "status_emuiibo_disabled": "Emuiibo disabled",
+    "status_emuiibo_enabled": "Emuiibo enabled",
+    "status_uuid_random_enabled": "Amiibos will now generate with random UUIDs",
+    "status_uuid_random_disabled": "Amiibos will now generate with static UUIDs",
+
+    "settings_disable_random_uuid": "Disable Random UUID",
+    "settings_enable_random_uuid": "Enable Random UUID",
+    "settings_update_api_cache": "Update API Cache",
+    "settings_update_amiigo": "Update Amiigo",
+
+    "credits_title": "Credits",
+    "credits_developer": "Developer",
+
+    "context_favorite": "Favourite",
+    "context_unfavorite": "Unfavourite",
+    "context_new_folder": "New folder",
+    "context_new_folder_keyboard_guide": "Enter folder name",
+    "context_new_folder_keyboard_default": "New folder",
+    "context_delete": "Delete",
+
+    "error_generic": "Error",
+    "error_unknown_category_mode": "Error, unknown category mode",
+    "error_unknown_emulation_status": "Error: Unknown emulation status!",
+    "error_folder_not_exist": "Folder does not exist",
+    "error_failed_set_amiibo": "Failed to set active Amiibo",
+    "error_failed_save_image": "Failed to save Amiibo image",
+    "error_api_cache_vanished": "Error, API cache vanished?",
+    "error_no_api_cache": "Error, no API cache!",
+    "error_api_cache_corrupt": "Error, API cache corrupt!",
+    "error_api_cache_corrupt_hint": "Try updating cache in settings!",
+    "error_no_network": "No network connection!"
+}

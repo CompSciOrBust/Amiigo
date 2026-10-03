@@ -11,6 +11,7 @@
 #include <unordered_set>
 
 #include <AmiigoSettings.h>
+#include <AmiigoLang.h>
 #include <AmiigoUI.h>
 #include <Networking.h>
 #include <emuiibo.hpp>
@@ -22,7 +23,6 @@
 #include <stb_image_write.h>
 
 #include <arribaText.h>
-#include <codecvt> // TODO: Replace with custom transcoder
 
 static std::string updateURL;
 
@@ -43,7 +43,7 @@ static bool caseInsensitiveSort(const Str& a, const Str& b) {
 
 static std::u32string getAmiiboDisplayName(const std::string& path, bool isCategory) {
     if (isCategory) return Arriba::Text::ASCIIToUnicode(path.substr(path.find_last_of('/') + 1).c_str());
-    return Arriba::Text::ASCIIToUnicode(readJsonField<std::string>(path + "/amiibo.json", "name", "Corrupt Amiibo Data").c_str());
+    return Amiigo::Lang::utf8ToU32(readJsonField<std::string>(path + "/amiibo.json", "name", "Corrupt Amiibo Data"));
 }
 
 std::vector<AmiiboEntry> scanForAmiibo(const char* path) {
@@ -88,13 +88,13 @@ std::vector<AmiiboEntry> scanForAmiibo(const char* path) {
 }
 
 std::vector<std::string> getListOfSeries() {
-    if (!checkIfFileExists("sdmc:/config/amiigo/API.json")) return {"Error, no API cache!"};
+    if (!checkIfFileExists("sdmc:/config/amiigo/API.json")) return {Amiigo::Lang::getNarrow("error_no_api_cache")};
 
     JsonDoc APIJson = loadJsonFile("sdmc:/config/amiigo/API.json");
     if (APIJson.is_discarded()) {
         printf("API cache is corrupt\n");
         remove("sdmc:/config/amiigo/API.json");
-        return {"Error, API cache corrupt!", "Try updating cache in settings!"};
+        return {Amiigo::Lang::getNarrow("error_api_cache_corrupt"), Amiigo::Lang::getNarrow("error_api_cache_corrupt_hint")};
     }
 
     std::unordered_set<std::string> seen;
@@ -120,7 +120,7 @@ unsigned short shiftAndDec(const std::string& input) {
 }
 
 std::vector<AmiiboCreatorData> getAmiibosFromSeries(const std::string& series) {
-    if (!checkIfFileExists("sdmc:/config/amiigo/API.json")) return {{U"Error, API cache vanished?", U"", U"", 0, 0, 0}};
+    if (!checkIfFileExists("sdmc:/config/amiigo/API.json")) return {{Amiigo::Lang::get("error_api_cache_vanished"), U"", U"", 0, 0, 0}};
     JsonDoc APIJson = loadJsonFile("sdmc:/config/amiigo/API.json");
 
     std::vector<AmiiboCreatorData> amiibos;
@@ -129,8 +129,7 @@ std::vector<AmiiboCreatorData> getAmiibosFromSeries(const std::string& series) {
         // Process the API data the same way Emutool does
         // https://github.com/XorTroll/emuiibo/blob/90cbc54a95c0aa4a9ceb6dd55b633de206763094/emutool/emutool/AmiiboUtils.cs#L144
         AmiiboCreatorData newAmiibo;
-        std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> ASCIIToUnicodeConverter;
-        newAmiibo.name = ASCIIToUnicodeConverter.from_bytes(APIJson["amiibo"][i]["name"].get<std::string>().c_str());
+        newAmiibo.name = Amiigo::Lang::utf8ToU32(APIJson["amiibo"][i]["name"].get<std::string>());
         std::string fullID = APIJson["amiibo"][i]["head"].get<std::string>() + APIJson["amiibo"][i]["tail"].get<std::string>();
         // Var names taken from emutool
         std::string character_game_id_str = fullID.substr(0, 4);
@@ -144,8 +143,8 @@ std::vector<AmiiboCreatorData> getAmiibosFromSeries(const std::string& series) {
         newAmiibo.figure_type = static_cast<uint8_t>(stoi(figure_type_str, nullptr, 16));
         newAmiibo.model_number = static_cast<unsigned short>(stoi(model_no_str, nullptr, 16));
         newAmiibo.series = static_cast<uint8_t>(stoi(series_str, nullptr, 16));
-        newAmiibo.gameName = ASCIIToUnicodeConverter.from_bytes(APIJson["amiibo"][i]["gameSeries"].get<std::string>().c_str()); // only used for categorization
-        newAmiibo.amiiboSeries = ASCIIToUnicodeConverter.from_bytes(APIJson["amiibo"][i]["amiiboSeries"].get<std::string>().c_str()); // only used for categorization
+        newAmiibo.gameName = Amiigo::Lang::utf8ToU32(APIJson["amiibo"][i]["gameSeries"].get<std::string>()); // only used for categorization
+        newAmiibo.amiiboSeries = Amiigo::Lang::utf8ToU32(APIJson["amiibo"][i]["amiiboSeries"].get<std::string>()); // only used for categorization
         newAmiibo.imageURL = APIJson["amiibo"][i]["image"].get<std::string>();
 
         amiibos.push_back(newAmiibo);
@@ -184,7 +183,7 @@ void saveAmiiboImage(const std::string& pathBase, const AmiiboCreatorData& amiib
     std::string imagePath = pathBase + "/amiibo.png";
     auto imageData = downloadToRAM(amiibo.imageURL);
     if (!imageData) {
-        MainThread::dispatch([]() { Amiigo::UI::updateStatus(U"Failed to save Amiibo image", Amiigo::UI::StatusLevel::Error); });
+        MainThread::dispatch([]() { Amiigo::UI::updateStatus(Amiigo::Lang::get("error_failed_save_image").c_str(), Amiigo::UI::StatusLevel::Error); });
         return;
     }
     int width, height, channels;
@@ -223,7 +222,7 @@ void createVirtualAmiibo(const AmiiboCreatorData& amiibo) {
     fileStream.close();
 
     JsonDoc amiiboJson;
-    amiiboJson["name"] = std::string(sanitizeAmiiboName(amiibo.name));
+    amiiboJson["name"] = Amiigo::Lang::u32ToUtf8(amiibo.name);
     amiiboJson["write_counter"] = 0;
     amiiboJson["version"] = 0;
     amiiboJson["mii_charinfo_file"] = "mii-charinfo.bin";

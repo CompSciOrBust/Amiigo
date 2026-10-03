@@ -16,6 +16,7 @@
 #include <AmiigoSettings.h>
 #include <AmiigoElements.h>
 #include <AmiigoBehaviours.h>
+#include <AmiigoLang.h>
 
 namespace {
     std::vector<std::string> seriesList;
@@ -35,6 +36,7 @@ namespace Amiigo::UI {
 	}
 
 	void initUI() {
+		Amiigo::Lang::init();
 		initBG();
 		Amiigo::Settings::loadSettings();
 		Arriba::Colour::neutral = Amiigo::Settings::Colour::listNeutral;
@@ -48,7 +50,7 @@ namespace Amiigo::UI {
 		initSettings();
 		Arriba::highlightedObject = Arriba::findObjectByName("SelectorList");
 		if (checkForUpdates()) {
-			Arriba::findObjectByName<Arriba::Elements::Button>("SettingsButton")->setText(U"Update");
+			Arriba::findObjectByName<Arriba::Elements::Button>("SettingsButton")->setText(Amiigo::Lang::get("nav_update").c_str());
 			Arriba::findObjectByName("UpdaterButton")->enabled = true;
 		}
 	}
@@ -84,10 +86,10 @@ namespace Amiigo::UI {
 		while (!checkIfFileExists("sdmc:/config/amiigo/API.json") || !checkIfFileExists("sdmc:/atmosphere/contents/0100000000000352/exefs.nsp") || checkIfFileExists("sdmc:/config/amiigo/update.flag")) {
 			splashScene->setColour({(sin(Arriba::time)+1)/4, (cos(Arriba::time)+1)/4, 0.5, 0.95});
 			Arriba::findObjectByName("AmiigoBG")->renderer->thisShader.setFloat1("iTime", Arriba::time);
-			if (!hasNetworkConnection()) doingText->setText(U"Waiting for internet connection...");
-			else if (!checkIfFileExists("sdmc:/config/amiigo/API.json")) doingText->setText(U"Caching API data...");
-			else if (!checkIfFileExists("sdmc:/atmosphere/contents/0100000000000352/exefs.nsp")) doingText->setText(U"Installing Emuiibo...");
-			else if (checkIfFileExists("sdmc:/config/amiigo/update.flag")) doingText->setText(U"Updating Amiigo...");
+			if (!hasNetworkConnection()) doingText->setText(Amiigo::Lang::get("splash_waiting_internet").c_str());
+			else if (!checkIfFileExists("sdmc:/config/amiigo/API.json")) doingText->setText(Amiigo::Lang::get("splash_caching_api").c_str());
+			else if (!checkIfFileExists("sdmc:/atmosphere/contents/0100000000000352/exefs.nsp")) doingText->setText(Amiigo::Lang::get("splash_installing_emuiibo").c_str());
+			else if (checkIfFileExists("sdmc:/config/amiigo/update.flag")) doingText->setText(Amiigo::Lang::get("splash_updating_amiigo").c_str());
 			Arriba::drawFrame();
 			svcSleepThread(1'000'000'000 / 60);
 		}
@@ -132,7 +134,7 @@ namespace Amiigo::UI {
 
 		// Amiibo list button
 		Arriba::Elements::Button* selectorButton = new Arriba::Elements::Button();
-		selectorButton->setText(U"My Amiibo");
+		selectorButton->setText(Amiigo::Lang::get("nav_my_amiibo").c_str());
 		selectorButton->setDimensions(switcherWidth, switcherHeight/4 - 1, Arriba::Graphics::Pivot::topRight);
 		selectorButton->setParent(sceneSwitcher);
 		selectorButton->setName("SelectorButton");
@@ -141,7 +143,7 @@ namespace Amiigo::UI {
 
 		// Amiigo store button
 		Arriba::Elements::Button* storeButton = new Arriba::Elements::Button();
-		storeButton->setText(U"Amiigo Store");
+		storeButton->setText(Amiigo::Lang::get("nav_amiigo_store").c_str());
 		storeButton->transform.position.y = selectorButton->height + 1;
 		storeButton->setDimensions(switcherWidth, switcherHeight/4 - 1, Arriba::Graphics::Pivot::topRight);
 		storeButton->setParent(sceneSwitcher);
@@ -151,7 +153,7 @@ namespace Amiigo::UI {
 
 		// Settings button
 		Arriba::Elements::Button* settingsButton = new Arriba::Elements::Button();
-		settingsButton->setText(U"Settings");
+		settingsButton->setText(Amiigo::Lang::get("nav_settings").c_str());
 		settingsButton->transform.position.y = storeButton->height + storeButton->transform.position.y + 1;
 		settingsButton->setDimensions(switcherWidth, switcherHeight/4 - 1, Arriba::Graphics::Pivot::topRight);
 		settingsButton->setParent(sceneSwitcher);
@@ -161,7 +163,7 @@ namespace Amiigo::UI {
 
 		// Exit button
 		Arriba::Elements::Button* exitButton = new Arriba::Elements::Button();
-		exitButton->setText(U"Exit");
+		exitButton->setText(Amiigo::Lang::get("nav_exit").c_str());
 		exitButton->transform.position.y = settingsButton->height + settingsButton->transform.position.y + 1;
 		exitButton->setDimensions(switcherWidth, switcherHeight/4, Arriba::Graphics::Pivot::topRight);
 		exitButton->setParent(sceneSwitcher);
@@ -191,19 +193,19 @@ namespace Amiigo::UI {
 	const char32_t* getCategoryModeLabel() {
 		switch (Amiigo::Settings::categoryMode) {
 			case Amiigo::Settings::categoryModes::saveToRoot:
-			return U"Save to Game Name";
+			return Amiigo::Lang::get("category_save_to_game_name").c_str();
 
 			case Amiigo::Settings::categoryModes::saveByGameName:
-			return U"Save to Amiibo Series";
+			return Amiigo::Lang::get("category_save_to_amiibo_series").c_str();
 
 			case Amiigo::Settings::categoryModes::saveByAmiiboSeries:
-			return U"Save to Current Folder";
+			return Amiigo::Lang::get("category_save_to_current_folder").c_str();
 
 			case Amiigo::Settings::categoryModes::saveByCurrentFolder:
-			return U"Save to Root";
+			return Amiigo::Lang::get("category_save_to_root").c_str();
 
 			default:
-			return U"Error";
+			return Amiigo::Lang::get("error_generic").c_str();
 		}
 	}
 
@@ -230,24 +232,24 @@ namespace Amiigo::UI {
 			Arriba::findObjectByName<Arriba::Elements::Button>("CategorySettingsButton")->setText(getCategoryModeLabel());
 			switch (Amiigo::Settings::categoryMode) {
 				case Amiigo::Settings::categoryModes::saveToRoot:
-				updateStatus(U"Amiibos will save to sdmc:/emuiibo/amiibo", StatusLevel::Info);
+				updateStatus(Amiigo::Lang::get("status_category_root").c_str(), StatusLevel::Info);
 				break;
-			
+
 				case Amiigo::Settings::categoryModes::saveByGameName:
-				updateStatus(U"Amiibos will save to sdmc:/emuiibo/game name", StatusLevel::Info);
+				updateStatus(Amiigo::Lang::get("status_category_game_name").c_str(), StatusLevel::Info);
 				break;
 
 				case Amiigo::Settings::categoryModes::saveByAmiiboSeries:
-				updateStatus(U"Amiibos will save to sdmc:/emuiibo/amiibo series", StatusLevel::Info);
+				updateStatus(Amiigo::Lang::get("status_category_amiibo_series").c_str(), StatusLevel::Info);
 				break;
 
 				case Amiigo::Settings::categoryModes::saveByCurrentFolder:
-				updateStatus(U"Amiibos will save to the current location", StatusLevel::Info);
+				updateStatus(Amiigo::Lang::get("status_category_current_folder").c_str(), StatusLevel::Info);
 				break;
 
 				default:
-				Arriba::findObjectByName<Arriba::Elements::Button>("CategorySettingsButton")->setText(U"Error");
-				updateStatus(U"Error, uknown category mode", StatusLevel::Error);
+				Arriba::findObjectByName<Arriba::Elements::Button>("CategorySettingsButton")->setText(Amiigo::Lang::get("error_generic").c_str());
+				updateStatus(Amiigo::Lang::get("error_unknown_category_mode").c_str(), StatusLevel::Error);
 				break;
 			}
 		});
@@ -256,8 +258,8 @@ namespace Amiigo::UI {
 		randomUUIDButton->setParent(settingsScene);
 		randomUUIDButton->setDimensions(550, buttonHeight, Arriba::Graphics::Pivot::centre);
 		randomUUIDButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 2/buttonOffsets, 0};
-		if (Amiigo::Settings::useRandomisedUUID) randomUUIDButton->setText(U"Disable Random UUID");
-		else randomUUIDButton->setText(U"Enable Random UUID");
+		if (Amiigo::Settings::useRandomisedUUID) randomUUIDButton->setText(Amiigo::Lang::get("settings_disable_random_uuid").c_str());
+		else randomUUIDButton->setText(Amiigo::Lang::get("settings_enable_random_uuid").c_str());
 		randomUUIDButton->setName("ToggleRandomUUIDButton");
 		randomUUIDButton->setTag("SettingsButton");
 
@@ -266,11 +268,11 @@ namespace Amiigo::UI {
 			Amiigo::Settings::saveSettings();
 			auto* uuidBtn = Arriba::findObjectByName<Arriba::Elements::Button>("ToggleRandomUUIDButton");
 			if (Amiigo::Settings::useRandomisedUUID) {
-				uuidBtn->setText(U"Disable random UUID");
-				updateStatus(U"Amiibos will now generate with random UUIDs", StatusLevel::Info);
+				uuidBtn->setText(Amiigo::Lang::get("settings_disable_random_uuid").c_str());
+				updateStatus(Amiigo::Lang::get("status_uuid_random_enabled").c_str(), StatusLevel::Info);
 			} else {
-				uuidBtn->setText(U"Enable random UUID");
-				updateStatus(U"Amiibos will now generate with static UUIDs", StatusLevel::Info);
+				uuidBtn->setText(Amiigo::Lang::get("settings_enable_random_uuid").c_str());
+				updateStatus(Amiigo::Lang::get("status_uuid_random_disabled").c_str(), StatusLevel::Info);
 			}
 		});
 
@@ -278,7 +280,7 @@ namespace Amiigo::UI {
 		cacheUpdateButton->setParent(settingsScene);
 		cacheUpdateButton->setDimensions(550, buttonHeight, Arriba::Graphics::Pivot::centre);
 		cacheUpdateButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 3/buttonOffsets, 0};
-		cacheUpdateButton->setText(U"Update API Cache");
+		cacheUpdateButton->setText(Amiigo::Lang::get("settings_update_api_cache").c_str());
 		cacheUpdateButton->setName("CacheUpdateButton");
 		cacheUpdateButton->setTag("SettingsButton");
 		cacheUpdateButton->enabled = hasNetworkConnection();
@@ -292,14 +294,14 @@ namespace Amiigo::UI {
 		updaterButton->setParent(settingsScene);
 		updaterButton->setDimensions(550, buttonHeight, Arriba::Graphics::Pivot::centre);
 		updaterButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 4/buttonOffsets, 0};
-		updaterButton->setText(U"Update Amiigo");
+		updaterButton->setText(Amiigo::Lang::get("settings_update_amiigo").c_str());
 		updaterButton->setName("UpdaterButton");
 		updaterButton->setTag("SettingsButton");
 		updaterButton->enabled = false;
 
 		updaterButton->registerCallback([](){
 			if (!hasNetworkConnection()) {
-				updateStatus(U"No network connection!", StatusLevel::Error);
+				updateStatus(Amiigo::Lang::get("error_no_network").c_str(), StatusLevel::Error);
 			} else {
 				std::ofstream fileStream("sdmc:/config/amiigo/update.flag");
 				fileStream.close();
@@ -316,14 +318,14 @@ namespace Amiigo::UI {
 		emu::Version emuiiboVersion = emu::GetVersion();
 		sprintf(emuVer, "%u.%u.%u", emuiiboVersion.major, emuiiboVersion.minor, emuiiboVersion.micro);
 
-		Arriba::Primitives::Text* creditsTitleText = new Arriba::Primitives::Text(U"Credits", 64);
+		Arriba::Primitives::Text* creditsTitleText = new Arriba::Primitives::Text(Amiigo::Lang::get("credits_title").c_str(), 64);
 		creditsTitleText->setColour({0, 0.7, 1, 1});
 		creditsTitleText->setParent(creditsQuad);
 		creditsTitleText->transform.position = {creditsQuad->width/2, yOffset += creditsTitleText->height + 30, 0};
 		struct Credit { std::u32string title; std::u32string name; };
 		const std::u32string emuiiboTitle = U"Emuiibo " + Arriba::Text::ASCIIToUnicode(emuVer);
 		const Credit credits[] = {
-			{U"Developer",   U"CompSciOrBust"},
+			{Amiigo::Lang::get("credits_developer"),   U"CompSciOrBust"},
 			{emuiiboTitle,   U"XorTroll"},
 			{U"Contribuyente", U"Kronos2308"},
 			{U"The Pizza Guy", U"Za"},
@@ -353,14 +355,14 @@ namespace Amiigo::UI {
 				case emu::EmulationStatus::On:
 					emu::ResetActiveVirtualAmiibo();
 					emu::SetEmulationStatus(emu::EmulationStatus::Off);
-					updateStatus(U"Emuiibo disabled", StatusLevel::Info);
+					updateStatus(Amiigo::Lang::get("status_emuiibo_disabled").c_str(), StatusLevel::Info);
 				break;
 				case emu::EmulationStatus::Off:
 					emu::SetEmulationStatus(emu::EmulationStatus::On);
-					updateStatus(U"Emuiibo enabled", StatusLevel::Info);
+					updateStatus(Amiigo::Lang::get("status_emuiibo_enabled").c_str(), StatusLevel::Info);
 				break;
 				default:
-					updateStatus(U"Error: Unkown emulation status!", StatusLevel::Info);
+					updateStatus(Amiigo::Lang::get("error_unknown_emulation_status").c_str(), StatusLevel::Info);
 				break;
 			}
 		}
@@ -449,13 +451,13 @@ namespace Amiigo::UI {
 			Arriba::Colour::neutral = Amiigo::Settings::Colour::makerNeutral;
 	    	Arriba::Colour::highlightA = Amiigo::Settings::Colour::makerHighlightA;
 	    	Arriba::Colour::highlightB = Amiigo::Settings::Colour::makerHighlightB;
-			updateStatus(U"Amiigo Store", StatusLevel::Silent);
+			updateStatus(Amiigo::Lang::get("nav_amiigo_store").c_str(), StatusLevel::Silent);
 		} else if (Arriba::highlightedObject == Arriba::findObjectByName("SettingsButton")) {
 			Arriba::findObjectByName("SettingsScene")->enabled = true;
 			Arriba::Colour::neutral = Amiigo::Settings::Colour::settingsNeutral;
 	    	Arriba::Colour::highlightA = Amiigo::Settings::Colour::settingsHighlightA;
 	    	Arriba::Colour::highlightB = Amiigo::Settings::Colour::settingsHighlightB;
-			updateStatus(U"Settings", StatusLevel::Silent);
+			updateStatus(Amiigo::Lang::get("nav_settings").c_str(), StatusLevel::Silent);
 		}
 	}
 
@@ -465,14 +467,14 @@ namespace Amiigo::UI {
 				selectorPath = selectorAmiibos[index].path;
 				updateSelectorStrings();
 			} else {
-				updateStatus(U"Folder does not exist", StatusLevel::Error);
+				updateStatus(Amiigo::Lang::get("error_folder_not_exist").c_str(), StatusLevel::Error);
 			}
 		} else {
 			std::string path = selectorAmiibos[index].path;
 			emu::SetEmulationStatus(emu::EmulationStatus::On);
 			Result res = emu::SetActiveVirtualAmiibo(path.c_str(), path.size());
 			if R_FAILED(res) {
-				updateStatus(U"Failed to set active Amiibo", StatusLevel::Error);
+				updateStatus(Amiigo::Lang::get("error_failed_set_amiibo").c_str(), StatusLevel::Error);
 				return;
 			}
 			
