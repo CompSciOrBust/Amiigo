@@ -1,0 +1,53 @@
+{
+    "splash_waiting_internet": "Esperando Conección a Internet...",
+    "splash_caching_api": "Cacheando API data...",
+    "splash_installing_emuiibo": "Instalando Emuiibo...",
+    "splash_updating_amiigo": "Actualizando Amiigo...",
+
+    "nav_my_amiibo": "Mis Amiibo",
+    "nav_amiigo_store": "Amiigo Store",
+    "nav_settings": "Configuración",
+    "nav_exit": "Salir",
+    "nav_update": "Actualizar",
+
+    "category_save_to_game_name": "Guargar en /(Game Name)",
+    "category_save_to_amiibo_series": "Guargar en /(Amiibo Series)",
+    "category_save_to_current_folder": "Guargar en Carpeta Actual",
+    "category_save_to_root": "Guardar en la Raiz",
+
+    "status_category_root": "Amiibo se guardara en sdmc:/emuiibo/amiibo",
+    "status_category_game_name": "Amiibo se guardara en sdmc:/emuiibo/game name",
+    "status_category_amiibo_series": "Amiibo se guardara en sdmc:/emuiibo/amiibo series",
+    "status_category_current_folder": "Amiibo se guardara en la Carpeta actual",
+    "status_emuiibo_disabled": "Emuiibo Apagado",
+    "status_emuiibo_enabled": "Emuiibo Encendido",
+    "status_uuid_random_enabled": "Amiibos se crearan con UUIDs Aleatorios",
+    "status_uuid_random_disabled": "AAmiibos se crearan con UUIDs Estaticos",
+
+    "settings_disable_random_uuid": "Desabilitar UUID Aleatorio",
+    "settings_enable_random_uuid": "Habilitar UUID Aleatorio",
+    "settings_update_api_cache": "Actualizar Cache de la API",
+    "settings_update_amiigo": "Actualizar Amiigo",
+
+    "credits_title": "Creditos",
+    "credits_developer": "Desarrollador",
+
+    "context_favorite": "Favorito",
+    "context_unfavorite": "No Favorito",
+    "context_new_folder": "Nueva Carpeta",
+    "context_new_folder_keyboard_guide": "Nombre de la Carpeta",
+    "context_new_folder_keyboard_default": "Nueva Carpeta",
+    "context_delete": "Borrar",
+
+    "error_generic": "Error",
+    "error_unknown_category_mode": "Error, categoría desconocida",
+    "error_unknown_emulation_status": "Error: estado de emulacion desconocida!",
+    "error_folder_not_exist": "La Carpeta no existe",
+    "error_failed_set_amiibo": "Fallo al activar este Amiibo",
+    "error_failed_save_image": "Fallo al Gurdar la imagen del Amiibo",
+    "error_api_cache_vanished": "Error, El API cache desaparecio?",
+    "error_no_api_cache": "Error, Sin Cache de API!",
+    "error_api_cache_corrupt": "Error, Cache de API corrupto!",
+    "error_api_cache_corrupt_hint": "¡Intente Actualizar el cache en Configuración!",
+    "error_no_network": "¡Sin Conección a Internet!"
+}
