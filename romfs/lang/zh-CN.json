@@ -1,0 +1,53 @@
+{
+    "splash_waiting_internet": "等待网络连接...",
+    "splash_caching_api": "正在缓存API数据...",
+    "splash_installing_emuiibo": "正在安装Emuiibo...",
+    "splash_updating_amiigo": "正在更新Amiigo...",
+
+    "nav_my_amiibo": "我的Amiibo",
+    "nav_amiigo_store": "Amiigo商店",
+    "nav_settings": "设置",
+    "nav_exit": "退出",
+    "nav_update": "更新",
+
+    "category_save_to_game_name": "按游戏名保存",
+    "category_save_to_amiibo_series": "按Amiibo系列保存",
+    "category_save_to_current_folder": "保存到当前文件夹",
+    "category_save_to_root": "保存到根目录",
+
+    "status_category_root": "Amiibo将保存到 sdmc:/emuiibo/amiibo",
+    "status_category_game_name": "Amiibo将保存到 sdmc:/emuiibo/游戏名",
+    "status_category_amiibo_series": "Amiibo将保存到 sdmc:/emuiibo/Amiibo系列",
+    "status_category_current_folder": "Amiibo将保存到当前位置",
+    "status_emuiibo_disabled": "Emuiibo已禁用",
+    "status_emuiibo_enabled": "Emuiibo已启用",
+    "status_uuid_random_enabled": "Amiibo现在将使用随机UUID生成",
+    "status_uuid_random_disabled": "Amiibo现在将使用固定UUID生成",
+
+    "settings_disable_random_uuid": "禁用随机UUID",
+    "settings_enable_random_uuid": "启用随机UUID",
+    "settings_update_api_cache": "更新API缓存",
+    "settings_update_amiigo": "更新Amiigo",
+
+    "credits_title": "致谢",
+    "credits_developer": "开发者",
+
+    "context_favorite": "收藏",
+    "context_unfavorite": "取消收藏",
+    "context_new_folder": "新建文件夹",
+    "context_new_folder_keyboard_guide": "输入文件夹名称",
+    "context_new_folder_keyboard_default": "新建文件夹",
+    "context_delete": "删除",
+
+    "error_generic": "错误",
+    "error_unknown_category_mode": "错误，未知的分类模式",
+    "error_unknown_emulation_status": "错误：未知的模拟状态！",
+    "error_folder_not_exist": "文件夹不存在",
+    "error_failed_set_amiibo": "设置活动Amiibo失败",
+    "error_failed_save_image": "保存Amiibo图片失败",
+    "error_api_cache_vanished": "错误，API缓存消失？",
+    "error_no_api_cache": "错误，无API缓存！",
+    "error_api_cache_corrupt": "错误，API缓存损坏！",
+    "error_api_cache_corrupt_hint": "请在设置中更新缓存！",
+    "error_no_network": "无网络连接！"
+}
