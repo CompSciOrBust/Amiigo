@@ -37,6 +37,7 @@ namespace Amiigo::Elements {
             }
         } else {
             spawnTime = Arriba::time - (displayDuration + fadeDuration);
+            setColour({1.0f, 1.0f, 1.0f, 0.0f});
         }
     }
 
