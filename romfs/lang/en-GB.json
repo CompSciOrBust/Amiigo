@@ -23,6 +23,8 @@
     "status_emuiibo_enabled": "Emuiibo enabled",
     "status_uuid_random_enabled": "Amiibos will now generate with random UUIDs",
     "status_uuid_random_disabled": "Amiibos will now generate with static UUIDs",
+    "status_save_amiibo_images_enabled": "Amiibo images will be saved",
+    "status_save_amiibo_images_disabled": "Amiibo images will not be saved",
 
     "settings_amiibo_settings": "Amiibo Settings",
     "settings_updates": "Updates",
@@ -41,6 +43,7 @@
     "settings_theme_settings_highlight_b": "Settings — Highlight B",
     "settings_disable_random_uuid": "Disable Random UUID",
     "settings_enable_random_uuid": "Enable Random UUID",
+    "settings_save_amiibo_images": "Save Amiibo Images",
     "settings_update_api_cache": "Update API Cache",
     "settings_update_amiigo": "Update Amiigo",
     "settings_reinstall_emuiibo": "Reinstall Emuiibo",

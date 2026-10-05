@@ -251,6 +251,7 @@ namespace Amiigo::UI {
 		Arriba::findObjectByName("SettingsAmiiboPane")->enabled = true;
 		Arriba::findObjectByName("CategorySettingsButton")->enabled = true;
 		Arriba::findObjectByName("RandomUUIDCheckBox")->enabled = true;
+		Arriba::findObjectByName("SaveAmiiboImagesCheckBox")->enabled = true;
 		Arriba::findObjectByName("SettingsAmiiboBackButton")->enabled = true;
 		Arriba::highlightedObject = Arriba::findObjectByName("SettingsAmiiboPane");
 	}
@@ -369,7 +370,7 @@ namespace Amiigo::UI {
 		Arriba::Elements::Button* categoryButton = new Arriba::Elements::Button();
 		categoryButton->setParent(amiiboPane);
 		categoryButton->setDimensions(subButtonWidth, buttonHeight, Arriba::Graphics::Pivot::centre);
-		categoryButton->transform.position = {amiiboPane->width / 2, amiiboPane->height * 1/4, 0};
+		categoryButton->transform.position = {amiiboPane->width / 2, amiiboPane->height * 1/5, 0};
 		categoryButton->setText(getCategoryModeLabel());
 		categoryButton->setName("CategorySettingsButton");
 		categoryButton->setTag("SettingsButton");
@@ -400,7 +401,7 @@ namespace Amiigo::UI {
 
 		Amiigo::Elements::CheckBox* randomUUIDCheckBox = new Amiigo::Elements::CheckBox(Amiigo::Settings::useRandomisedUUID, Amiigo::Lang::get("settings_enable_random_uuid").c_str());
 		randomUUIDCheckBox->setParent(amiiboPane);
-		randomUUIDCheckBox->transform.position = {(amiiboPane->width - subButtonWidth) / 2, amiiboPane->height * 2/4 - buttonHeight / 2, 0};
+		randomUUIDCheckBox->transform.position = {(amiiboPane->width - subButtonWidth) / 2, amiiboPane->height * 2/5 - buttonHeight / 2, 0};
 		randomUUIDCheckBox->setName("RandomUUIDCheckBox");
 		randomUUIDCheckBox->setTag("SettingsButton");
 		randomUUIDCheckBox->enabled = false;
@@ -411,10 +412,23 @@ namespace Amiigo::UI {
 			else updateStatus(Amiigo::Lang::get("status_uuid_random_disabled").c_str(), StatusLevel::Info);
 		});
 
+		Amiigo::Elements::CheckBox* saveImagesCheckBox = new Amiigo::Elements::CheckBox(Amiigo::Settings::saveAmiiboImages, Amiigo::Lang::get("settings_save_amiibo_images").c_str());
+		saveImagesCheckBox->setParent(amiiboPane);
+		saveImagesCheckBox->transform.position = {(amiiboPane->width - subButtonWidth) / 2, amiiboPane->height * 3/5 - buttonHeight / 2, 0};
+		saveImagesCheckBox->setName("SaveAmiiboImagesCheckBox");
+		saveImagesCheckBox->setTag("SettingsButton");
+		saveImagesCheckBox->enabled = false;
+		saveImagesCheckBox->registerCallback([](bool checked){
+			Amiigo::Settings::saveAmiiboImages = checked;
+			Amiigo::Settings::saveSettings();
+			if (checked) updateStatus(Amiigo::Lang::get("status_save_amiibo_images_enabled").c_str(), StatusLevel::Info);
+			else updateStatus(Amiigo::Lang::get("status_save_amiibo_images_disabled").c_str(), StatusLevel::Info);
+		});
+
 		Arriba::Elements::Button* amiiboBackButton = new Arriba::Elements::Button();
 		amiiboBackButton->setParent(amiiboPane);
 		amiiboBackButton->setDimensions(subButtonWidth, buttonHeight, Arriba::Graphics::Pivot::centre);
-		amiiboBackButton->transform.position = {amiiboPane->width / 2, amiiboPane->height * 3/4, 0};
+		amiiboBackButton->transform.position = {amiiboPane->width / 2, amiiboPane->height * 4/5, 0};
 		amiiboBackButton->setText(Amiigo::Lang::get("settings_back").c_str());
 		amiiboBackButton->setName("SettingsAmiiboBackButton");
 		amiiboBackButton->setTag("SettingsButton");

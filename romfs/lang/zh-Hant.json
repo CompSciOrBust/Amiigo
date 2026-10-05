@@ -23,6 +23,8 @@
     "status_emuiibo_enabled": "Emuiibo已啟用",
     "status_uuid_random_enabled": "Amiibo現在將使用隨機UUID產生",
     "status_uuid_random_disabled": "Amiibo現在將使用固定UUID產生",
+    "status_save_amiibo_images_enabled": "將會儲存Amiibo圖片",
+    "status_save_amiibo_images_disabled": "不會儲存Amiibo圖片",
 
     "settings_amiibo_settings": "Amiibo設定",
     "settings_updates": "更新",
@@ -41,6 +43,7 @@
     "settings_theme_settings_highlight_b": "設定 — 高亮B",
     "settings_disable_random_uuid": "停用隨機UUID",
     "settings_enable_random_uuid": "啟用隨機UUID",
+    "settings_save_amiibo_images": "儲存Amiibo圖片",
     "settings_update_api_cache": "更新API快取",
     "settings_update_amiigo": "更新Amiigo",
     "settings_reinstall_emuiibo": "重新安裝Emuiibo",

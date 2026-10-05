@@ -23,6 +23,8 @@
     "status_emuiibo_enabled": "Emuiibo Encendido",
     "status_uuid_random_enabled": "Amiibos se crearan con UUIDs Aleatorios",
     "status_uuid_random_disabled": "AAmiibos se crearan con UUIDs Estaticos",
+    "status_save_amiibo_images_enabled": "Se guardarán las imágenes de Amiibo",
+    "status_save_amiibo_images_disabled": "No se guardarán las imágenes de Amiibo",
 
     "settings_amiibo_settings": "Configuración de Amiibo",
     "settings_updates": "Actualizaciones",
@@ -41,6 +43,7 @@
     "settings_theme_settings_highlight_b": "Ajustes — Resaltado B",
     "settings_disable_random_uuid": "Desabilitar UUID Aleatorio",
     "settings_enable_random_uuid": "Habilitar UUID Aleatorio",
+    "settings_save_amiibo_images": "Guardar Imágenes de Amiibo",
     "settings_update_api_cache": "Actualizar Cache de la API",
     "settings_update_amiigo": "Actualizar Amiigo",
     "settings_reinstall_emuiibo": "Reinstalar Emuiibo",
