@@ -15,6 +15,7 @@ namespace Amiigo::Elements {
         Arriba::UIObject* returnFocusTarget;
         colour* target;
         std::function<void()> onChange;
+        std::function<void()> onClose;
         Arriba::UIObject* focusItems[NUM_FOCUS];
         bool firstFrame = true;
         bool initialHighlightSet = false;
@@ -26,7 +27,7 @@ namespace Amiigo::Elements {
         static const int DIALOG_W = 750;
         static const int DIALOG_H = 490;
 
-        ColourPickerDialog(int x, int y, colour* target, const char32_t* colourName, std::function<void()> onChange);
+        ColourPickerDialog(int x, int y, colour* target, const char32_t* colourName, std::function<void()> onChange, std::function<void()> onClose = nullptr);
         void onFrame() override;
     };
 }  // namespace Amiigo::Elements

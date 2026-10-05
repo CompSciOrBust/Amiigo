@@ -26,17 +26,26 @@ namespace Amiigo::Settings {
 typedef Arriba::Maths::vec4<float> colour;
 
 namespace Amiigo::Settings::Colour {
-    inline colour statusBar = {0.5, 0.7, 0.7, 0.9};
-    // Amiibo list
-    inline colour listNeutral = {0.22, 0.47, 0.93, 0.97};
-    inline colour listHighlightA = {0.1, 0.95, 0.98, 0.97};
-    inline colour listHighlightB = {0.5, 0.85, 1, 0.97};
-    // Amiigo Store
-    inline colour makerNeutral = {0.20, 0.76, 0.45, 0.97};
-    inline colour makerHighlightA = {0.6, 0.95, 0.98, 0.97};
-    inline colour makerHighlightB = {0.1, 0.98, 0.55, 0.97};
-    // Settings
-    inline colour settingsNeutral = {0.57, 0.21, 0.93, 0.97};
-    inline colour settingsHighlightA = {0.9, 0.95, 0.94, 0.97};
-    inline colour settingsHighlightB = {1, 0.85, 1, 0.97};
+    namespace Defaults {
+        inline constexpr colour statusBar          = {0.5f,  0.7f,  0.7f,  0.9f};
+        inline constexpr colour listNeutral        = {0.22f, 0.47f, 0.93f, 0.97f};
+        inline constexpr colour listHighlightA     = {0.1f,  0.95f, 0.98f, 0.97f};
+        inline constexpr colour listHighlightB     = {0.5f,  0.85f, 1.0f,  0.97f};
+        inline constexpr colour makerNeutral       = {0.20f, 0.76f, 0.45f, 0.97f};
+        inline constexpr colour makerHighlightA    = {0.6f,  0.95f, 0.98f, 0.97f};
+        inline constexpr colour makerHighlightB    = {0.1f,  0.98f, 0.55f, 0.97f};
+        inline constexpr colour settingsNeutral    = {0.57f, 0.21f, 0.93f, 0.97f};
+        inline constexpr colour settingsHighlightA = {0.9f,  0.95f, 0.94f, 0.97f};
+        inline constexpr colour settingsHighlightB = {1.0f,  0.85f, 1.0f,  0.97f};
+    }  // namespace Defaults
+    inline colour statusBar          = Defaults::statusBar;
+    inline colour listNeutral        = Defaults::listNeutral;
+    inline colour listHighlightA     = Defaults::listHighlightA;
+    inline colour listHighlightB     = Defaults::listHighlightB;
+    inline colour makerNeutral       = Defaults::makerNeutral;
+    inline colour makerHighlightA    = Defaults::makerHighlightA;
+    inline colour makerHighlightB    = Defaults::makerHighlightB;
+    inline colour settingsNeutral    = Defaults::settingsNeutral;
+    inline colour settingsHighlightA = Defaults::settingsHighlightA;
+    inline colour settingsHighlightB = Defaults::settingsHighlightB;
 }  // namespace Amiigo::Settings::Colour

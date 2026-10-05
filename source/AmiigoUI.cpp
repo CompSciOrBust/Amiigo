@@ -583,10 +583,11 @@ namespace Amiigo::UI {
 				const int dialogX = (settingsW - dialogW) / 2;
 				const int dialogY = statusHeight + (Arriba::Graphics::windowHeight - statusHeight - dialogH) / 2;
 				new Amiigo::Elements::ColourPickerDialog(dialogX, dialogY, targetColour, colourName, []() {
-					for (auto& s : themeSwatches) s.quad->setColour(*s.colourPtr);
+					for (auto& swatch : themeSwatches) swatch.quad->setColour(*swatch.colourPtr);
 					Arriba::Colour::neutral    = Amiigo::Settings::Colour::settingsNeutral;
 					Arriba::Colour::highlightA = Amiigo::Settings::Colour::settingsHighlightA;
 					Arriba::Colour::highlightB = Amiigo::Settings::Colour::settingsHighlightB;
+				}, []() {
 					Amiigo::Settings::saveTheme();
 				});
 			});
@@ -604,6 +605,25 @@ namespace Amiigo::UI {
 			return pane;
 		};
 
+		auto addResetDefaultsBtn = [&](Arriba::Primitives::Quad* pane, int slot, int slots, std::function<void()> resetFn) {
+			Arriba::Elements::Button* btn = new Arriba::Elements::Button();
+			btn->setParent(pane);
+			btn->setDimensions(subButtonWidth, buttonHeight, Arriba::Graphics::Pivot::centre);
+			btn->transform.position = {(float)pane->width / 2, (float)pane->height * slot / slots, 0};
+			btn->setText(Amiigo::Lang::get("settings_theme_reset_defaults").c_str());
+			btn->setTag("SettingsButton");
+			btn->enabled = false;
+			btn->registerCallback([resetFn]() {
+				resetFn();
+				for (auto& swatch : themeSwatches) swatch.quad->setColour(*swatch.colourPtr);
+				Arriba::Colour::neutral    = Amiigo::Settings::Colour::settingsNeutral;
+				Arriba::Colour::highlightA = Amiigo::Settings::Colour::settingsHighlightA;
+				Arriba::Colour::highlightB = Amiigo::Settings::Colour::settingsHighlightB;
+				Amiigo::Settings::saveTheme();
+			});
+			themeSubPanes.back().buttons.push_back(btn);
+		};
+
 		auto addHubBackBtn = [&](Arriba::Primitives::Quad* pane, int slot, int slots) {
 			Arriba::Elements::Button* btn = new Arriba::Elements::Button();
 			btn->setParent(pane);
@@ -618,8 +638,12 @@ namespace Amiigo::UI {
 
 		{
 			auto* pane = makeThemeSubPane(SettingsView::ThemeStatusBar, "ThemeStatusBarPane");
-			themeSubPanes.back().buttons.push_back(makeColourBtn(pane, 1, 3, &Amiigo::Settings::Colour::statusBar, "settings_theme_status_bar"));
-			addHubBackBtn(pane, 2, 3);
+			themeSubPanes.back().buttons.push_back(makeColourBtn(pane, 1, 4, &Amiigo::Settings::Colour::statusBar, "settings_theme_status_bar"));
+			addResetDefaultsBtn(pane, 2, 4, []() {
+				using namespace Amiigo::Settings::Colour;
+				statusBar = Defaults::statusBar;
+			});
+			addHubBackBtn(pane, 3, 4);
 		}
 
 		{
@@ -629,8 +653,14 @@ namespace Amiigo::UI {
 				{ &Amiigo::Settings::Colour::listHighlightA, "settings_theme_list_highlight_a" },
 				{ &Amiigo::Settings::Colour::listHighlightB, "settings_theme_list_highlight_b" },
 			};
-			for (int i = 0; i < 3; i++) themeSubPanes.back().buttons.push_back(makeColourBtn(pane, i + 1, 5, entries[i].c, entries[i].k));
-			addHubBackBtn(pane, 4, 5);
+			for (int i = 0; i < 3; i++) themeSubPanes.back().buttons.push_back(makeColourBtn(pane, i + 1, 6, entries[i].c, entries[i].k));
+			addResetDefaultsBtn(pane, 4, 6, []() {
+				using namespace Amiigo::Settings::Colour;
+				listNeutral    = Defaults::listNeutral;
+				listHighlightA = Defaults::listHighlightA;
+				listHighlightB = Defaults::listHighlightB;
+			});
+			addHubBackBtn(pane, 5, 6);
 		}
 
 		{
@@ -640,8 +670,14 @@ namespace Amiigo::UI {
 				{ &Amiigo::Settings::Colour::makerHighlightA, "settings_theme_store_highlight_a" },
 				{ &Amiigo::Settings::Colour::makerHighlightB, "settings_theme_store_highlight_b" },
 			};
-			for (int i = 0; i < 3; i++) themeSubPanes.back().buttons.push_back(makeColourBtn(pane, i + 1, 5, entries[i].c, entries[i].k));
-			addHubBackBtn(pane, 4, 5);
+			for (int i = 0; i < 3; i++) themeSubPanes.back().buttons.push_back(makeColourBtn(pane, i + 1, 6, entries[i].c, entries[i].k));
+			addResetDefaultsBtn(pane, 4, 6, []() {
+				using namespace Amiigo::Settings::Colour;
+				makerNeutral    = Defaults::makerNeutral;
+				makerHighlightA = Defaults::makerHighlightA;
+				makerHighlightB = Defaults::makerHighlightB;
+			});
+			addHubBackBtn(pane, 5, 6);
 		}
 
 		{
@@ -651,8 +687,14 @@ namespace Amiigo::UI {
 				{ &Amiigo::Settings::Colour::settingsHighlightA, "settings_theme_settings_highlight_a" },
 				{ &Amiigo::Settings::Colour::settingsHighlightB, "settings_theme_settings_highlight_b" },
 			};
-			for (int i = 0; i < 3; i++) themeSubPanes.back().buttons.push_back(makeColourBtn(pane, i + 1, 5, entries[i].c, entries[i].k));
-			addHubBackBtn(pane, 4, 5);
+			for (int i = 0; i < 3; i++) themeSubPanes.back().buttons.push_back(makeColourBtn(pane, i + 1, 6, entries[i].c, entries[i].k));
+			addResetDefaultsBtn(pane, 4, 6, []() {
+				using namespace Amiigo::Settings::Colour;
+				settingsNeutral    = Defaults::settingsNeutral;
+				settingsHighlightA = Defaults::settingsHighlightA;
+				settingsHighlightB = Defaults::settingsHighlightB;
+			});
+			addHubBackBtn(pane, 5, 6);
 		}
 	}
 

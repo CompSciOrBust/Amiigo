@@ -4,9 +4,9 @@
 #include <cmath>
 
 namespace Amiigo::Elements {
-    ColourPickerDialog::ColourPickerDialog(int x, int y, colour* target, const char32_t* colourName, std::function<void()> onChange)
+    ColourPickerDialog::ColourPickerDialog(int x, int y, colour* target, const char32_t* colourName, std::function<void()> onChange, std::function<void()> onClose)
         : Arriba::Primitives::Quad(x, y, DIALOG_W, DIALOG_H, Arriba::Graphics::Pivot::topLeft),
-          target(target), onChange(onChange) {
+          target(target), onChange(onChange), onClose(onClose) {
         returnFocusTarget = Arriba::highlightedObject;
         setName("ColourPickerDialog");
         setColour({0.08f, 0.08f, 0.08f, 0.97f});
@@ -62,6 +62,7 @@ namespace Amiigo::Elements {
         Arriba::activeLayer--;
         Arriba::UIObject* parent = returnFocusTarget ? returnFocusTarget->getParent() : nullptr;
         Arriba::highlightedObject = parent ? parent : returnFocusTarget;
+        if (onClose) onClose();
         destroy();
     }
 

@@ -46,6 +46,9 @@ namespace Amiigo::Elements {
         if (isHighlighted && Arriba::activeLayer == layer) {
             if (Arriba::Input::buttonDown(Arriba::Input::DPadLeft))  applyValue(currentValue - 0.01f);
             if (Arriba::Input::buttonDown(Arriba::Input::DPadRight)) applyValue(currentValue + 0.01f);
+
+            float stickX = Arriba::Input::AnalogStickLeft.xPos + Arriba::Input::AnalogStickRight.xPos;
+            if (std::abs(stickX) > 0.1f) applyValue(currentValue + stickX * (float)Arriba::deltaTime);
         }
 
         float touchX = Arriba::Input::touch.pos.x;
