@@ -8,6 +8,7 @@ namespace Amiigo::Elements {
     class ProgressDialog : public Arriba::Primitives::Quad {
         std::shared_ptr<std::atomic<int>> progress;
         int total;
+        Arriba::UIObject* returnFocus;
         Arriba::Primitives::Quad* progressBar;
         Arriba::Primitives::Text* progressText;
         Arriba::Elements::Button* doneBtn;
@@ -20,7 +21,7 @@ namespace Amiigo::Elements {
         static const int DIALOG_W = 700;
         static const int DIALOG_H = 265;
 
-        ProgressDialog(int x, int y, const char32_t* title, std::shared_ptr<std::atomic<int>> progress, int total);
+        ProgressDialog(int x, int y, const char32_t* title, std::shared_ptr<std::atomic<int>> progress, int total, Arriba::UIObject* returnFocusOverride = nullptr);
         void onFrame() override;
     };
 }  // namespace Amiigo::Elements

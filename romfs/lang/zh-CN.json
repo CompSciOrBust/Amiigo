@@ -68,6 +68,7 @@
     "context_new_folder_keyboard_guide": "输入文件夹名称",
     "context_new_folder_keyboard_default": "新建文件夹",
     "context_delete": "删除",
+    "context_create_all": "全部创建",
 
     "error_generic": "错误",
     "error_unknown_category_mode": "错误，未知的分类模式",

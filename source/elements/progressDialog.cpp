@@ -4,9 +4,9 @@
 #include <cstdio>
 
 namespace Amiigo::Elements {
-    ProgressDialog::ProgressDialog(int x, int y, const char32_t* title, std::shared_ptr<std::atomic<int>> progress, int total)
+    ProgressDialog::ProgressDialog(int x, int y, const char32_t* title, std::shared_ptr<std::atomic<int>> progress, int total, Arriba::UIObject* returnFocusOverride)
         : Arriba::Primitives::Quad(x, y, DIALOG_W, DIALOG_H, Arriba::Graphics::Pivot::topLeft),
-          progress(progress), total(total) {
+          progress(progress), total(total), returnFocus(returnFocusOverride ? returnFocusOverride : Arriba::highlightedObject) {
         setName("ProgressDialog");
         setColour({0.08f, 0.08f, 0.08f, 0.97f});
         renderer->thisShader.updateFragments("romfs:/VertexDefault.glsl", "romfs:/dialogFragment.glsl");
@@ -45,7 +45,7 @@ namespace Amiigo::Elements {
 
     void ProgressDialog::closeDialog() {
         Arriba::activeLayer--;
-        Arriba::highlightedObject = Arriba::findObjectByName("GenerateAllAmiiboButton");
+        Arriba::highlightedObject = returnFocus;
         destroy();
     }
 

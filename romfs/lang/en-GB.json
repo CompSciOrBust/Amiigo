@@ -61,6 +61,7 @@
     "context_new_folder_keyboard_guide": "Enter folder name",
     "context_new_folder_keyboard_default": "New folder",
     "context_delete": "Delete",
+    "context_create_all": "Create All",
 
     "error_generic": "Error",
     "error_unknown_category_mode": "Error, unknown category mode",

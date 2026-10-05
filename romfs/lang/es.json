@@ -68,6 +68,7 @@
     "context_new_folder_keyboard_guide": "Nombre de la Carpeta",
     "context_new_folder_keyboard_default": "Nueva Carpeta",
     "context_delete": "Borrar",
+    "context_create_all": "Crear Todo",
 
     "error_generic": "Error",
     "error_unknown_category_mode": "Error, categoría desconocida",

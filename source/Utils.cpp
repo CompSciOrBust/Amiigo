@@ -231,7 +231,7 @@ void saveAmiiboImage(const std::string& pathBase, const AmiiboCreatorData& amiib
     stbi_image_free(input);
 }
 
-void createVirtualAmiibo(const AmiiboCreatorData& amiibo) {
+std::string createVirtualAmiibo(const AmiiboCreatorData& amiibo, bool enqueueImage) {
     std::string pathBase = "sdmc:/emuiibo/amiibo/";
     switch (Amiigo::Settings::categoryMode) {
         case Amiigo::Settings::saveByGameName:
@@ -275,7 +275,8 @@ void createVirtualAmiibo(const AmiiboCreatorData& amiibo) {
         amiiboJson["use_random_uuid"] = true;
     writeJsonFile(pathBase + "/amiibo.json", amiiboJson);
 
-    if (Amiigo::Settings::saveAmiiboImages) workerQueue.enqueue(std::bind(saveAmiiboImage, pathBase, amiibo));
+    if (Amiigo::Settings::saveAmiiboImages && enqueueImage) workerQueue.enqueue(std::bind(saveAmiiboImage, pathBase, amiibo));
+    return pathBase;
 }
 
 static std::vector<char> extractSingleFileZip(const char* zipPath) {

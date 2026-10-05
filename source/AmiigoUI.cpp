@@ -58,12 +58,15 @@ namespace {
             (settingsW - Amiigo::Elements::ProgressDialog::DIALOG_W) / 2,
             Amiigo::UI::statusHeight + (Arriba::Graphics::windowHeight - Amiigo::UI::statusHeight - Amiigo::Elements::ProgressDialog::DIALOG_H) / 2,
             Amiigo::Lang::get("settings_generate_all_progress").c_str(),
-            progress, total
+            progress, total,
+            Arriba::findObjectByName("GenerateAllAmiiboButton")
         );
 
-        workerQueue.enqueue([amiibos = std::move(allAmiibos), progress]() {
+        bool downloadImages = Amiigo::Settings::saveAmiiboImages;
+        workerQueue.enqueue([amiibos = std::move(allAmiibos), progress, downloadImages]() {
             for (const auto& amiibo : amiibos) {
-                createVirtualAmiibo(amiibo);
+                std::string pathBase = createVirtualAmiibo(amiibo, false);
+                if (downloadImages) saveAmiiboImage(pathBase, amiibo);
                 progress->fetch_add(1, std::memory_order_relaxed);
             }
             MainThread::dispatch([]() {
@@ -250,6 +253,7 @@ namespace Amiigo::UI {
 		seriesList = getListOfSeries();
 	    Arriba::Elements::InertialList* makerList = new Arriba::Elements::InertialList(0, statusHeight, Arriba::Graphics::windowWidth - switcherWidth - 1, Arriba::Graphics::windowHeight - statusHeight, seriesList);
 		makerList->registerCallback(makerInput);
+		makerList->registerAltCallback(makerContextMenuSpawner);
 		makerList->setName("MakerList");
 		makerList->setTag("List");
 		makerList->enabled = false;
@@ -973,6 +977,10 @@ namespace Amiigo::UI {
 
 	void selectorContextMenuSpawner(int index, Arriba::Maths::vec2<float> pos) {
 		if (index != -1) new Amiigo::Elements::SelectorContextMenu(static_cast<int>(pos.x), static_cast<int>(pos.y), selectorAmiibos[index]);
+	}
+
+	void makerContextMenuSpawner(int index, Arriba::Maths::vec2<float> pos) {
+		if (index != -1 && !makerIsInCategory) new Amiigo::Elements::MakerContextMenu(static_cast<int>(pos.x), static_cast<int>(pos.y), seriesList[index]);
 	}
 
 	void updateStatus(const char32_t* text, StatusLevel level) {
