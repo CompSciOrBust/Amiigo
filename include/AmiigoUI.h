@@ -27,5 +27,6 @@ namespace Amiigo::UI {
     void selectorContextMenuSpawner(int index, Arriba::Maths::vec2<float> pos);
     enum class StatusLevel { Info, Error, Silent };
     void updateStatus(const char32_t* text, StatusLevel level = StatusLevel::Info);
+    const char32_t* getCategoryModeLabel();
     const std::string& getSelectorPath();
 }  // namespace Amiigo::UI

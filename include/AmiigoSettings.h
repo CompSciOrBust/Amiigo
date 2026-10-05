@@ -12,6 +12,7 @@ namespace Amiigo::Settings {
     inline bool saveAmiiboImages = true;
     void loadSettings();
     void saveSettings();
+    void saveTheme();
 
     enum categoryModes  {
         saveToRoot,

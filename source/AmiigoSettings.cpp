@@ -44,6 +44,27 @@ namespace Amiigo::Settings {
         }
     }
 
+    void saveTheme() {
+        JsonDoc themeJson;
+        auto put = [&](const char* prefix, const colour& c) {
+            themeJson[std::string(prefix) + "_R"] = c.r;
+            themeJson[std::string(prefix) + "_G"] = c.g;
+            themeJson[std::string(prefix) + "_B"] = c.b;
+            themeJson[std::string(prefix) + "_A"] = c.a;
+        };
+        put("StatusBar_Neutral",       Colour::statusBar);
+        put("SelectorList_Neutral",    Colour::listNeutral);
+        put("SelectorList_HighlightA", Colour::listHighlightA);
+        put("SelectorList_HighlightB", Colour::listHighlightB);
+        put("AmiigoStore_Neutral",     Colour::makerNeutral);
+        put("AmiigoStore_HighlightA",  Colour::makerHighlightA);
+        put("AmiigoStore_HighlightB",  Colour::makerHighlightB);
+        put("Settings_Neutral",        Colour::settingsNeutral);
+        put("Settings_HighlightA",     Colour::settingsHighlightA);
+        put("Settings_HighlightB",     Colour::settingsHighlightB);
+        writeJsonFile("sdmc:/config/amiigo/theme.json", themeJson);
+    }
+
     void saveSettings() {
         JsonDoc settingsJson;
         settingsJson["settingsVersion"] = 1;

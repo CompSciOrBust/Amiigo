@@ -24,6 +24,22 @@ namespace {
     bool makerIsInCategory = false;
     std::vector<AmiiboEntry> selectorAmiibos;
     std::string selectorPath = "sdmc:/emuiibo/amiibo";
+    enum class SettingsView { TopLevel, AmiiboSettings, Updates, ThemeHub, ThemeStatusBar, ThemeList, ThemeStore, ThemeSection };
+    SettingsView settingsView = SettingsView::TopLevel;
+    bool settingsUpdateAvailable = false;
+
+    struct ThemeSwatch { colour* colourPtr; Arriba::Primitives::Quad* quad; };
+    std::vector<ThemeSwatch> themeSwatches;
+
+    std::vector<Arriba::Primitives::Quad*> settingsPaneRegistry;
+
+    struct ThemeSubPane {
+        SettingsView view;
+        SettingsView parentView;
+        const char* paneName;
+        std::vector<Arriba::UIObject*> buttons;
+    };
+    std::vector<ThemeSubPane> themeSubPanes;
 }
 
 namespace Amiigo::UI {
@@ -47,12 +63,12 @@ namespace Amiigo::UI {
 		initSceneSwitcher();
 		initSelector();
 		initMaker();
-		initSettings();
-		Arriba::highlightedObject = Arriba::findObjectByName("SelectorList");
 		if (checkForUpdates()) {
 			Arriba::findObjectByName<Arriba::Elements::Button>("SettingsButton")->setText(Amiigo::Lang::get("nav_update").c_str());
-			Arriba::findObjectByName("UpdaterButton")->enabled = true;
+			settingsUpdateAvailable = true;
 		}
+		initSettings();
+		Arriba::highlightedObject = Arriba::findObjectByName("SelectorList");
 	}
 
 	void initSplash() {
@@ -193,125 +209,95 @@ namespace Amiigo::UI {
 	const char32_t* getCategoryModeLabel() {
 		switch (Amiigo::Settings::categoryMode) {
 			case Amiigo::Settings::categoryModes::saveToRoot:
-			return Amiigo::Lang::get("category_save_to_game_name").c_str();
+			return Amiigo::Lang::get("category_save_to_root").c_str();
 
 			case Amiigo::Settings::categoryModes::saveByGameName:
-			return Amiigo::Lang::get("category_save_to_amiibo_series").c_str();
+			return Amiigo::Lang::get("category_save_to_game_name").c_str();
 
 			case Amiigo::Settings::categoryModes::saveByAmiiboSeries:
-			return Amiigo::Lang::get("category_save_to_current_folder").c_str();
+			return Amiigo::Lang::get("category_save_to_amiibo_series").c_str();
 
 			case Amiigo::Settings::categoryModes::saveByCurrentFolder:
-			return Amiigo::Lang::get("category_save_to_root").c_str();
+			return Amiigo::Lang::get("category_save_to_current_folder").c_str();
 
 			default:
 			return Amiigo::Lang::get("error_generic").c_str();
 		}
 	}
 
+	void disableAllSettingsElements() {
+		for (auto* btn : Arriba::findObjectsByTag("SettingsButton")) btn->enabled = false;
+		for (auto* pane : settingsPaneRegistry) pane->enabled = false;
+		Arriba::findObjectByName("SettingsCredits")->enabled = false;
+	}
+
+	void resetSettingsToTopLevel() {
+		disableAllSettingsElements();
+		settingsView = SettingsView::TopLevel;
+		Arriba::findObjectByName("SettingsTopAmiiboButton")->enabled = true;
+		Arriba::findObjectByName("SettingsTopUpdateButton")->enabled = true;
+		Arriba::findObjectByName("SettingsTopThemeButton")->enabled = true;
+		Arriba::findObjectByName("SettingsCredits")->enabled = true;
+	}
+
+	void goToSettingsTopLevel() {
+		resetSettingsToTopLevel();
+		Arriba::highlightedObject = Arriba::findObjectByName("SettingsTopAmiiboButton");
+	}
+
+	void goToAmiiboSubmenu() {
+		disableAllSettingsElements();
+		settingsView = SettingsView::AmiiboSettings;
+		Arriba::findObjectByName("SettingsAmiiboPane")->enabled = true;
+		Arriba::findObjectByName("CategorySettingsButton")->enabled = true;
+		Arriba::findObjectByName("RandomUUIDCheckBox")->enabled = true;
+		Arriba::findObjectByName("SettingsAmiiboBackButton")->enabled = true;
+		Arriba::highlightedObject = Arriba::findObjectByName("SettingsAmiiboPane");
+	}
+
+	void goToUpdatesSubmenu() {
+		disableAllSettingsElements();
+		settingsView = SettingsView::Updates;
+		Arriba::findObjectByName("SettingsUpdatePane")->enabled = true;
+		Arriba::findObjectByName("CacheUpdateButton")->enabled = hasNetworkConnection();
+		Arriba::findObjectByName("UpdaterButton")->enabled = settingsUpdateAvailable;
+		Arriba::findObjectByName("ReinstallEmuiiboButton")->enabled = hasNetworkConnection();
+		Arriba::findObjectByName("SettingsUpdateBackButton")->enabled = true;
+		Arriba::highlightedObject = Arriba::findObjectByName("SettingsUpdatePane");
+	}
+
+	void activateThemePane(SettingsView view) {
+		disableAllSettingsElements();
+		settingsView = view;
+		for (auto& subPane : themeSubPanes) {
+			if (subPane.view != view) continue;
+			Arriba::findObjectByName(subPane.paneName)->enabled = true;
+			for (auto* btn : subPane.buttons) btn->enabled = true;
+			for (auto& swatch : themeSwatches) swatch.quad->setColour(*swatch.colourPtr);
+			Arriba::highlightedObject = Arriba::findObjectByName(subPane.paneName);
+			return;
+		}
+	}
+
+	void goToThemeHub() { activateThemePane(SettingsView::ThemeHub); }
+
 	void initSettings() {
 		const int buttonHeight = 100;
-		const int buttonOffsets = 5;
+		const int topButtonWidth = 550;
+		const int subButtonWidth = 700;
+		settingsPaneRegistry.clear();
+		themeSubPanes.clear();
+		themeSwatches.clear();
 		Arriba::Primitives::Quad* settingsScene = new Arriba::Primitives::Quad(0, statusHeight, Arriba::Graphics::windowWidth - switcherWidth - 1, Arriba::Graphics::windowHeight - statusHeight, Arriba::Graphics::Pivot::topLeft);
 		settingsScene->setName("SettingsScene");
-		settingsScene->setTag("List"); // Not a list but pretending makes scene switching easier
+		settingsScene->setTag("List");
 		settingsScene->enabled = false;
 		settingsScene->setColour({0, 0, 0, 0});
-
-		Arriba::Elements::Button* categoryButton = new Arriba::Elements::Button();
-		categoryButton->setParent(settingsScene);
-		categoryButton->setDimensions(550, buttonHeight, Arriba::Graphics::Pivot::centre);
-		categoryButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 1/buttonOffsets, 0};
-		categoryButton->setText(getCategoryModeLabel());
-		categoryButton->setName("CategorySettingsButton");
-		categoryButton->setTag("SettingsButton");
-
-		categoryButton->registerCallback([](){
-			Amiigo::Settings::categoryMode = (Amiigo::Settings::categoryMode+1) % Amiigo::Settings::categoryModes::categoryCount;
-			Amiigo::Settings::saveSettings();
-			Arriba::findObjectByName<Arriba::Elements::Button>("CategorySettingsButton")->setText(getCategoryModeLabel());
-			switch (Amiigo::Settings::categoryMode) {
-				case Amiigo::Settings::categoryModes::saveToRoot:
-				updateStatus(Amiigo::Lang::get("status_category_root").c_str(), StatusLevel::Info);
-				break;
-
-				case Amiigo::Settings::categoryModes::saveByGameName:
-				updateStatus(Amiigo::Lang::get("status_category_game_name").c_str(), StatusLevel::Info);
-				break;
-
-				case Amiigo::Settings::categoryModes::saveByAmiiboSeries:
-				updateStatus(Amiigo::Lang::get("status_category_amiibo_series").c_str(), StatusLevel::Info);
-				break;
-
-				case Amiigo::Settings::categoryModes::saveByCurrentFolder:
-				updateStatus(Amiigo::Lang::get("status_category_current_folder").c_str(), StatusLevel::Info);
-				break;
-
-				default:
-				Arriba::findObjectByName<Arriba::Elements::Button>("CategorySettingsButton")->setText(Amiigo::Lang::get("error_generic").c_str());
-				updateStatus(Amiigo::Lang::get("error_unknown_category_mode").c_str(), StatusLevel::Error);
-				break;
-			}
-		});
-
-		Arriba::Elements::Button* randomUUIDButton = new Arriba::Elements::Button();
-		randomUUIDButton->setParent(settingsScene);
-		randomUUIDButton->setDimensions(550, buttonHeight, Arriba::Graphics::Pivot::centre);
-		randomUUIDButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 2/buttonOffsets, 0};
-		if (Amiigo::Settings::useRandomisedUUID) randomUUIDButton->setText(Amiigo::Lang::get("settings_disable_random_uuid").c_str());
-		else randomUUIDButton->setText(Amiigo::Lang::get("settings_enable_random_uuid").c_str());
-		randomUUIDButton->setName("ToggleRandomUUIDButton");
-		randomUUIDButton->setTag("SettingsButton");
-
-		randomUUIDButton->registerCallback([](){
-			Amiigo::Settings::useRandomisedUUID = !Amiigo::Settings::useRandomisedUUID;
-			Amiigo::Settings::saveSettings();
-			auto* uuidBtn = Arriba::findObjectByName<Arriba::Elements::Button>("ToggleRandomUUIDButton");
-			if (Amiigo::Settings::useRandomisedUUID) {
-				uuidBtn->setText(Amiigo::Lang::get("settings_disable_random_uuid").c_str());
-				updateStatus(Amiigo::Lang::get("status_uuid_random_enabled").c_str(), StatusLevel::Info);
-			} else {
-				uuidBtn->setText(Amiigo::Lang::get("settings_enable_random_uuid").c_str());
-				updateStatus(Amiigo::Lang::get("status_uuid_random_disabled").c_str(), StatusLevel::Info);
-			}
-		});
-
-		Arriba::Elements::Button* cacheUpdateButton = new Arriba::Elements::Button();
-		cacheUpdateButton->setParent(settingsScene);
-		cacheUpdateButton->setDimensions(550, buttonHeight, Arriba::Graphics::Pivot::centre);
-		cacheUpdateButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 3/buttonOffsets, 0};
-		cacheUpdateButton->setText(Amiigo::Lang::get("settings_update_api_cache").c_str());
-		cacheUpdateButton->setName("CacheUpdateButton");
-		cacheUpdateButton->setTag("SettingsButton");
-		cacheUpdateButton->enabled = hasNetworkConnection();
-
-		cacheUpdateButton->registerCallback([]() {
-			remove("sdmc:/config/amiigo/API.json");
-			initSplash();
-		});
-
-		Arriba::Elements::Button* updaterButton = new Arriba::Elements::Button();
-		updaterButton->setParent(settingsScene);
-		updaterButton->setDimensions(550, buttonHeight, Arriba::Graphics::Pivot::centre);
-		updaterButton->transform.position = {settingsScene->width / 2 + 165, settingsScene->height * 4/buttonOffsets, 0};
-		updaterButton->setText(Amiigo::Lang::get("settings_update_amiigo").c_str());
-		updaterButton->setName("UpdaterButton");
-		updaterButton->setTag("SettingsButton");
-		updaterButton->enabled = false;
-
-		updaterButton->registerCallback([](){
-			if (!hasNetworkConnection()) {
-				updateStatus(Amiigo::Lang::get("error_no_network").c_str(), StatusLevel::Error);
-			} else {
-				std::ofstream fileStream("sdmc:/config/amiigo/update.flag");
-				fileStream.close();
-				initSplash();
-			}
-		});
 
 		Arriba::Primitives::Quad* creditsQuad = new Arriba::Primitives::Quad(0, 0, 330, Arriba::Graphics::windowHeight - statusHeight, Arriba::Graphics::Pivot::topLeft);
 		creditsQuad->setParent(settingsScene);
 		creditsQuad->setColour({0, 0, 0, 0.9});
+		creditsQuad->setName("SettingsCredits");
 		int yOffset = 0;
 
 		char emuVer[12];
@@ -322,6 +308,7 @@ namespace Amiigo::UI {
 		creditsTitleText->setColour({0, 0.7, 1, 1});
 		creditsTitleText->setParent(creditsQuad);
 		creditsTitleText->transform.position = {creditsQuad->width/2, yOffset += creditsTitleText->height + 30, 0};
+		
 		struct Credit { std::u32string title; std::u32string name; };
 		const std::u32string emuiiboTitle = U"Emuiibo " + Arriba::Text::ASCIIToUnicode(emuVer);
 		const Credit credits[] = {
@@ -331,6 +318,7 @@ namespace Amiigo::UI {
 			{U"The Pizza Guy", U"Za"},
 			{U"Amiibo API",  U"N3evin"},
 		};
+
 		for (const auto& credit : credits) {
 			Arriba::Primitives::Text* titleTextObject = new Arriba::Primitives::Text(credit.title.c_str(), 38);
 			titleTextObject->setParent(creditsQuad);
@@ -340,6 +328,317 @@ namespace Amiigo::UI {
 			nameTextObject->transform.position = {creditsQuad->width/2, yOffset += nameTextObject->height + 10, 0};
 			titleTextObject->setColour({0, 0.7, 1, 1});
 			nameTextObject->setColour({0, 0.7, 1, 1});
+		}
+
+		int topCenterX = settingsScene->width / 2 + 165;
+
+		Arriba::Elements::Button* topAmiiboButton = new Arriba::Elements::Button();
+		topAmiiboButton->setParent(settingsScene);
+		topAmiiboButton->setDimensions(topButtonWidth, buttonHeight, Arriba::Graphics::Pivot::centre);
+		topAmiiboButton->transform.position = {topCenterX, settingsScene->height * 1/4, 0};
+		topAmiiboButton->setText(Amiigo::Lang::get("settings_amiibo_settings").c_str());
+		topAmiiboButton->setName("SettingsTopAmiiboButton");
+		topAmiiboButton->setTag("SettingsButton");
+		topAmiiboButton->registerCallback(goToAmiiboSubmenu);
+
+		Arriba::Elements::Button* topThemeButton = new Arriba::Elements::Button();
+		topThemeButton->setParent(settingsScene);
+		topThemeButton->setDimensions(topButtonWidth, buttonHeight, Arriba::Graphics::Pivot::centre);
+		topThemeButton->transform.position = {topCenterX, settingsScene->height * 2/4, 0};
+		topThemeButton->setText(Amiigo::Lang::get("settings_theme").c_str());
+		topThemeButton->setName("SettingsTopThemeButton");
+		topThemeButton->setTag("SettingsButton");
+		topThemeButton->registerCallback(goToThemeHub);
+
+		Arriba::Elements::Button* topUpdateButton = new Arriba::Elements::Button();
+		topUpdateButton->setParent(settingsScene);
+		topUpdateButton->setDimensions(topButtonWidth, buttonHeight, Arriba::Graphics::Pivot::centre);
+		topUpdateButton->transform.position = {topCenterX, settingsScene->height * 3/4, 0};
+		topUpdateButton->setText(Amiigo::Lang::get("settings_updates").c_str());
+		topUpdateButton->setName("SettingsTopUpdateButton");
+		topUpdateButton->setTag("SettingsButton");
+		topUpdateButton->registerCallback(goToUpdatesSubmenu);
+
+		Arriba::Primitives::Quad* amiiboPane = new Arriba::Primitives::Quad(0, 0, settingsScene->width, settingsScene->height, Arriba::Graphics::Pivot::topLeft);
+		amiiboPane->setParent(settingsScene);
+		amiiboPane->setColour({0, 0, 0, 0.7});
+		amiiboPane->setName("SettingsAmiiboPane");
+		amiiboPane->enabled = false;
+		settingsPaneRegistry.push_back(amiiboPane);
+
+		Arriba::Elements::Button* categoryButton = new Arriba::Elements::Button();
+		categoryButton->setParent(amiiboPane);
+		categoryButton->setDimensions(subButtonWidth, buttonHeight, Arriba::Graphics::Pivot::centre);
+		categoryButton->transform.position = {amiiboPane->width / 2, amiiboPane->height * 1/4, 0};
+		categoryButton->setText(getCategoryModeLabel());
+		categoryButton->setName("CategorySettingsButton");
+		categoryButton->setTag("SettingsButton");
+		categoryButton->enabled = false;
+		categoryButton->registerCallback([](){
+			using Option = Amiigo::Elements::DropdownMenu::Option;
+			const struct { unsigned char mode; const char* labelKey; const char* statusKey; } modes[] = {
+				{ Amiigo::Settings::categoryModes::saveToRoot,         "category_save_to_root",         "status_category_root" },
+				{ Amiigo::Settings::categoryModes::saveByGameName,      "category_save_to_game_name",      "status_category_game_name" },
+				{ Amiigo::Settings::categoryModes::saveByAmiiboSeries,  "category_save_to_amiibo_series",  "status_category_amiibo_series" },
+				{ Amiigo::Settings::categoryModes::saveByCurrentFolder, "category_save_to_current_folder", "status_category_current_folder" },
+			};
+			std::vector<Option> opts;
+			for (auto& m : modes) {
+				opts.push_back({ Amiigo::Lang::get(m.labelKey), [mode = m.mode, statusKey = m.statusKey](){
+					Amiigo::Settings::categoryMode = mode;
+					Amiigo::Settings::saveSettings();
+					Arriba::findObjectByName<Arriba::Elements::Button>("CategorySettingsButton")->setText(getCategoryModeLabel());
+					updateStatus(Amiigo::Lang::get(statusKey).c_str(), StatusLevel::Info);
+				}});
+			}
+			auto* btn = Arriba::findObjectByName<Arriba::Primitives::Quad>("CategorySettingsButton");
+			auto* scene = Arriba::findObjectByName("SettingsScene");
+			int dropX = (int)(scene->transform.position.x + btn->transform.position.x) - btn->width / 2;
+			int dropY = (int)(scene->transform.position.y + btn->transform.position.y) + btn->height / 2;
+			new Amiigo::Elements::DropdownMenu(dropX, dropY, btn->width, opts, Amiigo::Settings::categoryMode);
+		});
+
+		Amiigo::Elements::CheckBox* randomUUIDCheckBox = new Amiigo::Elements::CheckBox(Amiigo::Settings::useRandomisedUUID, Amiigo::Lang::get("settings_enable_random_uuid").c_str());
+		randomUUIDCheckBox->setParent(amiiboPane);
+		randomUUIDCheckBox->transform.position = {(amiiboPane->width - subButtonWidth) / 2, amiiboPane->height * 2/4 - buttonHeight / 2, 0};
+		randomUUIDCheckBox->setName("RandomUUIDCheckBox");
+		randomUUIDCheckBox->setTag("SettingsButton");
+		randomUUIDCheckBox->enabled = false;
+		randomUUIDCheckBox->registerCallback([](bool checked){
+			Amiigo::Settings::useRandomisedUUID = checked;
+			Amiigo::Settings::saveSettings();
+			if (checked) updateStatus(Amiigo::Lang::get("status_uuid_random_enabled").c_str(), StatusLevel::Info);
+			else updateStatus(Amiigo::Lang::get("status_uuid_random_disabled").c_str(), StatusLevel::Info);
+		});
+
+		Arriba::Elements::Button* amiiboBackButton = new Arriba::Elements::Button();
+		amiiboBackButton->setParent(amiiboPane);
+		amiiboBackButton->setDimensions(subButtonWidth, buttonHeight, Arriba::Graphics::Pivot::centre);
+		amiiboBackButton->transform.position = {amiiboPane->width / 2, amiiboPane->height * 3/4, 0};
+		amiiboBackButton->setText(Amiigo::Lang::get("settings_back").c_str());
+		amiiboBackButton->setName("SettingsAmiiboBackButton");
+		amiiboBackButton->setTag("SettingsButton");
+		amiiboBackButton->enabled = false;
+		amiiboBackButton->registerCallback(goToSettingsTopLevel);
+
+		Arriba::Primitives::Quad* updatePane = new Arriba::Primitives::Quad(0, 0, settingsScene->width, settingsScene->height, Arriba::Graphics::Pivot::topLeft);
+		updatePane->setParent(settingsScene);
+		updatePane->setColour({0, 0, 0, 0.7});
+		updatePane->setName("SettingsUpdatePane");
+		updatePane->enabled = false;
+		settingsPaneRegistry.push_back(updatePane);
+
+		Arriba::Elements::Button* cacheUpdateButton = new Arriba::Elements::Button();
+		cacheUpdateButton->setParent(updatePane);
+		cacheUpdateButton->setDimensions(subButtonWidth, buttonHeight, Arriba::Graphics::Pivot::centre);
+		cacheUpdateButton->transform.position = {updatePane->width / 2, updatePane->height * 1/5, 0};
+		cacheUpdateButton->setText(Amiigo::Lang::get("settings_update_api_cache").c_str());
+		cacheUpdateButton->setName("CacheUpdateButton");
+		cacheUpdateButton->setTag("SettingsButton");
+		cacheUpdateButton->enabled = false;
+		cacheUpdateButton->registerCallback([]() {
+			remove("sdmc:/config/amiigo/API.json");
+			initSplash();
+		});
+
+		Arriba::Elements::Button* updaterButton = new Arriba::Elements::Button();
+		updaterButton->setParent(updatePane);
+		updaterButton->setDimensions(subButtonWidth, buttonHeight, Arriba::Graphics::Pivot::centre);
+		updaterButton->transform.position = {updatePane->width / 2, updatePane->height * 2/5, 0};
+		updaterButton->setText(Amiigo::Lang::get("settings_update_amiigo").c_str());
+		updaterButton->setName("UpdaterButton");
+		updaterButton->setTag("SettingsButton");
+		updaterButton->enabled = false;
+		updaterButton->registerCallback([](){
+			if (!hasNetworkConnection()) {
+				updateStatus(Amiigo::Lang::get("error_no_network").c_str(), StatusLevel::Error);
+			} else {
+				std::ofstream fileStream("sdmc:/config/amiigo/update.flag");
+				fileStream.close();
+				initSplash();
+			}
+		});
+
+		Arriba::Elements::Button* reinstallEmuiiboButton = new Arriba::Elements::Button();
+		reinstallEmuiiboButton->setParent(updatePane);
+		reinstallEmuiiboButton->setDimensions(subButtonWidth, buttonHeight, Arriba::Graphics::Pivot::centre);
+		reinstallEmuiiboButton->transform.position = {updatePane->width / 2, updatePane->height * 3/5, 0};
+		reinstallEmuiiboButton->setText(Amiigo::Lang::get("settings_reinstall_emuiibo").c_str());
+		reinstallEmuiiboButton->setName("ReinstallEmuiiboButton");
+		reinstallEmuiiboButton->setTag("SettingsButton");
+		reinstallEmuiiboButton->enabled = false;
+		reinstallEmuiiboButton->registerCallback([](){
+			if (!hasNetworkConnection()) {
+				updateStatus(Amiigo::Lang::get("error_no_network").c_str(), StatusLevel::Error);
+			} else {
+				pmshellInitialize();
+				pmshellTerminateProgram(0x0100000000000352);
+				pmshellExit();
+				remove("sdmc:/atmosphere/contents/0100000000000352/exefs.nsp");
+				initSplash();
+			}
+		});
+
+		Arriba::Elements::Button* updateBackButton = new Arriba::Elements::Button();
+		updateBackButton->setParent(updatePane);
+		updateBackButton->setDimensions(subButtonWidth, buttonHeight, Arriba::Graphics::Pivot::centre);
+		updateBackButton->transform.position = {updatePane->width / 2, updatePane->height * 4/5, 0};
+		updateBackButton->setText(Amiigo::Lang::get("settings_back").c_str());
+		updateBackButton->setName("SettingsUpdateBackButton");
+		updateBackButton->setTag("SettingsButton");
+		updateBackButton->enabled = false;
+		updateBackButton->registerCallback(goToSettingsTopLevel);
+
+		{
+			struct Entry { const char* name; bool show; };
+			const Entry entries[] = {
+				{ "CacheUpdateButton",        hasNetworkConnection()  },
+				{ "UpdaterButton",            settingsUpdateAvailable },
+				{ "ReinstallEmuiiboButton",   hasNetworkConnection()  },
+				{ "SettingsUpdateBackButton", true                    },
+			};
+			std::vector<Arriba::UIObject*> visible;
+			for (const auto& entry : entries) {
+				if (entry.show) visible.push_back(Arriba::findObjectByName(entry.name));
+			}
+			const float cx = updatePane->width / 2.0f;
+			const float spacing = (float)updatePane->height / (float)(visible.size() + 1);
+			for (size_t i = 0; i < visible.size(); i++) {
+				visible[i]->transform.position = {cx, (float)(i + 1) * spacing, 0};
+			}
+		}
+
+		Arriba::Primitives::Quad* themePane = new Arriba::Primitives::Quad(0, 0, settingsScene->width, settingsScene->height, Arriba::Graphics::Pivot::topLeft);
+		themePane->setParent(settingsScene);
+		themePane->setColour({0, 0, 0, 0.7f});
+		themePane->setName("SettingsThemePane");
+		themePane->enabled = false;
+		settingsPaneRegistry.push_back(themePane);
+		themeSubPanes.push_back({SettingsView::ThemeHub, SettingsView::TopLevel, "SettingsThemePane", {}});
+
+		{
+			const struct { const char* nameKey; SettingsView target; } hubEntries[] = {
+				{ "settings_theme_status_bar",       SettingsView::ThemeStatusBar },
+				{ "settings_theme_section_list",     SettingsView::ThemeList      },
+				{ "settings_theme_section_store",    SettingsView::ThemeStore     },
+				{ "settings_theme_section_settings", SettingsView::ThemeSection   },
+			};
+			const int numHub = sizeof(hubEntries) / sizeof(hubEntries[0]);
+			const int hubSlots = numHub + 2;
+			for (int i = 0; i < numHub; i++) {
+				Arriba::Elements::Button* btn = new Arriba::Elements::Button();
+				btn->setParent(themePane);
+				btn->setDimensions(subButtonWidth, buttonHeight, Arriba::Graphics::Pivot::centre);
+				btn->transform.position = {(float)themePane->width / 2, (float)themePane->height * (i + 1) / hubSlots, 0};
+				btn->setText(Amiigo::Lang::get(hubEntries[i].nameKey).c_str());
+				btn->setTag("SettingsButton");
+				btn->enabled = false;
+				SettingsView target = hubEntries[i].target;
+				btn->registerCallback([target](){ activateThemePane(target); });
+				themeSubPanes.back().buttons.push_back(btn);
+			}
+			Arriba::Elements::Button* hubBackBtn = new Arriba::Elements::Button();
+			hubBackBtn->setParent(themePane);
+			hubBackBtn->setDimensions(subButtonWidth, buttonHeight, Arriba::Graphics::Pivot::centre);
+			hubBackBtn->transform.position = {(float)themePane->width / 2, (float)themePane->height * (numHub + 1) / hubSlots, 0};
+			hubBackBtn->setText(Amiigo::Lang::get("settings_back").c_str());
+			hubBackBtn->setTag("SettingsButton");
+			hubBackBtn->enabled = false;
+			hubBackBtn->registerCallback(goToSettingsTopLevel);
+			themeSubPanes.back().buttons.push_back(hubBackBtn);
+		}
+
+		auto makeColourBtn = [&](Arriba::Primitives::Quad* parentPane, int slot, int slots, colour* targetColour, const char* nameKey) -> Arriba::Elements::Button* {
+			Arriba::Elements::Button* btn = new Arriba::Elements::Button();
+			btn->setParent(parentPane);
+			btn->setDimensions(subButtonWidth, buttonHeight, Arriba::Graphics::Pivot::centre);
+			btn->transform.position = {(float)parentPane->width / 2, (float)parentPane->height * slot / slots, 0};
+			btn->setText(Amiigo::Lang::get(nameKey).c_str());
+			btn->setTag("SettingsButton");
+			btn->enabled = false;
+			Arriba::Primitives::Quad* swatch = new Arriba::Primitives::Quad(0, 0, 36, 36, Arriba::Graphics::Pivot::centre);
+			swatch->setParent(btn);
+			swatch->transform.position = {-(float)(subButtonWidth / 2) + 28, 0, 0};
+			swatch->setColour(*targetColour);
+			themeSwatches.push_back({targetColour, swatch});
+			const char32_t* colourName = Amiigo::Lang::get(nameKey).c_str();
+			btn->registerCallback([targetColour, colourName]() {
+				const int dialogW = Amiigo::Elements::ColourPickerDialog::DIALOG_W;
+				const int dialogH = Amiigo::Elements::ColourPickerDialog::DIALOG_H;
+				const int settingsW = Arriba::Graphics::windowWidth - switcherWidth - 1;
+				const int dialogX = (settingsW - dialogW) / 2;
+				const int dialogY = statusHeight + (Arriba::Graphics::windowHeight - statusHeight - dialogH) / 2;
+				new Amiigo::Elements::ColourPickerDialog(dialogX, dialogY, targetColour, colourName, []() {
+					for (auto& s : themeSwatches) s.quad->setColour(*s.colourPtr);
+					Arriba::Colour::neutral    = Amiigo::Settings::Colour::settingsNeutral;
+					Arriba::Colour::highlightA = Amiigo::Settings::Colour::settingsHighlightA;
+					Arriba::Colour::highlightB = Amiigo::Settings::Colour::settingsHighlightB;
+					Amiigo::Settings::saveTheme();
+				});
+			});
+			return btn;
+		};
+
+		auto makeThemeSubPane = [&](SettingsView view, const char* paneName) -> Arriba::Primitives::Quad* {
+			Arriba::Primitives::Quad* pane = new Arriba::Primitives::Quad(0, 0, settingsScene->width, settingsScene->height, Arriba::Graphics::Pivot::topLeft);
+			pane->setParent(settingsScene);
+			pane->setColour({0, 0, 0, 0.7f});
+			pane->setName(paneName);
+			pane->enabled = false;
+			settingsPaneRegistry.push_back(pane);
+			themeSubPanes.push_back({view, SettingsView::ThemeHub, paneName, {}});
+			return pane;
+		};
+
+		auto addHubBackBtn = [&](Arriba::Primitives::Quad* pane, int slot, int slots) {
+			Arriba::Elements::Button* btn = new Arriba::Elements::Button();
+			btn->setParent(pane);
+			btn->setDimensions(subButtonWidth, buttonHeight, Arriba::Graphics::Pivot::centre);
+			btn->transform.position = {(float)pane->width / 2, (float)pane->height * slot / slots, 0};
+			btn->setText(Amiigo::Lang::get("settings_back").c_str());
+			btn->setTag("SettingsButton");
+			btn->enabled = false;
+			btn->registerCallback([]() { activateThemePane(SettingsView::ThemeHub); });
+			themeSubPanes.back().buttons.push_back(btn);
+		};
+
+		{
+			auto* pane = makeThemeSubPane(SettingsView::ThemeStatusBar, "ThemeStatusBarPane");
+			themeSubPanes.back().buttons.push_back(makeColourBtn(pane, 1, 3, &Amiigo::Settings::Colour::statusBar, "settings_theme_status_bar"));
+			addHubBackBtn(pane, 2, 3);
+		}
+
+		{
+			auto* pane = makeThemeSubPane(SettingsView::ThemeList, "ThemeListPane");
+			const struct { colour* c; const char* k; } entries[] = {
+				{ &Amiigo::Settings::Colour::listNeutral,    "settings_theme_list_neutral"     },
+				{ &Amiigo::Settings::Colour::listHighlightA, "settings_theme_list_highlight_a" },
+				{ &Amiigo::Settings::Colour::listHighlightB, "settings_theme_list_highlight_b" },
+			};
+			for (int i = 0; i < 3; i++) themeSubPanes.back().buttons.push_back(makeColourBtn(pane, i + 1, 5, entries[i].c, entries[i].k));
+			addHubBackBtn(pane, 4, 5);
+		}
+
+		{
+			auto* pane = makeThemeSubPane(SettingsView::ThemeStore, "ThemeStorePane");
+			const struct { colour* c; const char* k; } entries[] = {
+				{ &Amiigo::Settings::Colour::makerNeutral,    "settings_theme_store_neutral"     },
+				{ &Amiigo::Settings::Colour::makerHighlightA, "settings_theme_store_highlight_a" },
+				{ &Amiigo::Settings::Colour::makerHighlightB, "settings_theme_store_highlight_b" },
+			};
+			for (int i = 0; i < 3; i++) themeSubPanes.back().buttons.push_back(makeColourBtn(pane, i + 1, 5, entries[i].c, entries[i].k));
+			addHubBackBtn(pane, 4, 5);
+		}
+
+		{
+			auto* pane = makeThemeSubPane(SettingsView::ThemeSection, "ThemeSectionPane");
+			const struct { colour* c; const char* k; } entries[] = {
+				{ &Amiigo::Settings::Colour::settingsNeutral,    "settings_theme_settings_neutral"     },
+				{ &Amiigo::Settings::Colour::settingsHighlightA, "settings_theme_settings_highlight_a" },
+				{ &Amiigo::Settings::Colour::settingsHighlightB, "settings_theme_settings_highlight_b" },
+			};
+			for (int i = 0; i < 3; i++) themeSubPanes.back().buttons.push_back(makeColourBtn(pane, i + 1, 5, entries[i].c, entries[i].k));
+			addHubBackBtn(pane, 4, 5);
 		}
 	}
 
@@ -376,12 +675,40 @@ namespace Amiigo::UI {
 	}
 
 	void handleSettingsInput() {
-		if (Arriba::highlightedObject == Arriba::findObjectByName("SettingsScene")) Arriba::highlightedObject = Arriba::findObjectByName("CategorySettingsButton");
-		if (Arriba::Input::buttonDown(Arriba::Input::DPadRight) && Arriba::highlightedObject->getTag() != "SwitcherButton") Arriba::highlightedObject = Arriba::findObjectByName("SelectorButton");
+		if (Arriba::highlightedObject == Arriba::findObjectByName("SettingsScene")) Arriba::highlightedObject = Arriba::findObjectByName("SettingsTopAmiiboButton");
+
+		if (Arriba::Input::buttonDown(Arriba::Input::DPadRight) && Arriba::highlightedObject->getTag() != "SwitcherButton") {
+			Arriba::highlightedObject = Arriba::findObjectByName("SelectorButton");
+			return;
+		}
+
+		if (Arriba::Input::buttonDown(Arriba::Input::BButtonSwitch) && settingsView != SettingsView::TopLevel) {
+			for (auto& subPane : themeSubPanes) {
+				if (subPane.view != settingsView) continue;
+				if (subPane.parentView == SettingsView::TopLevel) goToSettingsTopLevel();
+				else activateThemePane(subPane.parentView);
+				return;
+			}
+			goToSettingsTopLevel();
+			return;
+		}
+
+		for (auto* pane : settingsPaneRegistry) {
+			if (Arriba::highlightedObject != pane) continue;
+			for (auto* btn : Arriba::findObjectsByTag("SettingsButton")) {
+				if (btn->enabled) {
+					Arriba::highlightedObject = btn;
+					return;
+				}
+			}
+			return;
+		}
+
 		int direction = 0;
 		if (Arriba::Input::buttonDown(Arriba::Input::DPadUp)) direction -= 1;
 		if (Arriba::Input::buttonDown(Arriba::Input::DPadDown)) direction += 1;
 		if (direction == 0) return;
+
 		std::vector<Arriba::UIObject*> settingsButtons = Arriba::findObjectsByTag("SettingsButton");
 		int buttonCount = (int)settingsButtons.size();
 		for (size_t i = 0; i < settingsButtons.size(); i++) {
@@ -454,6 +781,7 @@ namespace Amiigo::UI {
 			updateStatus(Amiigo::Lang::get("nav_amiigo_store").c_str(), StatusLevel::Silent);
 		} else if (Arriba::highlightedObject == Arriba::findObjectByName("SettingsButton")) {
 			Arriba::findObjectByName("SettingsScene")->enabled = true;
+			resetSettingsToTopLevel();
 			Arriba::Colour::neutral = Amiigo::Settings::Colour::settingsNeutral;
 	    	Arriba::Colour::highlightA = Amiigo::Settings::Colour::settingsHighlightA;
 	    	Arriba::Colour::highlightB = Amiigo::Settings::Colour::settingsHighlightB;

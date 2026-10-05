@@ -128,11 +128,9 @@ namespace Amiigo::Elements {
         if (Arriba::Input::buttonDown(Arriba::Input::DPadDown) || Arriba::Input::buttonDown(Arriba::Input::DPadUp)) {
             for (unsigned int i = 0; i < buttonVector.size(); i++) {
                 if (Arriba::highlightedObject == buttonVector[i]) {
-                    if (Arriba::Input::buttonDown(Arriba::Input::DPadDown) && i != buttonVector.size()-1) {
-                        Arriba::highlightedObject = buttonVector[i+1];
-                        break;
-                    }
+                    if (Arriba::Input::buttonDown(Arriba::Input::DPadDown) && i != buttonVector.size()-1) Arriba::highlightedObject = buttonVector[i+1];
                     if (Arriba::Input::buttonDown(Arriba::Input::DPadUp) && i != 0) Arriba::highlightedObject = buttonVector[i-1];
+                    break;
                 }
             }
         }
