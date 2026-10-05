@@ -8,7 +8,6 @@ namespace Amiigo::Elements {
     class CheckBox : public Arriba::Primitives::Quad {
     private:
         Arriba::Primitives::Quad* checkQuad;
-        Arriba::Primitives::Quad* checkFill;
         Arriba::Primitives::Text* labelText;
         bool checkedState;
         std::vector<std::function<void(bool)>> callbacks;

@@ -8,7 +8,6 @@ namespace Amiigo::Elements {
     class ColourSlider : public Arriba::Primitives::Quad {
     private:
         Arriba::Primitives::Quad* track;
-        Arriba::Primitives::Quad* fill;
         Arriba::Primitives::Text* valueText;
         float currentValue;
         bool touching = false;

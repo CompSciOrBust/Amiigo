@@ -17,11 +17,9 @@ namespace Amiigo::Elements {
 
         track = new Arriba::Primitives::Quad(TRACK_X, (SLIDER_HEIGHT - TRACK_H) / 2, TRACK_W, TRACK_H, Arriba::Graphics::Pivot::topLeft);
         track->setParent(this);
-        track->setColour({0.2f, 0.2f, 0.2f, 1.0f});
-
-        fill = new Arriba::Primitives::Quad(0, 0, (int)(currentValue * TRACK_W), TRACK_H, Arriba::Graphics::Pivot::topLeft);
-        fill->setParent(track);
-        fill->setColour(fillColour);
+        track->setColour(fillColour);
+        track->renderer->thisShader.updateFragments("romfs:/VertexDefault.glsl", "romfs:/colourSliderFragment.glsl");
+        track->renderer->thisShader.setFloat1("progress", currentValue);
 
         char buf[8];
         snprintf(buf, sizeof(buf), "%.2f", currentValue);
@@ -33,7 +31,7 @@ namespace Amiigo::Elements {
 
     void ColourSlider::applyValue(float v) {
         currentValue = std::max(0.0f, std::min(1.0f, v));
-        fill->setDimensions((int)(currentValue * TRACK_W), TRACK_H, Arriba::Graphics::Pivot::topLeft);
+        track->renderer->thisShader.setFloat1("progress", currentValue);
         char buf[8];
         snprintf(buf, sizeof(buf), "%.2f", currentValue);
         valueText->setText(buf);
@@ -79,7 +77,7 @@ namespace Amiigo::Elements {
 
     void ColourSlider::setValue(float v) {
         currentValue = std::max(0.0f, std::min(1.0f, v));
-        fill->setDimensions((int)(currentValue * TRACK_W), TRACK_H, Arriba::Graphics::Pivot::topLeft);
+        track->renderer->thisShader.setFloat1("progress", currentValue);
         char buf[8];
         snprintf(buf, sizeof(buf), "%.2f", currentValue);
         valueText->setText(buf);
