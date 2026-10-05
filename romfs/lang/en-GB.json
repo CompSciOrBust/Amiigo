@@ -72,5 +72,13 @@
     "error_no_api_cache": "Error, no API cache!",
     "error_api_cache_corrupt": "Error, API cache corrupt!",
     "error_api_cache_corrupt_hint": "Try updating cache in settings!",
-    "error_no_network": "No network connection!"
+    "error_no_network": "No network connection!",
+
+    "settings_generate_all": "Generate All Amiibos",
+    "settings_generate_all_confirm": "Generate all Amiibos?",
+    "settings_generate_all_yes": "Yes",
+    "settings_generate_all_no": "No",
+    "settings_generate_all_progress": "Generating Amiibos...",
+    "settings_generate_all_done": "Done",
+    "status_generate_all_complete": "All Amiibos generated!"
 }

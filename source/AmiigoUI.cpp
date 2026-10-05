@@ -2,10 +2,11 @@
 #include <arriba.h>
 #include <utils.h>
 
+#include <atomic>
 #include <cmath>
 #include <cstdio>
-
 #include <fstream>
+#include <memory>
 #include <thread>
 
 #include <arribaElements.h>
@@ -19,6 +20,7 @@
 #include <AmiigoLang.h>
 
 namespace {
+
     std::vector<std::string> seriesList;
     std::vector<AmiiboCreatorData> creatorData;
     bool makerIsInCategory = false;
@@ -40,6 +42,46 @@ namespace {
         std::vector<Arriba::UIObject*> buttons;
     };
     std::vector<ThemeSubPane> themeSubPanes;
+
+    void onGenerateAllConfirmed() {
+        auto allAmiibos = getAllAmiibos();
+        int total = (int)allAmiibos.size();
+        if (total == 0) {
+			Amiigo::UI::updateStatus(Amiigo::Lang::get("error_no_api_cache").c_str(), Amiigo::UI::StatusLevel::Error);
+			return;
+		}
+
+        auto progress = std::make_shared<std::atomic<int>>(0);
+
+        const int settingsW = Arriba::Graphics::windowWidth - Amiigo::UI::switcherWidth - 1;
+        new Amiigo::Elements::ProgressDialog(
+            (settingsW - Amiigo::Elements::ProgressDialog::DIALOG_W) / 2,
+            Amiigo::UI::statusHeight + (Arriba::Graphics::windowHeight - Amiigo::UI::statusHeight - Amiigo::Elements::ProgressDialog::DIALOG_H) / 2,
+            Amiigo::Lang::get("settings_generate_all_progress").c_str(),
+            progress, total
+        );
+
+        workerQueue.enqueue([amiibos = std::move(allAmiibos), progress]() {
+            for (const auto& amiibo : amiibos) {
+                createVirtualAmiibo(amiibo);
+                progress->fetch_add(1, std::memory_order_relaxed);
+            }
+            MainThread::dispatch([]() {
+                Amiigo::UI::updateSelectorStrings();
+                Amiigo::UI::updateStatus(Amiigo::Lang::get("status_generate_all_complete").c_str(), Amiigo::UI::StatusLevel::Info);
+            });
+        });
+    }
+
+    void showGenerateAllConfirm() {
+        const int settingsW = Arriba::Graphics::windowWidth - Amiigo::UI::switcherWidth - 1;
+        new Amiigo::Elements::ConfirmDialog(
+            (settingsW - Amiigo::Elements::ConfirmDialog::DIALOG_W) / 2,
+            Amiigo::UI::statusHeight + (Arriba::Graphics::windowHeight - Amiigo::UI::statusHeight - Amiigo::Elements::ConfirmDialog::DIALOG_H) / 2,
+            Amiigo::Lang::get("settings_generate_all_confirm").c_str(),
+            onGenerateAllConfirmed
+        );
+    }
 }
 
 namespace Amiigo::UI {
@@ -117,21 +159,11 @@ namespace Amiigo::UI {
 		Arriba::activeLayer--;
 	}
 
-	void addButtonBorder(Arriba::Primitives::Quad* btn) {
-		const float hw = btn->width / 2.0f;
-		const float hh = btn->height / 2.0f;
-
-		auto make = [&](float x, float y, int w, int h) {
-			auto* q = new Arriba::Primitives::Quad(0, 0, w, h, Arriba::Graphics::Pivot::topLeft);
-			q->transform.position = {x, y, 0};
-			q->setColour({0, 0, 0, 1});
-			q->setParent(btn);
-		};
-
-		make(-hw,    -hh,     btn->width, 2);
-		make(-hw,    hh - 2,  btn->width, 2);
-		make(-hw,    -hh,     2,          btn->height);
-		make(hw - 2, -hh,     2,          btn->height);
+	void applySettingsQuadStyle(Arriba::Primitives::Quad* quad) {
+		quad->renderer->thisShader.updateFragments("romfs:/VertexDefault.glsl", "romfs:/dialogFragment.glsl");
+		quad->renderer->thisShader.setFloat1("aspectRatio", quad->width / (float)quad->height);
+		quad->renderer->thisShader.setFloat1("radius", 20.0f / quad->height);
+		quad->renderer->thisShader.setFloat1("outlineWidth", 2.0f / quad->height);
 	}
 
 	void initSceneSwitcher() {
@@ -269,6 +301,7 @@ namespace Amiigo::UI {
 		Arriba::findObjectByName("CategorySettingsButton")->enabled = true;
 		Arriba::findObjectByName("RandomUUIDCheckBox")->enabled = true;
 		Arriba::findObjectByName("SaveAmiiboImagesCheckBox")->enabled = true;
+		Arriba::findObjectByName("GenerateAllAmiiboButton")->enabled = true;
 		Arriba::findObjectByName("SettingsAmiiboBackButton")->enabled = true;
 		Arriba::highlightedObject = Arriba::findObjectByName("SettingsAmiiboPane");
 	}
@@ -358,7 +391,7 @@ namespace Amiigo::UI {
 		topAmiiboButton->setName("SettingsTopAmiiboButton");
 		topAmiiboButton->setTag("SettingsButton");
 		topAmiiboButton->registerCallback(goToAmiiboSubmenu);
-		addButtonBorder(topAmiiboButton);
+		applySettingsQuadStyle(topAmiiboButton);
 
 		Arriba::Elements::Button* topThemeButton = new Arriba::Elements::Button();
 		topThemeButton->setParent(settingsScene);
@@ -368,7 +401,7 @@ namespace Amiigo::UI {
 		topThemeButton->setName("SettingsTopThemeButton");
 		topThemeButton->setTag("SettingsButton");
 		topThemeButton->registerCallback(goToThemeHub);
-		addButtonBorder(topThemeButton);
+		applySettingsQuadStyle(topThemeButton);
 
 		Arriba::Elements::Button* topUpdateButton = new Arriba::Elements::Button();
 		topUpdateButton->setParent(settingsScene);
@@ -378,7 +411,7 @@ namespace Amiigo::UI {
 		topUpdateButton->setName("SettingsTopUpdateButton");
 		topUpdateButton->setTag("SettingsButton");
 		topUpdateButton->registerCallback(goToUpdatesSubmenu);
-		addButtonBorder(topUpdateButton);
+		applySettingsQuadStyle(topUpdateButton);
 
 		Arriba::Primitives::Quad* amiiboPane = new Arriba::Primitives::Quad(0, 0, settingsScene->width, settingsScene->height, Arriba::Graphics::Pivot::topLeft);
 		amiiboPane->setParent(settingsScene);
@@ -390,7 +423,7 @@ namespace Amiigo::UI {
 		Arriba::Elements::Button* categoryButton = new Arriba::Elements::Button();
 		categoryButton->setParent(amiiboPane);
 		categoryButton->setDimensions(subButtonWidth, buttonHeight, Arriba::Graphics::Pivot::centre);
-		categoryButton->transform.position = {amiiboPane->width / 2, amiiboPane->height * 1/5, 0};
+		categoryButton->transform.position = {amiiboPane->width / 2, amiiboPane->height * 1/6, 0};
 		categoryButton->setText(getCategoryModeLabel());
 		categoryButton->setName("CategorySettingsButton");
 		categoryButton->setTag("SettingsButton");
@@ -418,11 +451,11 @@ namespace Amiigo::UI {
 			int dropY = (int)(scene->transform.position.y + btn->transform.position.y) + btn->height / 2;
 			new Amiigo::Elements::DropdownMenu(dropX, dropY, btn->width, opts, Amiigo::Settings::categoryMode);
 		});
-		addButtonBorder(categoryButton);
+		applySettingsQuadStyle(categoryButton);
 
 		Amiigo::Elements::CheckBox* randomUUIDCheckBox = new Amiigo::Elements::CheckBox(Amiigo::Settings::useRandomisedUUID, Amiigo::Lang::get("settings_enable_random_uuid").c_str());
 		randomUUIDCheckBox->setParent(amiiboPane);
-		randomUUIDCheckBox->transform.position = {(amiiboPane->width - subButtonWidth) / 2, amiiboPane->height * 2/5 - buttonHeight / 2, 0};
+		randomUUIDCheckBox->transform.position = {(amiiboPane->width - subButtonWidth) / 2, amiiboPane->height * 2/6 - buttonHeight / 2, 0};
 		randomUUIDCheckBox->setName("RandomUUIDCheckBox");
 		randomUUIDCheckBox->setTag("SettingsButton");
 		randomUUIDCheckBox->enabled = false;
@@ -435,7 +468,7 @@ namespace Amiigo::UI {
 
 		Amiigo::Elements::CheckBox* saveImagesCheckBox = new Amiigo::Elements::CheckBox(Amiigo::Settings::saveAmiiboImages, Amiigo::Lang::get("settings_save_amiibo_images").c_str());
 		saveImagesCheckBox->setParent(amiiboPane);
-		saveImagesCheckBox->transform.position = {(amiiboPane->width - subButtonWidth) / 2, amiiboPane->height * 3/5 - buttonHeight / 2, 0};
+		saveImagesCheckBox->transform.position = {(amiiboPane->width - subButtonWidth) / 2, amiiboPane->height * 3/6 - buttonHeight / 2, 0};
 		saveImagesCheckBox->setName("SaveAmiiboImagesCheckBox");
 		saveImagesCheckBox->setTag("SettingsButton");
 		saveImagesCheckBox->enabled = false;
@@ -446,16 +479,27 @@ namespace Amiigo::UI {
 			else updateStatus(Amiigo::Lang::get("status_save_amiibo_images_disabled").c_str(), StatusLevel::Info);
 		});
 
+		Arriba::Elements::Button* generateAllButton = new Arriba::Elements::Button();
+		generateAllButton->setParent(amiiboPane);
+		generateAllButton->setDimensions(subButtonWidth, buttonHeight, Arriba::Graphics::Pivot::centre);
+		generateAllButton->transform.position = {amiiboPane->width / 2, amiiboPane->height * 4/6, 0};
+		generateAllButton->setText(Amiigo::Lang::get("settings_generate_all").c_str());
+		generateAllButton->setName("GenerateAllAmiiboButton");
+		generateAllButton->setTag("SettingsButton");
+		generateAllButton->enabled = false;
+		generateAllButton->registerCallback(showGenerateAllConfirm);
+		applySettingsQuadStyle(generateAllButton);
+
 		Arriba::Elements::Button* amiiboBackButton = new Arriba::Elements::Button();
 		amiiboBackButton->setParent(amiiboPane);
 		amiiboBackButton->setDimensions(subButtonWidth, buttonHeight, Arriba::Graphics::Pivot::centre);
-		amiiboBackButton->transform.position = {amiiboPane->width / 2, amiiboPane->height * 4/5, 0};
+		amiiboBackButton->transform.position = {amiiboPane->width / 2, amiiboPane->height * 5/6, 0};
 		amiiboBackButton->setText(Amiigo::Lang::get("settings_back").c_str());
 		amiiboBackButton->setName("SettingsAmiiboBackButton");
 		amiiboBackButton->setTag("SettingsButton");
 		amiiboBackButton->enabled = false;
 		amiiboBackButton->registerCallback(goToSettingsTopLevel);
-		addButtonBorder(amiiboBackButton);
+		applySettingsQuadStyle(amiiboBackButton);
 
 		Arriba::Primitives::Quad* updatePane = new Arriba::Primitives::Quad(0, 0, settingsScene->width, settingsScene->height, Arriba::Graphics::Pivot::topLeft);
 		updatePane->setParent(settingsScene);
@@ -476,7 +520,7 @@ namespace Amiigo::UI {
 			remove("sdmc:/config/amiigo/API.json");
 			initSplash();
 		});
-		addButtonBorder(cacheUpdateButton);
+		applySettingsQuadStyle(cacheUpdateButton);
 
 		Arriba::Elements::Button* updaterButton = new Arriba::Elements::Button();
 		updaterButton->setParent(updatePane);
@@ -495,7 +539,7 @@ namespace Amiigo::UI {
 				initSplash();
 			}
 		});
-		addButtonBorder(updaterButton);
+		applySettingsQuadStyle(updaterButton);
 
 		Arriba::Elements::Button* reinstallEmuiiboButton = new Arriba::Elements::Button();
 		reinstallEmuiiboButton->setParent(updatePane);
@@ -516,7 +560,7 @@ namespace Amiigo::UI {
 				initSplash();
 			}
 		});
-		addButtonBorder(reinstallEmuiiboButton);
+		applySettingsQuadStyle(reinstallEmuiiboButton);
 
 		Arriba::Elements::Button* updateBackButton = new Arriba::Elements::Button();
 		updateBackButton->setParent(updatePane);
@@ -527,7 +571,7 @@ namespace Amiigo::UI {
 		updateBackButton->setTag("SettingsButton");
 		updateBackButton->enabled = false;
 		updateBackButton->registerCallback(goToSettingsTopLevel);
-		addButtonBorder(updateBackButton);
+		applySettingsQuadStyle(updateBackButton);
 
 		{
 			struct Entry { const char* name; bool show; };
@@ -575,7 +619,7 @@ namespace Amiigo::UI {
 				btn->enabled = false;
 				SettingsView target = hubEntries[i].target;
 				btn->registerCallback([target](){ activateThemePane(target); });
-				addButtonBorder(btn);
+				applySettingsQuadStyle(btn);
 				themeSubPanes.back().buttons.push_back(btn);
 			}
 			Arriba::Elements::Button* hubBackBtn = new Arriba::Elements::Button();
@@ -586,7 +630,7 @@ namespace Amiigo::UI {
 			hubBackBtn->setTag("SettingsButton");
 			hubBackBtn->enabled = false;
 			hubBackBtn->registerCallback(goToSettingsTopLevel);
-			addButtonBorder(hubBackBtn);
+			applySettingsQuadStyle(hubBackBtn);
 			themeSubPanes.back().buttons.push_back(hubBackBtn);
 		}
 
@@ -619,7 +663,7 @@ namespace Amiigo::UI {
 					Amiigo::Settings::saveTheme();
 				});
 			});
-			addButtonBorder(btn);
+			applySettingsQuadStyle(btn);
 			return btn;
 		};
 
@@ -650,7 +694,7 @@ namespace Amiigo::UI {
 				Arriba::Colour::highlightB = Amiigo::Settings::Colour::settingsHighlightB;
 				Amiigo::Settings::saveTheme();
 			});
-			addButtonBorder(btn);
+			applySettingsQuadStyle(btn);
 			themeSubPanes.back().buttons.push_back(btn);
 		};
 
@@ -663,7 +707,7 @@ namespace Amiigo::UI {
 			btn->setTag("SettingsButton");
 			btn->enabled = false;
 			btn->registerCallback([]() { activateThemePane(SettingsView::ThemeHub); });
-			addButtonBorder(btn);
+			applySettingsQuadStyle(btn);
 			themeSubPanes.back().buttons.push_back(btn);
 		};
 

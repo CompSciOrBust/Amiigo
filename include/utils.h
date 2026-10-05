@@ -30,6 +30,7 @@ std::vector<AmiiboEntry> scanForAmiibo(const char* path);
 std::vector<std::string> getListOfSeries();
 std::vector<AmiiboCreatorData> getAmiibosFromSeries(const std::string& series);
 void saveAmiiboImage(const std::string& pathBase, const AmiiboCreatorData& amiibo);
+std::vector<AmiiboCreatorData> getAllAmiibos();
 void createVirtualAmiibo(const AmiiboCreatorData& amiibo);
 void firstTimeSetup();
 bool checkForUpdates();

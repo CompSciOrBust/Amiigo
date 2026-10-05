@@ -1,5 +1,6 @@
 #include <elements/colourPickerDialog.h>
 #include <AmiigoLang.h>
+#include <AmiigoUI.h>
 #include <arribaText.h>
 #include <cmath>
 
@@ -10,6 +11,10 @@ namespace Amiigo::Elements {
         returnFocusTarget = Arriba::highlightedObject;
         setName("ColourPickerDialog");
         setColour({0.08f, 0.08f, 0.08f, 0.97f});
+        renderer->thisShader.updateFragments("romfs:/VertexDefault.glsl", "romfs:/dialogFragment.glsl");
+        renderer->thisShader.setFloat1("aspectRatio", (float)DIALOG_W / DIALOG_H);
+        renderer->thisShader.setFloat1("radius", 30.0f / DIALOG_H);
+        renderer->thisShader.setFloat1("outlineWidth", 2.0f / DIALOG_H);
         Arriba::activeLayer++;
 
         Arriba::Primitives::Text* titleText = new Arriba::Primitives::Text(colourName, 38);
@@ -19,7 +24,7 @@ namespace Amiigo::Elements {
 
         preview = new Arriba::Primitives::Quad(0, 0, 40, 40, Arriba::Graphics::Pivot::topRight);
         preview->setParent(this);
-        preview->transform.position = {this->width - 10, 10};
+        preview->transform.position = {this->width - 20, 10};
         updatePreview();
 
         const Arriba::Maths::vec4<float> fillColours[4] = {
@@ -51,6 +56,7 @@ namespace Amiigo::Elements {
         closeBtn->transform.position = {(float)DIALOG_W / 2, 455, 0};
         closeBtn->setText(Amiigo::Lang::get("settings_theme_close").c_str());
         closeBtn->registerCallback([this]() { closeDialog(); });
+        Amiigo::UI::applySettingsQuadStyle(closeBtn);
         focusItems[4] = closeBtn;
     }
 
@@ -67,7 +73,10 @@ namespace Amiigo::Elements {
     }
 
     void ColourPickerDialog::onFrame() {
-        if (firstFrame) { firstFrame = false; return; }
+        if (firstFrame) {
+            firstFrame = false;
+            return;
+        }
 
         if (!initialHighlightSet) {
             Arriba::highlightedObject = focusItems[0];

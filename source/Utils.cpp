@@ -156,6 +156,38 @@ std::vector<AmiiboCreatorData> getAmiibosFromSeries(const std::string& series) {
     return amiibos;
 }
 
+std::vector<AmiiboCreatorData> getAllAmiibos() {
+    if (!checkIfFileExists("sdmc:/config/amiigo/API.json")) return {};
+    JsonDoc APIJson = loadJsonFile("sdmc:/config/amiigo/API.json");
+    if (APIJson.is_discarded()) return {};
+
+    std::vector<AmiiboCreatorData> amiibos;
+    for (int i = 0; i < (int)APIJson["amiibo"].size(); i++) {
+        AmiiboCreatorData newAmiibo;
+        newAmiibo.name = Amiigo::Lang::utf8ToU32(APIJson["amiibo"][i]["name"].get<std::string>());
+        std::string fullID = APIJson["amiibo"][i]["head"].get<std::string>() + APIJson["amiibo"][i]["tail"].get<std::string>();
+        std::string character_game_id_str = fullID.substr(0, 4);
+        std::string character_variant_str = fullID.substr(4, 2);
+        std::string figure_type_str       = fullID.substr(6, 2);
+        std::string model_no_str          = fullID.substr(8, 4);
+        std::string series_str            = fullID.substr(12, 2);
+        newAmiibo.game_character_id = shiftAndDec(character_game_id_str);
+        newAmiibo.character_variant = static_cast<uint8_t>(stoi(character_variant_str, nullptr, 16));
+        newAmiibo.figure_type       = static_cast<uint8_t>(stoi(figure_type_str, nullptr, 16));
+        newAmiibo.model_number      = static_cast<unsigned short>(stoi(model_no_str, nullptr, 16));
+        newAmiibo.series            = static_cast<uint8_t>(stoi(series_str, nullptr, 16));
+        newAmiibo.gameName     = Amiigo::Lang::utf8ToU32(APIJson["amiibo"][i]["gameSeries"].get<std::string>());
+        newAmiibo.amiiboSeries = Amiigo::Lang::utf8ToU32(APIJson["amiibo"][i]["amiiboSeries"].get<std::string>());
+        newAmiibo.imageURL     = APIJson["amiibo"][i]["image"].get<std::string>();
+        amiibos.push_back(newAmiibo);
+    }
+
+    std::sort(amiibos.begin(), amiibos.end(), [](const AmiiboCreatorData& a, const AmiiboCreatorData& b) {
+        return caseInsensitiveSort(a.name, b.name);
+    });
+    return amiibos;
+}
+
 std::string sanitizeAmiiboName(const std::u32string& name) {
     static const std::unordered_map<char32_t, char> replacements = {
         {U'é', 'e'}, {U'ō', 'o'}, {U'É', 'E'}, {U'“', '\''}, {U'”', '\''}
