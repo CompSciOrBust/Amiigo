@@ -117,6 +117,23 @@ namespace Amiigo::UI {
 		Arriba::activeLayer--;
 	}
 
+	void addButtonBorder(Arriba::Primitives::Quad* btn) {
+		const float hw = btn->width / 2.0f;
+		const float hh = btn->height / 2.0f;
+
+		auto make = [&](float x, float y, int w, int h) {
+			auto* q = new Arriba::Primitives::Quad(0, 0, w, h, Arriba::Graphics::Pivot::topLeft);
+			q->transform.position = {x, y, 0};
+			q->setColour({0, 0, 0, 1});
+			q->setParent(btn);
+		};
+
+		make(-hw,    -hh,     btn->width, 2);
+		make(-hw,    hh - 2,  btn->width, 2);
+		make(-hw,    -hh,     2,          btn->height);
+		make(hw - 2, -hh,     2,          btn->height);
+	}
+
 	void initSceneSwitcher() {
 		// Divider quads
 		int buttonDivX = Arriba::Graphics::windowWidth - switcherWidth;
@@ -341,6 +358,7 @@ namespace Amiigo::UI {
 		topAmiiboButton->setName("SettingsTopAmiiboButton");
 		topAmiiboButton->setTag("SettingsButton");
 		topAmiiboButton->registerCallback(goToAmiiboSubmenu);
+		addButtonBorder(topAmiiboButton);
 
 		Arriba::Elements::Button* topThemeButton = new Arriba::Elements::Button();
 		topThemeButton->setParent(settingsScene);
@@ -350,6 +368,7 @@ namespace Amiigo::UI {
 		topThemeButton->setName("SettingsTopThemeButton");
 		topThemeButton->setTag("SettingsButton");
 		topThemeButton->registerCallback(goToThemeHub);
+		addButtonBorder(topThemeButton);
 
 		Arriba::Elements::Button* topUpdateButton = new Arriba::Elements::Button();
 		topUpdateButton->setParent(settingsScene);
@@ -359,6 +378,7 @@ namespace Amiigo::UI {
 		topUpdateButton->setName("SettingsTopUpdateButton");
 		topUpdateButton->setTag("SettingsButton");
 		topUpdateButton->registerCallback(goToUpdatesSubmenu);
+		addButtonBorder(topUpdateButton);
 
 		Arriba::Primitives::Quad* amiiboPane = new Arriba::Primitives::Quad(0, 0, settingsScene->width, settingsScene->height, Arriba::Graphics::Pivot::topLeft);
 		amiiboPane->setParent(settingsScene);
@@ -398,6 +418,7 @@ namespace Amiigo::UI {
 			int dropY = (int)(scene->transform.position.y + btn->transform.position.y) + btn->height / 2;
 			new Amiigo::Elements::DropdownMenu(dropX, dropY, btn->width, opts, Amiigo::Settings::categoryMode);
 		});
+		addButtonBorder(categoryButton);
 
 		Amiigo::Elements::CheckBox* randomUUIDCheckBox = new Amiigo::Elements::CheckBox(Amiigo::Settings::useRandomisedUUID, Amiigo::Lang::get("settings_enable_random_uuid").c_str());
 		randomUUIDCheckBox->setParent(amiiboPane);
@@ -434,6 +455,7 @@ namespace Amiigo::UI {
 		amiiboBackButton->setTag("SettingsButton");
 		amiiboBackButton->enabled = false;
 		amiiboBackButton->registerCallback(goToSettingsTopLevel);
+		addButtonBorder(amiiboBackButton);
 
 		Arriba::Primitives::Quad* updatePane = new Arriba::Primitives::Quad(0, 0, settingsScene->width, settingsScene->height, Arriba::Graphics::Pivot::topLeft);
 		updatePane->setParent(settingsScene);
@@ -454,6 +476,7 @@ namespace Amiigo::UI {
 			remove("sdmc:/config/amiigo/API.json");
 			initSplash();
 		});
+		addButtonBorder(cacheUpdateButton);
 
 		Arriba::Elements::Button* updaterButton = new Arriba::Elements::Button();
 		updaterButton->setParent(updatePane);
@@ -472,6 +495,7 @@ namespace Amiigo::UI {
 				initSplash();
 			}
 		});
+		addButtonBorder(updaterButton);
 
 		Arriba::Elements::Button* reinstallEmuiiboButton = new Arriba::Elements::Button();
 		reinstallEmuiiboButton->setParent(updatePane);
@@ -492,6 +516,7 @@ namespace Amiigo::UI {
 				initSplash();
 			}
 		});
+		addButtonBorder(reinstallEmuiiboButton);
 
 		Arriba::Elements::Button* updateBackButton = new Arriba::Elements::Button();
 		updateBackButton->setParent(updatePane);
@@ -502,6 +527,7 @@ namespace Amiigo::UI {
 		updateBackButton->setTag("SettingsButton");
 		updateBackButton->enabled = false;
 		updateBackButton->registerCallback(goToSettingsTopLevel);
+		addButtonBorder(updateBackButton);
 
 		{
 			struct Entry { const char* name; bool show; };
@@ -549,6 +575,7 @@ namespace Amiigo::UI {
 				btn->enabled = false;
 				SettingsView target = hubEntries[i].target;
 				btn->registerCallback([target](){ activateThemePane(target); });
+				addButtonBorder(btn);
 				themeSubPanes.back().buttons.push_back(btn);
 			}
 			Arriba::Elements::Button* hubBackBtn = new Arriba::Elements::Button();
@@ -559,6 +586,7 @@ namespace Amiigo::UI {
 			hubBackBtn->setTag("SettingsButton");
 			hubBackBtn->enabled = false;
 			hubBackBtn->registerCallback(goToSettingsTopLevel);
+			addButtonBorder(hubBackBtn);
 			themeSubPanes.back().buttons.push_back(hubBackBtn);
 		}
 
@@ -591,6 +619,7 @@ namespace Amiigo::UI {
 					Amiigo::Settings::saveTheme();
 				});
 			});
+			addButtonBorder(btn);
 			return btn;
 		};
 
@@ -621,6 +650,7 @@ namespace Amiigo::UI {
 				Arriba::Colour::highlightB = Amiigo::Settings::Colour::settingsHighlightB;
 				Amiigo::Settings::saveTheme();
 			});
+			addButtonBorder(btn);
 			themeSubPanes.back().buttons.push_back(btn);
 		};
 
@@ -633,6 +663,7 @@ namespace Amiigo::UI {
 			btn->setTag("SettingsButton");
 			btn->enabled = false;
 			btn->registerCallback([]() { activateThemePane(SettingsView::ThemeHub); });
+			addButtonBorder(btn);
 			themeSubPanes.back().buttons.push_back(btn);
 		};
 

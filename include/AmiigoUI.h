@@ -13,6 +13,7 @@ namespace Amiigo::UI {
     inline const int switcherWidth = Arriba::Graphics::windowWidth * 0.3;
     inline const int switcherHeight = Arriba::Graphics::windowHeight - statusHeight;
 
+    void addButtonBorder(Arriba::Primitives::Quad* btn);
     void initUI();
     void initSplash();
     void initSceneSwitcher();
