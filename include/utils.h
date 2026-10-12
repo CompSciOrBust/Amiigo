@@ -32,5 +32,6 @@ std::vector<AmiiboCreatorData> getAmiibosFromSeries(const std::string& series);
 void saveAmiiboImage(const std::string& pathBase, const AmiiboCreatorData& amiibo);
 std::vector<AmiiboCreatorData> getAllAmiibos();
 std::string createVirtualAmiibo(const AmiiboCreatorData& amiibo, bool enqueueImage = true);
+extern bool emuiiboJustInstalled;
 void firstTimeSetup();
 bool checkForUpdates();

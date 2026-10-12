@@ -82,7 +82,10 @@ namespace {
             (settingsW - Amiigo::Elements::ConfirmDialog::DIALOG_W) / 2,
             Amiigo::UI::statusHeight + (Arriba::Graphics::windowHeight - Amiigo::UI::statusHeight - Amiigo::Elements::ConfirmDialog::DIALOG_H) / 2,
             Amiigo::Lang::get("settings_generate_all_confirm").c_str(),
-            onGenerateAllConfirmed
+            onGenerateAllConfirmed,
+            nullptr,
+            Amiigo::Lang::get("settings_generate_all_yes").c_str(),
+            Amiigo::Lang::get("settings_generate_all_no").c_str()
         );
     }
 }
@@ -160,6 +163,18 @@ namespace Amiigo::UI {
 		if (sceneSwitcher) sceneSwitcher->enabled = true;
 		if (statusBar) statusBar->enabled = true;
 		Arriba::activeLayer--;
+		
+		if (emuiiboJustInstalled) {
+			new Amiigo::Elements::ConfirmDialog(
+				(Arriba::Graphics::windowWidth - Amiigo::Elements::ConfirmDialog::DIALOG_W) / 2,
+				(Arriba::Graphics::windowHeight - Amiigo::Elements::ConfirmDialog::DIALOG_H) / 2,
+				Amiigo::Lang::get("emuiibo_installed_message").c_str(),
+				[]() { bpcInitialize(); bpcRebootSystem(); bpcExit(); },
+				[]() { Amiigo::UI::isRunning = 0; },
+				Amiigo::Lang::get("emuiibo_installed_reboot").c_str(),
+				Amiigo::Lang::get("emuiibo_installed_exit").c_str()
+			);
+		}
 	}
 
 	void applySettingsQuadStyle(Arriba::Primitives::Quad* quad) {
@@ -337,7 +352,7 @@ namespace Amiigo::UI {
 	void goToThemeHub() { activateThemePane(SettingsView::ThemeHub); }
 
 	void initSettings() {
-		const int buttonHeight = 100;
+		const int buttonHeight = 110;
 		const int topButtonWidth = 550;
 		const int subButtonWidth = 700;
 		settingsPaneRegistry.clear();

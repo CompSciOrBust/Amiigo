@@ -25,6 +25,7 @@
 #include <arribaText.h>
 
 static std::string updateURL;
+bool emuiiboJustInstalled = false;
 
 bool checkIfFileExists(const char* path) {
     return !access(path, F_OK);
@@ -333,6 +334,7 @@ static void setupAPICache() {
 
 static void installEmuiibo() {
     if (checkIfFileExists("sdmc:/atmosphere/contents/0100000000000352/exefs.nsp")) return;
+    emuiiboJustInstalled = true;
     JsonDoc emuiiboInfo;
     bool hasValidEmuiiboJSON = false;
     while (!hasValidEmuiiboJSON) {

@@ -3,6 +3,9 @@
     "splash_caching_api": "Cacheando API data...",
     "splash_installing_emuiibo": "Instalando Emuiibo...",
     "splash_updating_amiigo": "Actualizando Amiigo...",
+    "emuiibo_installed_message": "Reinicio requerido.",
+    "emuiibo_installed_reboot": "Reiniciar",
+    "emuiibo_installed_exit": "Salir",
 
     "nav_my_amiibo": "Mis Amiibo",
     "nav_amiigo_store": "Amiigo Store",

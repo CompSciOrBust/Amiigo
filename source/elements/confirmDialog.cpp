@@ -3,9 +3,13 @@
 #include <AmiigoUI.h>
 
 namespace Amiigo::Elements {
-    ConfirmDialog::ConfirmDialog(int x, int y, const char32_t* message, std::function<void()> onConfirm)
+    ConfirmDialog::ConfirmDialog(int x, int y, const char32_t* message, std::function<void()> onConfirm,
+                                 std::function<void()> onReject,
+                                 const char32_t* confirmLabel,
+                                 const char32_t* rejectLabel)
         : Arriba::Primitives::Quad(x, y, DIALOG_W, DIALOG_H, Arriba::Graphics::Pivot::topLeft),
-          onConfirm(onConfirm) {
+          onConfirm(onConfirm),
+          onReject(onReject) {
         returnFocusTarget = Arriba::highlightedObject;
         setName("ConfirmDialog");
 
@@ -25,15 +29,18 @@ namespace Amiigo::Elements {
         noBtn->setParent(this);
         noBtn->setDimensions(200, 70, Arriba::Graphics::Pivot::centre);
         noBtn->transform.position = {(float)DIALOG_W / 2 - 130, 160, 0};
-        noBtn->setText(Amiigo::Lang::get("settings_generate_all_no").c_str());
-        noBtn->registerCallback([this]() { close(); });
+        noBtn->setText(rejectLabel);
+        noBtn->registerCallback([this]() {
+            if (this->onReject) this->onReject();
+            close();
+        });
         Amiigo::UI::applySettingsQuadStyle(noBtn);
 
         yesBtn = new Arriba::Elements::Button();
         yesBtn->setParent(this);
         yesBtn->setDimensions(200, 70, Arriba::Graphics::Pivot::centre);
         yesBtn->transform.position = {(float)DIALOG_W / 2 + 130, 160, 0};
-        yesBtn->setText(Amiigo::Lang::get("settings_generate_all_yes").c_str());
+        yesBtn->setText(confirmLabel);
         yesBtn->registerCallback([this]() {
             if (this->onConfirm) this->onConfirm();
             close();

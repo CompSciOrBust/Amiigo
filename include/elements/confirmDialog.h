@@ -9,6 +9,7 @@ namespace Amiigo::Elements {
         Arriba::Elements::Button* noBtn;
         Arriba::UIObject* returnFocusTarget;
         std::function<void()> onConfirm;
+        std::function<void()> onReject;
         bool firstFrame = true;
         bool initialHighlightSet = false;
 
@@ -18,7 +19,10 @@ namespace Amiigo::Elements {
         static const int DIALOG_W = 620;
         static const int DIALOG_H = 210;
 
-        ConfirmDialog(int x, int y, const char32_t* message, std::function<void()> onConfirm);
+        ConfirmDialog(int x, int y, const char32_t* message, std::function<void()> onConfirm,
+                      std::function<void()> onReject,
+                      const char32_t* confirmLabel,
+                      const char32_t* rejectLabel);
         void onFrame() override;
     };
 }  // namespace Amiigo::Elements
