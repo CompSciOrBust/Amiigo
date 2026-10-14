@@ -11,8 +11,8 @@ namespace Amiigo::Elements {
         checkQuad->setParent(this);
         checkQuad->transform.position = {0, this->height / 2 - checkQuad->height / 2, 0};
         checkQuad->setColour(Arriba::Colour::neutral);
-        checkQuad->renderer->thisShader.updateFragments("romfs:/VertexDefault.glsl", "romfs:/checkBoxFragment.glsl");
-        checkQuad->renderer->thisShader.setBool("checked", initialState);
+        checkQuad->renderer->shader.updateFragments("romfs:/VertexDefault.glsl", "romfs:/checkBoxFragment.glsl");
+        checkQuad->renderer->shader.setBool("checked", initialState);
 
         labelText = new Arriba::Primitives::Text(label, 48);
         labelText->setParent(checkQuad);
@@ -45,7 +45,7 @@ namespace Amiigo::Elements {
 
         if (activated) {
             checkedState = !checkedState;
-            checkQuad->renderer->thisShader.setBool("checked", checkedState);
+            checkQuad->renderer->shader.setBool("checked", checkedState);
             for (auto& cb : callbacks) cb(checkedState);
         }
 
@@ -60,7 +60,7 @@ namespace Amiigo::Elements {
 
     void CheckBox::setChecked(bool state) {
         checkedState = state;
-        checkQuad->renderer->thisShader.setBool("checked", state);
+        checkQuad->renderer->shader.setBool("checked", state);
     }
 
     bool CheckBox::isChecked() const { return checkedState; }

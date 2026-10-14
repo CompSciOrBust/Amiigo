@@ -9,10 +9,10 @@ namespace Amiigo::Elements {
           progress(progress), total(total), returnFocus(returnFocusOverride ? returnFocusOverride : Arriba::highlightedObject) {
         setName("ProgressDialog");
         setColour({0.08f, 0.08f, 0.08f, 0.97f});
-        renderer->thisShader.updateFragments("romfs:/VertexDefault.glsl", "romfs:/dialogFragment.glsl");
-        renderer->thisShader.setFloat1("aspectRatio", (float)DIALOG_W / DIALOG_H);
-        renderer->thisShader.setFloat1("radius", 30.0f / DIALOG_H);
-        renderer->thisShader.setFloat1("outlineWidth", 2.0f / DIALOG_H);
+        renderer->shader.updateFragments("romfs:/VertexDefault.glsl", "romfs:/dialogFragment.glsl");
+        renderer->shader.setFloat1("aspectRatio", (float)DIALOG_W / DIALOG_H);
+        renderer->shader.setFloat1("radius", 30.0f / DIALOG_H);
+        renderer->shader.setFloat1("outlineWidth", 2.0f / DIALOG_H);
         Arriba::activeLayer++;
 
         Arriba::Primitives::Text* titleText = new Arriba::Primitives::Text(title, 38);
@@ -24,9 +24,9 @@ namespace Amiigo::Elements {
         progressBar->transform.position = {40, 80, 0};
         progressBar->setParent(this);
         progressBar->setColour(Arriba::Colour::neutral);
-        progressBar->renderer->thisShader.updateFragments("romfs:/VertexDefault.glsl", "romfs:/progressBarFragment.glsl");
-        progressBar->renderer->thisShader.setFloat1("aspectRatio", (float)(DIALOG_W - 80) / 40.0f);
-        progressBar->renderer->thisShader.setFloat1("progress", 0.0f);
+        progressBar->renderer->shader.updateFragments("romfs:/VertexDefault.glsl", "romfs:/progressBarFragment.glsl");
+        progressBar->renderer->shader.setFloat1("aspectRatio", (float)(DIALOG_W - 80) / 40.0f);
+        progressBar->renderer->shader.setFloat1("progress", 0.0f);
 
         progressText = new Arriba::Primitives::Text(U"0 / 0", 32);
         progressText->setParent(this);
@@ -57,7 +57,7 @@ namespace Amiigo::Elements {
 
         int cur = progress->load(std::memory_order_relaxed);
         float fillPct = total > 0 ? (float)cur / (float)total : 0.0f;
-        progressBar->renderer->thisShader.setFloat1("progress", fillPct);
+        progressBar->renderer->shader.setFloat1("progress", fillPct);
 
         char buf[32];
         snprintf(buf, sizeof(buf), "%d / %d", cur, total);

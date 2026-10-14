@@ -8,11 +8,11 @@ namespace Amiigo::AmiigoBehaviours {
     }
 
     void BGBehaviour::init() {
-        if(checkIfFileExists("sdmc:/config/amiigo/bgFragment.glsl")) object->renderer->thisShader.updateFragments("romfs:/VertexDefault.glsl", "sdmc:/config/amiigo/bgFragment.glsl");
-        else object->renderer->thisShader.updateFragments("romfs:/VertexDefault.glsl", "romfs:/bgFragment.glsl");
+        if(checkIfFileExists("sdmc:/config/amiigo/bgFragment.glsl")) object->renderer->shader.updateFragments("romfs:/VertexDefault.glsl", "sdmc:/config/amiigo/bgFragment.glsl");
+        else object->renderer->shader.updateFragments("romfs:/VertexDefault.glsl", "romfs:/bgFragment.glsl");
     }
 
     void BGBehaviour::update() {
-        object->renderer->thisShader.setFloat1("iTime", Arriba::time);
+        object->renderer->shader.setFloat1("iTime", Arriba::time);
     }
 } // namespace Amiigo::AmiigoBehaviours

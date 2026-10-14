@@ -11,10 +11,10 @@ namespace Amiigo::Elements {
         returnFocusTarget = Arriba::highlightedObject;
         setName("ColourPickerDialog");
         setColour({0.08f, 0.08f, 0.08f, 0.97f});
-        renderer->thisShader.updateFragments("romfs:/VertexDefault.glsl", "romfs:/dialogFragment.glsl");
-        renderer->thisShader.setFloat1("aspectRatio", (float)DIALOG_W / DIALOG_H);
-        renderer->thisShader.setFloat1("radius", 30.0f / DIALOG_H);
-        renderer->thisShader.setFloat1("outlineWidth", 2.0f / DIALOG_H);
+        renderer->shader.updateFragments("romfs:/VertexDefault.glsl", "romfs:/dialogFragment.glsl");
+        renderer->shader.setFloat1("aspectRatio", (float)DIALOG_W / DIALOG_H);
+        renderer->shader.setFloat1("radius", 30.0f / DIALOG_H);
+        renderer->shader.setFloat1("outlineWidth", 2.0f / DIALOG_H);
         Arriba::activeLayer++;
 
         Arriba::Primitives::Text* titleText = new Arriba::Primitives::Text(colourName, 38);

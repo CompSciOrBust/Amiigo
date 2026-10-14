@@ -72,7 +72,7 @@ namespace Amiigo::UI {
 		if (statusBar) statusBar->enabled = false;
 		while (!checkIfFileExists("sdmc:/config/amiigo/API.json") || !checkIfFileExists("sdmc:/atmosphere/contents/0100000000000352/exefs.nsp") || checkIfFileExists("sdmc:/config/amiigo/update.flag")) {
 			splashScene->setColour({(sin(Arriba::time)+1)/4, (cos(Arriba::time)+1)/4, 0.5, 0.95});
-			Arriba::findObjectByName("AmiigoBG")->renderer->thisShader.setFloat1("iTime", Arriba::time);
+			Arriba::findObjectByName("AmiigoBG")->renderer->shader.setFloat1("iTime", Arriba::time);
 			if (!hasNetworkConnection()) doingText->setText(Amiigo::Lang::get("splash_waiting_internet").c_str());
 			else if (!checkIfFileExists("sdmc:/config/amiigo/API.json")) doingText->setText(Amiigo::Lang::get("splash_caching_api").c_str());
 			else if (!checkIfFileExists("sdmc:/atmosphere/contents/0100000000000352/exefs.nsp")) doingText->setText(Amiigo::Lang::get("splash_installing_emuiibo").c_str());
@@ -101,10 +101,10 @@ namespace Amiigo::UI {
 	}
 
 	void applySettingsQuadStyle(Arriba::Primitives::Quad* quad) {
-		quad->renderer->thisShader.setProgID(Arriba::Graphics::createSharedShader("dialog", "romfs:/VertexDefault.glsl", "romfs:/dialogFragment.glsl"));
-		quad->renderer->thisShader.setFloat1("aspectRatio", quad->width / (float)quad->height);
-		quad->renderer->thisShader.setFloat1("radius", 20.0f / quad->height);
-		quad->renderer->thisShader.setFloat1("outlineWidth", 2.0f / quad->height);
+		quad->renderer->shader.setProgID(Arriba::Graphics::createSharedShader("dialog", "romfs:/VertexDefault.glsl", "romfs:/dialogFragment.glsl"));
+		quad->renderer->shader.setFloat1("aspectRatio", quad->width / (float)quad->height);
+		quad->renderer->shader.setFloat1("radius", 20.0f / quad->height);
+		quad->renderer->shader.setFloat1("outlineWidth", 2.0f / quad->height);
 	}
 
 	void initSceneSwitcher() {
