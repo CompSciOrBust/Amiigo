@@ -1,5 +1,6 @@
 #include <elements/makerContextMenu.h>
 #include <AmiigoUI.h>
+#include <AmiigoUISelector.h>
 #include <AmiigoLang.h>
 #include <AmiigoSettings.h>
 #include <WorkerQueue.h>

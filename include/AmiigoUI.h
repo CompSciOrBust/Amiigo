@@ -17,18 +17,8 @@ namespace Amiigo::UI {
     void initUI();
     void initSplash();
     void initSceneSwitcher();
-    void initSelector();
-    void initMaker();
-    void initSettings();
     void handleInput();
     void switcherPressed();
-    void selectorInput(int index);
-    void makerInput(int index);
-    void updateSelectorStrings();
-    void selectorContextMenuSpawner(int index, Arriba::Maths::vec2<float> pos);
-    void makerContextMenuSpawner(int index, Arriba::Maths::vec2<float> pos);
     enum class StatusLevel { Info, Error, Silent };
     void updateStatus(const char32_t* text, StatusLevel level = StatusLevel::Info);
-    const char32_t* getCategoryModeLabel();
-    const std::string& getSelectorPath();
 }  // namespace Amiigo::UI

@@ -13,6 +13,7 @@
 #include <AmiigoSettings.h>
 #include <AmiigoLang.h>
 #include <AmiigoUI.h>
+#include <AmiigoUISelector.h>
 #include <Networking.h>
 #include <emuiibo.hpp>
 #define STB_IMAGE_IMPLEMENTATION
