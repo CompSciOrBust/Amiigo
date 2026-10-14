@@ -178,7 +178,7 @@ namespace Amiigo::UI {
 	}
 
 	void applySettingsQuadStyle(Arriba::Primitives::Quad* quad) {
-		quad->renderer->thisShader.updateFragments("romfs:/VertexDefault.glsl", "romfs:/dialogFragment.glsl");
+		quad->renderer->thisShader.setProgID(Arriba::Graphics::createSharedShader("dialog", "romfs:/VertexDefault.glsl", "romfs:/dialogFragment.glsl"));
 		quad->renderer->thisShader.setFloat1("aspectRatio", quad->width / (float)quad->height);
 		quad->renderer->thisShader.setFloat1("radius", 20.0f / quad->height);
 		quad->renderer->thisShader.setFloat1("outlineWidth", 2.0f / quad->height);
