@@ -112,6 +112,7 @@ namespace Amiigo::UI {
 	void resetSettingsToTopLevel() {
 		disableAllSettingsElements();
 		settingsView = SettingsView::TopLevel;
+		Arriba::findObjectByName("SettingsTopLevelPane")->enabled = true;
 		Arriba::findObjectByName("SettingsTopAmiiboButton")->enabled = true;
 		Arriba::findObjectByName("SettingsTopUpdateButton")->enabled = true;
 		Arriba::findObjectByName("SettingsTopThemeButton")->enabled = true;
@@ -153,12 +154,23 @@ namespace Amiigo::UI {
 	void goToUpdatesSubmenu() {
 		disableAllSettingsElements();
 		settingsView = SettingsView::Updates;
-		Arriba::findObjectByName("SettingsUpdatePane")->enabled = true;
-		Arriba::findObjectByName("CacheUpdateButton")->enabled = hasNetworkConnection();
+		auto* updatePane = Arriba::findObjectByName<Arriba::Primitives::Quad>("SettingsUpdatePane");
+		updatePane->enabled = true;
+		bool hasNet = hasNetworkConnection();
+		Arriba::findObjectByName("CacheUpdateButton")->enabled = hasNet;
 		Arriba::findObjectByName("UpdaterButton")->enabled = settingsUpdateAvailable;
-		Arriba::findObjectByName("ReinstallEmuiiboButton")->enabled = hasNetworkConnection();
+		Arriba::findObjectByName("ReinstallEmuiiboButton")->enabled = hasNet;
 		Arriba::findObjectByName("SettingsUpdateBackButton")->enabled = true;
-		Arriba::highlightedObject = Arriba::findObjectByName("SettingsUpdatePane");
+		const char* const names[] = { "CacheUpdateButton", "UpdaterButton", "ReinstallEmuiiboButton", "SettingsUpdateBackButton" };
+		std::vector<Arriba::UIObject*> visible;
+		for (const auto* name : names) {
+			auto* btn = Arriba::findObjectByName(name);
+			if (btn->enabled) visible.push_back(btn);
+		}
+		const float cx = updatePane->width / 2.0f;
+		const float spacing = (float)updatePane->height / (float)(visible.size() + 1);
+		for (size_t i = 0; i < visible.size(); i++) visible[i]->transform.position = {cx, (float)(i + 1) * spacing, 0};
+		Arriba::highlightedObject = updatePane;
 	}
 
 	void initSettings() {
@@ -179,9 +191,16 @@ namespace Amiigo::UI {
 		settingsScene->enabled = false;
 		settingsScene->setColour({0, 0, 0, 0});
 
+		Arriba::Primitives::Quad* topLevelPane = new Arriba::Primitives::Quad(0, 0, settingsScene->width, settingsScene->height, Arriba::Graphics::Pivot::topLeft);
+		topLevelPane->setParent(settingsScene);
+		topLevelPane->setColour({0, 0, 0, 0.7f});
+		topLevelPane->setName("SettingsTopLevelPane");
+		topLevelPane->enabled = false;
+		settingsPaneRegistry.push_back(topLevelPane);
+
 		Arriba::Primitives::Quad* creditsQuad = new Arriba::Primitives::Quad(0, 0, 330, Arriba::Graphics::windowHeight - statusHeight, Arriba::Graphics::Pivot::topLeft);
 		creditsQuad->setParent(settingsScene);
-		creditsQuad->setColour({0, 0, 0, 0.9});
+		creditsQuad->setColour({0, 0, 0, 0.77});
 		creditsQuad->setName("SettingsCredits");
 		int yOffset = 0;
 
@@ -339,25 +358,6 @@ namespace Amiigo::UI {
 		});
 		makeBtn(updatePane, subButtonWidth, updatePane->width / 2, updatePane->height * 4/5,
 		        Amiigo::Lang::get("settings_back").c_str(), "SettingsUpdateBackButton", goToSettingsTopLevel);
-
-		{
-			struct Entry { const char* name; bool show; };
-			const Entry entries[] = {
-				{ "CacheUpdateButton",        hasNetworkConnection()  },
-				{ "UpdaterButton",            settingsUpdateAvailable },
-				{ "ReinstallEmuiiboButton",   hasNetworkConnection()  },
-				{ "SettingsUpdateBackButton", true                    },
-			};
-			std::vector<Arriba::UIObject*> visible;
-			for (const auto& entry : entries) {
-				if (entry.show) visible.push_back(Arriba::findObjectByName(entry.name));
-			}
-			const float cx = updatePane->width / 2.0f;
-			const float spacing = (float)updatePane->height / (float)(visible.size() + 1);
-			for (size_t i = 0; i < visible.size(); i++) {
-				visible[i]->transform.position = {cx, (float)(i + 1) * spacing, 0};
-			}
-		}
 
 		Arriba::Primitives::Quad* themePane = new Arriba::Primitives::Quad(0, 0, settingsScene->width, settingsScene->height, Arriba::Graphics::Pivot::topLeft);
 		themePane->setParent(settingsScene);
@@ -541,7 +541,14 @@ namespace Amiigo::UI {
 	}
 
 	void handleSettingsInput() {
-		if (Arriba::highlightedObject == Arriba::findObjectByName("SettingsScene")) Arriba::highlightedObject = Arriba::findObjectByName("SettingsTopAmiiboButton");
+		if (Arriba::highlightedObject == Arriba::findObjectByName("SettingsScene")) {
+			for (int i = 0; i < settingsPaneRegistry.size(); i++) {
+				if (settingsPaneRegistry.at(i)->enabled) {
+					Arriba::highlightedObject = settingsPaneRegistry.at(i);
+					break;
+				}
+			}
+		}
 
 		if (Arriba::Input::buttonDown(Arriba::Input::DPadRight) && Arriba::highlightedObject->getTag() != "SwitcherButton") {
 			Arriba::highlightedObject = Arriba::findObjectByName("SelectorButton");
