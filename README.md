@@ -21,10 +21,10 @@ Amiigo is built with the [Arriba](https://github.com/CompSciOrBust/Arriba) UI fr
 ### Quick Links
 
    * [Usage](#Usage)
+   * [Language](#Language)
    * [Support](#Support)
    * [Building](#Building)
    * [Credits](#Credits)
-   * [Donating](#Donating)
 
 ### Screenshots
 
@@ -38,23 +38,33 @@ Amiigo is built with the [Arriba](https://github.com/CompSciOrBust/Arriba) UI fr
 The right hand side of the user interface has several tabs for switching between modes.
 
 ### Amiibo List
-The "Amiibo List" tab is the default tab upon opening the app and is used for selecting which Amiibo to emulate.
+The "Amiibo List" tab is the default tab upon opening the app and is used for selecting which Amiibo to emulate. When an Amiibo is selected, an image preview is shown if one is available.
 
 ### Amiigo Store
-The "Amiigo Store" tab is used to generate virtual Amiibo files. Any Amiibos generated in this mode will show up in the Amiibo List tab. First, select a category from the listed games, then select which Amiibo from that category you wish to generate.
+The "Amiigo Store" tab is used to generate virtual Amiibo files. Any Amiibos generated in this mode will show up in the Amiibo List tab. First, select a category from the listed games, then select which Amiibo from that category you wish to generate. You can also press Y on a category to generate all Amiibos in it at once.
 
 ### Settings / Update
-The "Settings" tab can be used to configure how Amiigo works and to update the Amiigo app. Note that when an update is available for the Amiigo app this tab will automatically change from "Settings" to "Update".
+The "Settings" tab can be used to configure how Amiigo works and to update the Amiigo app. Settings are organised into submenus. Note that when an update is available for the Amiigo app this tab will automatically change from "Settings" to "Update".
 
 The "Update Amiigo" button can be used to download the latest version of Amiigo within the app. This button will only be visible when an update is available.
 
-The "Save to X" button is used to configure which folder virtual Amiibos are saved to. This changes how Amiibos appear in the Amiibo list. Possible options are:
+The "Save to" dropdown is used to configure which folder virtual Amiibos are saved to. This changes how Amiibos appear in the Amiibo list. Possible options are:
 * Root
 * Game name
 * Amiibo Series
 * Current folder
 
-The "Enable random UUID" / "Disable random UUID" button configures if Amiibos are generated using a static identifier or an identifier which changes after each Amiibo use. For most users it is recommended to leave this as the default.
+The "Random UUID" checkbox configures if Amiibos are generated using a static identifier or an identifier which changes after each Amiibo use. For most users it is recommended to leave this as the default.
+
+The "Save images" checkbox controls whether images downloaded for Amiibo previews are saved to disk.
+
+The "Generate all" button generates every Amiibo in the database at once and displays a progress dialog while doing so.
+
+The theming submenu allows the colours of the UI to be customised. Each colour can be reset to its default individually.
+
+### Language
+
+Amiigo supports English (en-GB), Spanish (es), Simplified Chinese (zh-Hans / zh-CN), and Traditional Chinese (zh-Hant / zh-TW). The language is selected automatically based on the system language setting.
 
 ### Controls
 
@@ -106,10 +116,4 @@ Za for bringing pizzas.
 
 All of the beta testers in the [CompSciOrBust Discord server](https://discord.gg/ZhRn3nn).
 
-[hazelwiss](https://github.com/hazelwiss) for providing much useful programming advice.
-
-## Donating
-Before donating to a homebrew developer, consider donating to a charity instead.
-|Method|Info
-|--|--|
-|BTC|bc1qdr7nd8kpkuhamd0cugs763y5vfzx73la8as2ms|
+[hazelwiss](https://github.com/hazelwiss) for general help.
