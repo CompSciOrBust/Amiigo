@@ -11,7 +11,7 @@ namespace Amiigo::Elements {
         Arriba::activeLayer++;
         setColour({0, 0, 0, 1});
 
-        if (entry.name != U"★Favorites" && entry.name != U"← Back") {
+        if (!entry.isSpecial) {
             Arriba::Elements::Button* favoriteButton = new Arriba::Elements::Button();
             favoriteButton->setParent(this);
             std::string tempLine;
@@ -78,7 +78,7 @@ namespace Amiigo::Elements {
             });
         }
 
-        if (entry.name != U"★Favorites" && Amiigo::UI::getSelectorPath() != "Favorites" && entry.name != U"← Back") {
+        if (!entry.isSpecial && Amiigo::UI::getSelectorPath() != "Favorites") {
             Arriba::Elements::Button* deleteButton = new Arriba::Elements::Button();
             deleteButton->setParent(this);
             deleteButton->setText(Amiigo::Lang::get("context_delete").c_str());
@@ -91,7 +91,7 @@ namespace Amiigo::Elements {
         }
 
         buttonVector = Arriba::findObjectsByTag<Arriba::Elements::Button>("ContextMenuButton");
-        if (buttonVector.size() == 0) closeMenu();
+        if (buttonVector.size() == 0) { closeMenu(); return; }
 		int menuHeight = 103 * buttonVector.size() + 3;
         int menuWidth = 306;
 		bool tooFarX = transform.position.x + menuWidth > Arriba::Graphics::windowWidth;

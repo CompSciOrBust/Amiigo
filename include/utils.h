@@ -10,6 +10,7 @@ struct AmiiboEntry {
     std::u32string name;
     bool isCategory;
     std::string path;
+    bool isSpecial;
 };
 
 struct AmiiboCreatorData {

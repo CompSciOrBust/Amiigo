@@ -59,6 +59,7 @@ std::vector<AmiiboEntry> scanForAmiibo(const char* path) {
             std::string flagCheckPath = amiibo.path + "/amiibo.flag";
             amiibo.isCategory = !checkIfFileExists(flagCheckPath.c_str());
             amiibo.name = getAmiiboDisplayName(amiibo.path, amiibo.isCategory);
+            amiibo.isSpecial = false;
             amiibos.push_back(amiibo);
         }
         closedir(folder);
@@ -68,15 +69,15 @@ std::vector<AmiiboEntry> scanForAmiibo(const char* path) {
         });
 
         if (!strcmp(path, "sdmc:/emuiibo/amiibo")) {
-            amiibos.insert(amiibos.begin(), {U"★Favorites", true, "Favorites"});
+            amiibos.insert(amiibos.begin(), {Amiigo::Lang::get("nav_favorites"), true, "Favorites", true});
         } else {
             std::string cleanPath(path);
-            amiibos.insert(amiibos.begin(), {U"← Back", true, cleanPath.substr(0, cleanPath.find_last_of("/"))});
+            amiibos.insert(amiibos.begin(), {Amiigo::Lang::get("settings_back"), true, cleanPath.substr(0, cleanPath.find_last_of("/")), true});
         }
     }
 
     if (!strcmp(path, "Favorites")) {
-        amiibos.insert(amiibos.begin(), {U"← Back", true, "sdmc:/emuiibo/amiibo"});
+        amiibos.insert(amiibos.begin(), {Amiigo::Lang::get("settings_back"), true, "sdmc:/emuiibo/amiibo", true});
         std::string tempLine;
         std::ifstream fileStream("sdmc:/emuiibo/overlay/favorites.txt");
         while (getline(fileStream, tempLine)) {

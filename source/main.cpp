@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
 
 	strcpy(Amiigo::Settings::amiigoPath, argv[0]);
 
-	Amiigo::NFC::Dumper::init();
+	//Amiigo::NFC::Dumper::init();
 
 	Amiigo::UI::initUI();
 
@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
 	socketExit();
 	romfsExit();
 	nifmExit();
-	Amiigo::NFC::Dumper::exit();
+	//Amiigo::NFC::Dumper::exit();
 	Arriba::exit();
 	if(emu::IsAvailable()) emu::Exit();
 	return 0;
