@@ -223,6 +223,10 @@ void saveAmiiboImage(const std::string& pathBase, const AmiiboCreatorData& amiib
     }
     int width, height, channels;
     unsigned char* input = stbi_load_from_memory((const stbi_uc*)imageData->data(), imageData->size(), &width, &height, &channels, 0);
+    if (!input) {
+        MainThread::dispatch([]() { Amiigo::UI::updateStatus(Amiigo::Lang::get("error_failed_save_image").c_str(), Amiigo::UI::StatusLevel::Error); });
+        return;
+    }
     int outWidth = width, outHeight = height;
     const unsigned char* outImg = input;
     std::vector<unsigned char> scaled;
