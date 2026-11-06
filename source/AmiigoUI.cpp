@@ -40,6 +40,18 @@ namespace Amiigo::UI {
 		initMaker();
 		initSettings();
 		Arriba::highlightedObject = Arriba::findObjectByName("SelectorList");
+		
+		if (emuiiboJustInstalled) {
+			new Amiigo::Elements::ConfirmDialog(
+				(Arriba::Graphics::windowWidth - Amiigo::Elements::ConfirmDialog::DIALOG_W) / 2,
+				(Arriba::Graphics::windowHeight - Amiigo::Elements::ConfirmDialog::DIALOG_H) / 2,
+				Amiigo::Lang::get("emuiibo_installed_message").c_str(),
+				[]() { bpcInitialize(); bpcRebootSystem(); bpcExit(); },
+				[]() { Amiigo::UI::isRunning = 0; },
+				Amiigo::Lang::get("emuiibo_installed_reboot").c_str(),
+				Amiigo::Lang::get("emuiibo_installed_exit").c_str()
+			);
+		}
 	}
 
 	void initSplash() {
@@ -86,18 +98,6 @@ namespace Amiigo::UI {
 		if (sceneSwitcher) sceneSwitcher->enabled = true;
 		if (statusBar) statusBar->enabled = true;
 		Arriba::activeLayer--;
-
-		if (emuiiboJustInstalled) {
-			new Amiigo::Elements::ConfirmDialog(
-				(Arriba::Graphics::windowWidth - Amiigo::Elements::ConfirmDialog::DIALOG_W) / 2,
-				(Arriba::Graphics::windowHeight - Amiigo::Elements::ConfirmDialog::DIALOG_H) / 2,
-				Amiigo::Lang::get("emuiibo_installed_message").c_str(),
-				[]() { bpcInitialize(); bpcRebootSystem(); bpcExit(); },
-				[]() { Amiigo::UI::isRunning = 0; },
-				Amiigo::Lang::get("emuiibo_installed_reboot").c_str(),
-				Amiigo::Lang::get("emuiibo_installed_exit").c_str()
-			);
-		}
 	}
 
 	void applySettingsQuadStyle(Arriba::Primitives::Quad* quad) {
